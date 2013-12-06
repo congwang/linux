@@ -180,6 +180,17 @@ static inline int list_is_last(const struct list_head *list,
 }
 
 /**
+ * list_is_first - tests whether @list is the first entry in list @head
+ * @list: the entry to test
+ * @head: the head of the list
+ */
+static inline int list_is_first(const struct list_head *list,
+				const struct list_head *head)
+{
+	return list == head->next;
+}
+
+/**
  * list_empty - tests whether a list is empty
  * @head: the list to test.
  */
@@ -301,7 +312,7 @@ static inline void list_splice(const struct list_head *list,
  * @list: the new list to add.
  * @head: the place to add it in the first list.
  */
-static inline void list_splice_tail(struct list_head *list,
+static inline void list_splice_tail(const struct list_head *list,
 				struct list_head *head)
 {
 	if (!list_empty(list))
@@ -566,6 +577,21 @@ static inline void list_splice_tail_init(struct list_head *list,
 #define list_for_each_entry_safe_reverse(pos, n, head, member)		\
 	for (pos = list_last_entry(head, typeof(*pos), member),		\
 		n = list_prev_entry(pos, member);			\
+	     &pos->member != (head); 					\
+	     pos = n, n = list_prev_entry(n, member))
+
+/**
+ * list_for_each_entry_safe_reverse_from - iterate backwards over list from current point safe against removal
+ * @pos:	the type * to use as a loop cursor.
+ * @n:		another type * to use as temporary storage
+ * @head:	the head for your list.
+ * @member:	the name of the list_struct within the struct.
+ *
+ * Iterate backwards over list of given type, safe against removal
+ * of list entry.
+ */
+#define list_for_each_entry_safe_reverse_from(pos, n, head, member)	\
+	for (n = list_prev_entry(pos, member);				\
 	     &pos->member != (head); 					\
 	     pos = n, n = list_prev_entry(n, member))
 
