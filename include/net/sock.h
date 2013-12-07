@@ -343,8 +343,7 @@ struct sock {
 	struct {
 		atomic_t	rmem_alloc;
 		int		len;
-		struct sk_buff	*head;
-		struct sk_buff	*tail;
+		struct list_head head;
 	} sk_backlog;
 #define sk_rmem_alloc sk_backlog.rmem_alloc
 	int			sk_forward_alloc;
@@ -795,13 +794,7 @@ static inline void __sk_add_backlog(struct sock *sk, struct sk_buff *skb)
 	/* dont let skb dst not refcounted, we are going to leave rcu lock */
 	skb_dst_force(skb);
 
-	if (!sk->sk_backlog.tail)
-		sk->sk_backlog.head = skb;
-	else
-		sk->sk_backlog.tail->next = skb;
-
-	sk->sk_backlog.tail = skb;
-	skb->next = NULL;
+	list_add_tail(&skb->list, &sk->sk_backlog.head);
 }
 
 /*

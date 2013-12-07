@@ -95,7 +95,7 @@ static int wait_for_more_packets(struct sock *sk, int *err, long *timeo_p,
 	if (error)
 		goto out_err;
 
-	if (sk->sk_receive_queue.prev != skb)
+	if (skb != skb_peek_tail(&sk->sk_receive_queue))
 		goto out;
 
 	/* Socket shut down? */
@@ -164,7 +164,7 @@ out_noerr:
 struct sk_buff *__skb_recv_datagram(struct sock *sk, unsigned int flags,
 				    int *peeked, int *off, int *err)
 {
-	struct sk_buff *skb, *last;
+	struct sk_buff *skb, *last = NULL;
 	long timeo;
 	/*
 	 * Caller is allowed not to check sk->sk_err before skb_recv_datagram()
@@ -187,10 +187,9 @@ struct sk_buff *__skb_recv_datagram(struct sock *sk, unsigned int flags,
 		struct sk_buff_head *queue = &sk->sk_receive_queue;
 		int _off = *off;
 
-		last = (struct sk_buff *)queue;
 		spin_lock_irqsave(&queue->lock, cpu_flags);
 		skb_queue_walk(queue, skb) {
-			last = skb;
+			last = skb_peek(queue);
 			*peeked = skb->peeked;
 			if (flags & MSG_PEEK) {
 				if (_off >= skb->len && (skb->len || _off ||

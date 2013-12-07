@@ -1735,7 +1735,7 @@ int tcp_recvmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 
 		/* Well, if we have backlog, try to process it now yet. */
 
-		if (copied >= target && !sk->sk_backlog.tail)
+		if (copied >= target && list_empty(&sk->sk_backlog.head))
 			break;
 
 		if (copied) {

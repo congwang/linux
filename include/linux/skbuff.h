@@ -146,9 +146,7 @@ struct nf_bridge_info {
 #endif
 
 struct sk_buff_head {
-	/* These two members must be first. */
-	struct sk_buff	*next;
-	struct sk_buff	*prev;
+	struct list_head head;
 
 	__u32		qlen;
 	spinlock_t	lock;
@@ -418,6 +416,7 @@ static inline u32 skb_mstamp_us_delta(const struct skb_mstamp *t1,
  *	struct sk_buff - socket buffer
  *	@next: Next buffer in list
  *	@prev: Previous buffer in list
+ *	@list: list head to sk_buff list
  *	@tstamp: Time we arrived/left
  *	@sk: Socket we are owned by
  *	@dev: Device we arrived on/are leaving by
@@ -485,9 +484,15 @@ static inline u32 skb_mstamp_us_delta(const struct skb_mstamp *t1,
  */
 
 struct sk_buff {
-	/* These two members must be first. */
-	struct sk_buff		*next;
-	struct sk_buff		*prev;
+	union {
+		struct list_head	list;
+		struct {
+			/* Still used by frag_list and some drivers */
+			struct sk_buff	*next;
+			/* Still used by gro_list */
+			struct sk_buff	*prev;
+		};
+	};
 
 	union {
 		ktime_t		tstamp;
@@ -911,7 +916,7 @@ static inline struct skb_shared_hwtstamps *skb_hwtstamps(struct sk_buff *skb)
  */
 static inline int skb_queue_empty(const struct sk_buff_head *list)
 {
-	return list->next == (const struct sk_buff *) list;
+	return list_empty(&list->head);
 }
 
 /**
@@ -924,7 +929,7 @@ static inline int skb_queue_empty(const struct sk_buff_head *list)
 static inline bool skb_queue_is_last(const struct sk_buff_head *list,
 				     const struct sk_buff *skb)
 {
-	return skb->next == (const struct sk_buff *) list;
+	return list_is_last(&skb->list, &list->head);
 }
 
 /**
@@ -937,7 +942,7 @@ static inline bool skb_queue_is_last(const struct sk_buff_head *list,
 static inline bool skb_queue_is_first(const struct sk_buff_head *list,
 				      const struct sk_buff *skb)
 {
-	return skb->prev == (const struct sk_buff *) list;
+	return list_is_first(&skb->list, &list->head);
 }
 
 /**
@@ -955,7 +960,7 @@ static inline struct sk_buff *skb_queue_next(const struct sk_buff_head *list,
 	 * are going to dereference garbage.
 	 */
 	BUG_ON(skb_queue_is_last(list, skb));
-	return skb->next;
+	return (struct sk_buff *)list_next_entry(skb, list);
 }
 
 /**
@@ -973,7 +978,7 @@ static inline struct sk_buff *skb_queue_prev(const struct sk_buff_head *list,
 	 * are going to dereference garbage.
 	 */
 	BUG_ON(skb_queue_is_first(list, skb));
-	return skb->prev;
+	return (struct sk_buff *)list_prev_entry(skb, list);
 }
 
 /**
@@ -1139,11 +1144,7 @@ static inline struct sk_buff *skb_unshare(struct sk_buff *skb,
  */
 static inline struct sk_buff *skb_peek(const struct sk_buff_head *list_)
 {
-	struct sk_buff *skb = list_->next;
-
-	if (skb == (struct sk_buff *)list_)
-		skb = NULL;
-	return skb;
+	return list_first_entry_or_null(&list_->head, struct sk_buff, list);
 }
 
 /**
@@ -1158,11 +1159,10 @@ static inline struct sk_buff *skb_peek(const struct sk_buff_head *list_)
 static inline struct sk_buff *skb_peek_next(struct sk_buff *skb,
 		const struct sk_buff_head *list_)
 {
-	struct sk_buff *next = skb->next;
-
-	if (next == (struct sk_buff *)list_)
-		next = NULL;
-	return next;
+	if (skb_queue_is_last(list_, skb))
+		return NULL;
+	else
+		return list_next_entry(skb, list);
 }
 
 /**
@@ -1180,12 +1180,10 @@ static inline struct sk_buff *skb_peek_next(struct sk_buff *skb,
  */
 static inline struct sk_buff *skb_peek_tail(const struct sk_buff_head *list_)
 {
-	struct sk_buff *skb = list_->prev;
-
-	if (skb == (struct sk_buff *)list_)
-		skb = NULL;
-	return skb;
-
+	if (list_empty(&list_->head))
+		return NULL;
+	else
+		return list_last_entry(&list_->head, struct sk_buff, list);
 }
 
 /**
@@ -1211,7 +1209,7 @@ static inline __u32 skb_queue_len(const struct sk_buff_head *list_)
  */
 static inline void __skb_queue_head_init(struct sk_buff_head *list)
 {
-	list->prev = list->next = (struct sk_buff *)list;
+	INIT_LIST_HEAD(&list->head);
 	list->qlen = 0;
 }
 
@@ -1244,29 +1242,6 @@ static inline void skb_queue_head_init_class(struct sk_buff_head *list,
  */
 void skb_insert(struct sk_buff *old, struct sk_buff *newsk,
 		struct sk_buff_head *list);
-static inline void __skb_insert(struct sk_buff *newsk,
-				struct sk_buff *prev, struct sk_buff *next,
-				struct sk_buff_head *list)
-{
-	newsk->next = next;
-	newsk->prev = prev;
-	next->prev  = prev->next = newsk;
-	list->qlen++;
-}
-
-static inline void __skb_queue_splice(const struct sk_buff_head *list,
-				      struct sk_buff *prev,
-				      struct sk_buff *next)
-{
-	struct sk_buff *first = list->next;
-	struct sk_buff *last = list->prev;
-
-	first->prev = prev;
-	prev->next = first;
-
-	last->next = next;
-	next->prev = last;
-}
 
 /**
  *	skb_queue_splice - join two skb lists, this is designed for stacks
@@ -1277,7 +1252,7 @@ static inline void skb_queue_splice(const struct sk_buff_head *list,
 				    struct sk_buff_head *head)
 {
 	if (!skb_queue_empty(list)) {
-		__skb_queue_splice(list, (struct sk_buff *) head, head->next);
+		list_splice(&list->head, &head->head);
 		head->qlen += list->qlen;
 	}
 }
@@ -1293,9 +1268,9 @@ static inline void skb_queue_splice_init(struct sk_buff_head *list,
 					 struct sk_buff_head *head)
 {
 	if (!skb_queue_empty(list)) {
-		__skb_queue_splice(list, (struct sk_buff *) head, head->next);
+		list_splice_init(&list->head, &head->head);
 		head->qlen += list->qlen;
-		__skb_queue_head_init(list);
+		list->qlen = 0;
 	}
 }
 
@@ -1308,7 +1283,7 @@ static inline void skb_queue_splice_tail(const struct sk_buff_head *list,
 					 struct sk_buff_head *head)
 {
 	if (!skb_queue_empty(list)) {
-		__skb_queue_splice(list, head->prev, (struct sk_buff *) head);
+		list_splice_tail(&list->head, &head->head);
 		head->qlen += list->qlen;
 	}
 }
@@ -1325,9 +1300,9 @@ static inline void skb_queue_splice_tail_init(struct sk_buff_head *list,
 					      struct sk_buff_head *head)
 {
 	if (!skb_queue_empty(list)) {
-		__skb_queue_splice(list, head->prev, (struct sk_buff *) head);
+		list_splice_tail_init(&list->head, &head->head);
 		head->qlen += list->qlen;
-		__skb_queue_head_init(list);
+		list->qlen = 0;
 	}
 }
 
@@ -1346,7 +1321,8 @@ static inline void __skb_queue_after(struct sk_buff_head *list,
 				     struct sk_buff *prev,
 				     struct sk_buff *newsk)
 {
-	__skb_insert(newsk, prev, prev->next, list);
+	list_add(&newsk->list, &prev->list);
+	list->qlen++;
 }
 
 void skb_append(struct sk_buff *old, struct sk_buff *newsk,
@@ -1356,7 +1332,8 @@ static inline void __skb_queue_before(struct sk_buff_head *list,
 				      struct sk_buff *next,
 				      struct sk_buff *newsk)
 {
-	__skb_insert(newsk, next->prev, next, list);
+	list_add_tail(&newsk->list, &next->list);
+	list->qlen++;
 }
 
 /**
@@ -1400,14 +1377,8 @@ static inline void __skb_queue_tail(struct sk_buff_head *list,
 void skb_unlink(struct sk_buff *skb, struct sk_buff_head *list);
 static inline void __skb_unlink(struct sk_buff *skb, struct sk_buff_head *list)
 {
-	struct sk_buff *next, *prev;
-
 	list->qlen--;
-	next	   = skb->next;
-	prev	   = skb->prev;
-	skb->next  = skb->prev = NULL;
-	next->prev = prev;
-	prev->next = next;
+	list_del_init(&skb->list);
 }
 
 /**
@@ -2467,39 +2438,26 @@ static inline int pskb_trim_rcsum(struct sk_buff *skb, unsigned int len)
 	return __pskb_trim(skb, len);
 }
 
-#define skb_queue_walk(queue, skb) \
-		for (skb = (queue)->next;					\
-		     skb != (struct sk_buff *)(queue);				\
-		     skb = skb->next)
+#define skb_queue_walk(queue, skb)						\
+		list_for_each_entry(skb, &((queue)->head), list)
 
 #define skb_queue_walk_safe(queue, skb, tmp)					\
-		for (skb = (queue)->next, tmp = skb->next;			\
-		     skb != (struct sk_buff *)(queue);				\
-		     skb = tmp, tmp = skb->next)
+		list_for_each_entry_safe(skb, tmp, &((queue)->head), list)
 
 #define skb_queue_walk_from(queue, skb)						\
-		for (; skb != (struct sk_buff *)(queue);			\
-		     skb = skb->next)
+		list_for_each_entry_from(skb, &((queue)->head), list)
 
 #define skb_queue_walk_from_safe(queue, skb, tmp)				\
-		for (tmp = skb->next;						\
-		     skb != (struct sk_buff *)(queue);				\
-		     skb = tmp, tmp = skb->next)
+		list_for_each_entry_safe_from(skb, tmp, &((queue)->head), list)
 
-#define skb_queue_reverse_walk(queue, skb) \
-		for (skb = (queue)->prev;					\
-		     skb != (struct sk_buff *)(queue);				\
-		     skb = skb->prev)
+#define skb_queue_reverse_walk(queue, skb)					\
+		list_for_each_entry_reverse(skb, &((queue)->head), list)
 
 #define skb_queue_reverse_walk_safe(queue, skb, tmp)				\
-		for (skb = (queue)->prev, tmp = skb->prev;			\
-		     skb != (struct sk_buff *)(queue);				\
-		     skb = tmp, tmp = skb->prev)
+		list_for_each_entry_safe_reverse(skb, tmp, &((queue)->head), list)
 
 #define skb_queue_reverse_walk_from_safe(queue, skb, tmp)			\
-		for (tmp = skb->prev;						\
-		     skb != (struct sk_buff *)(queue);				\
-		     skb = tmp, tmp = skb->prev)
+		list_for_each_entry_safe_reverse_from(skb, tmp, &((queue)->head), list)
 
 static inline bool skb_has_frag_list(const struct sk_buff *skb)
 {

@@ -169,6 +169,7 @@ struct sk_buff *__alloc_skb_head(gfp_t gfp_mask, int node)
 	 * the tail pointer in struct sk_buff!
 	 */
 	memset(skb, 0, offsetof(struct sk_buff, tail));
+	INIT_LIST_HEAD(&skb->list);
 	skb->head = NULL;
 	skb->truesize = sizeof(struct sk_buff);
 	atomic_set(&skb->users, 1);
@@ -239,6 +240,7 @@ struct sk_buff *__alloc_skb(unsigned int size, gfp_t gfp_mask,
 	 * the tail pointer in struct sk_buff!
 	 */
 	memset(skb, 0, offsetof(struct sk_buff, tail));
+	INIT_LIST_HEAD(&skb->list);
 	/* Account for allocated memory : skb + skb->head */
 	skb->truesize = SKB_TRUESIZE(size);
 	skb->pfmemalloc = pfmemalloc;
@@ -308,6 +310,7 @@ struct sk_buff *build_skb(void *data, unsigned int frag_size)
 	size -= SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
 
 	memset(skb, 0, offsetof(struct sk_buff, tail));
+	INIT_LIST_HEAD(&skb->list);
 	skb->truesize = SKB_TRUESIZE(size);
 	skb->head_frag = frag_size != 0;
 	atomic_set(&skb->users, 1);
@@ -735,7 +738,7 @@ static struct sk_buff *__skb_clone(struct sk_buff *n, struct sk_buff *skb)
 {
 #define C(x) n->x = skb->x
 
-	n->next = n->prev = NULL;
+	INIT_LIST_HEAD(&n->list);
 	n->sk = NULL;
 	__copy_skb_header(n, skb);
 
@@ -2380,7 +2383,7 @@ void skb_insert(struct sk_buff *old, struct sk_buff *newsk, struct sk_buff_head 
 	unsigned long flags;
 
 	spin_lock_irqsave(&list->lock, flags);
-	__skb_insert(newsk, old->prev, old, list);
+	__skb_queue_before(list, old, newsk);
 	spin_unlock_irqrestore(&list->lock, flags);
 }
 EXPORT_SYMBOL(skb_insert);

@@ -760,7 +760,7 @@ static int llc_ui_recvmsg(struct kiocb *iocb, struct socket *sock,
 		}
 		/* Well, if we have backlog, try to process it now yet. */
 
-		if (copied >= target && !sk->sk_backlog.tail)
+		if (copied >= target && list_empty(&sk->sk_backlog.head))
 			break;
 
 		if (copied) {

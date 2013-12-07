@@ -1373,6 +1373,7 @@ struct sock *sk_alloc(struct net *net, int family, gfp_t priority,
 		sock_lock_init(sk);
 		sock_net_set(sk, get_net(net));
 		atomic_set(&sk->sk_wmem_alloc, 1);
+		INIT_LIST_HEAD(&sk->sk_backlog.head);
 
 		sock_update_classid(sk);
 		sock_update_netprioidx(sk);
@@ -1470,7 +1471,7 @@ struct sock *sk_clone_lock(const struct sock *sk, const gfp_t priority)
 		sk_node_init(&newsk->sk_node);
 		sock_lock_init(newsk);
 		bh_lock_sock(newsk);
-		newsk->sk_backlog.head	= newsk->sk_backlog.tail = NULL;
+		INIT_LIST_HEAD(&newsk->sk_backlog.head);
 		newsk->sk_backlog.len = 0;
 
 		atomic_set(&newsk->sk_rmem_alloc, 0);
@@ -1926,18 +1927,16 @@ static void __release_sock(struct sock *sk)
 	__releases(&sk->sk_lock.slock)
 	__acquires(&sk->sk_lock.slock)
 {
-	struct sk_buff *skb = sk->sk_backlog.head;
+	struct sk_buff *skb, *tmp;
+	LIST_HEAD(local);
 
 	do {
-		sk->sk_backlog.head = sk->sk_backlog.tail = NULL;
+		list_splice_init(&sk->sk_backlog.head, &local);
 		bh_unlock_sock(sk);
 
-		do {
-			struct sk_buff *next = skb->next;
-
-			prefetch(next);
+		list_for_each_entry_safe(skb, tmp, &local, list) {
+			list_del(&skb->list);
 			WARN_ON_ONCE(skb_dst_is_noref(skb));
-			skb->next = NULL;
 			sk_backlog_rcv(sk, skb);
 
 			/*
@@ -1947,12 +1946,10 @@ static void __release_sock(struct sock *sk)
 			 * queue private:
 			 */
 			cond_resched_softirq();
-
-			skb = next;
-		} while (skb != NULL);
+		}
 
 		bh_lock_sock(sk);
-	} while ((skb = sk->sk_backlog.head) != NULL);
+	} while (!list_empty(&sk->sk_backlog.head));
 
 	/*
 	 * Doing the zeroing here guarantee we can not loop forever
@@ -2387,7 +2384,7 @@ void release_sock(struct sock *sk)
 	mutex_release(&sk->sk_lock.dep_map, 1, _RET_IP_);
 
 	spin_lock_bh(&sk->sk_lock.slock);
-	if (sk->sk_backlog.tail)
+	if (!list_empty(&sk->sk_backlog.head))
 		__release_sock(sk);
 
 	/* Warning : release_cb() might need to release sk ownership,
