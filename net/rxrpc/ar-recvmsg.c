@@ -231,8 +231,7 @@ int rxrpc_recvmsg(struct kiocb *iocb, struct socket *sock,
 
 		if (flags & MSG_PEEK) {
 			_debug("peek next");
-			skb = skb->next;
-			if (skb == (struct sk_buff *) &rx->sk.sk_receive_queue)
+			if (skb_queue_is_last(&rx->sk.sk_receive_queue, skb))
 				break;
 			goto peek_next_packet;
 		}
