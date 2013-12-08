@@ -102,8 +102,7 @@ struct sfq_head {
 };
 
 struct sfq_slot {
-	struct sk_buff	*skblist_next;
-	struct sk_buff	*skblist_prev;
+	struct list_head list;
 	sfq_index	qlen; /* number of skbs in skblist */
 	sfq_index	next; /* next slot in sfq RR chain */
 	struct sfq_head dep; /* anchor in dep[] chains */
@@ -276,44 +275,40 @@ static inline void sfq_inc(struct sfq_sched_data *q, sfq_index x)
 /* remove one skb from tail of slot queue */
 static inline struct sk_buff *slot_dequeue_tail(struct sfq_slot *slot)
 {
-	struct sk_buff *skb = slot->skblist_prev;
+	struct sk_buff *skb = list_last_entry(&slot->list, struct sk_buff, list);
 
-	slot->skblist_prev = skb->prev;
-	skb->prev->next = (struct sk_buff *)slot;
-	skb->next = skb->prev = NULL;
+	list_del_init(&skb->list);
 	return skb;
 }
 
 /* remove one skb from head of slot queue */
 static inline struct sk_buff *slot_dequeue_head(struct sfq_slot *slot)
 {
-	struct sk_buff *skb = slot->skblist_next;
+	struct sk_buff *skb = list_first_entry(&slot->list, struct sk_buff, list);
 
-	slot->skblist_next = skb->next;
-	skb->next->prev = (struct sk_buff *)slot;
-	skb->next = skb->prev = NULL;
+	list_del_init(&skb->list);
 	return skb;
+}
+
+static inline struct sk_buff *slot_first_skb(struct sfq_slot *slot)
+{
+	return list_first_entry(&slot->list, struct sk_buff, list);
 }
 
 static inline void slot_queue_init(struct sfq_slot *slot)
 {
 	memset(slot, 0, sizeof(*slot));
-	slot->skblist_prev = slot->skblist_next = (struct sk_buff *)slot;
+	INIT_LIST_HEAD(&slot->list);
 }
 
 /* add skb to slot queue (tail add) */
 static inline void slot_queue_add(struct sfq_slot *slot, struct sk_buff *skb)
 {
-	skb->prev = slot->skblist_prev;
-	skb->next = (struct sk_buff *)slot;
-	slot->skblist_prev->next = skb;
-	slot->skblist_prev = skb;
+	list_add_tail(&skb->list, &slot->list);
 }
 
 #define	slot_queue_walk(slot, skb)		\
-	for (skb = slot->skblist_next;		\
-	     skb != (struct sk_buff *)slot;	\
-	     skb = skb->next)
+	list_for_each_entry(skb, &((slot)->list), list)
 
 static unsigned int sfq_drop(struct Qdisc *sch)
 {
@@ -416,7 +411,7 @@ sfq_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 			if (sfq_prob_mark(q)) {
 				/* We know we have at least one packet in queue */
 				if (sfq_headdrop(q) &&
-				    INET_ECN_set_ce(slot->skblist_next)) {
+				    INET_ECN_set_ce(slot_first_skb(slot))) {
 					q->stats.prob_mark_head++;
 					break;
 				}
@@ -433,7 +428,7 @@ sfq_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 			if (sfq_hard_mark(q)) {
 				/* We know we have at least one packet in queue */
 				if (sfq_headdrop(q) &&
-				    INET_ECN_set_ce(slot->skblist_next)) {
+				    INET_ECN_set_ce(slot_first_skb(slot))) {
 					q->stats.forced_mark_head++;
 					break;
 				}
