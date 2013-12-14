@@ -193,12 +193,12 @@ static int sctp_ulpq_clear_pd(struct sctp_ulpq *ulpq)
 int sctp_ulpq_tail_event(struct sctp_ulpq *ulpq, struct sctp_ulpevent *event)
 {
 	struct sock *sk = ulpq->asoc->base.sk;
-	struct sk_buff_head *queue, *skb_list;
+	struct sk_buff_head *queue;
 	struct sk_buff *skb = sctp_event2skb(event);
 	int clear_pd = 0;
+	bool in_list;
 
-	skb_list = (struct sk_buff_head *) skb->prev;
-
+	in_list = !list_empty(&skb->list);
 	/* If the socket is just going to throw this away, do not
 	 * even try to deliver it.
 	 */
@@ -250,8 +250,8 @@ int sctp_ulpq_tail_event(struct sctp_ulpq *ulpq, struct sctp_ulpevent *event)
 	/* If we are harvesting multiple skbs they will be
 	 * collected on a list.
 	 */
-	if (skb_list)
-		sctp_skb_list_tail(skb_list, queue);
+	if (in_list)
+		sctp_skb_list_tail(&ulpq->event, queue);
 	else
 		__skb_queue_tail(queue, skb);
 
@@ -267,8 +267,8 @@ int sctp_ulpq_tail_event(struct sctp_ulpq *ulpq, struct sctp_ulpevent *event)
 	return 1;
 
 out_free:
-	if (skb_list)
-		sctp_queue_purge_ulpevents(skb_list);
+	if (in_list)
+		sctp_queue_purge_ulpevents(&ulpq->event);
 	else
 		sctp_ulpevent_free(event);
 
@@ -762,7 +762,7 @@ static void sctp_ulpq_retrieve_ordered(struct sctp_ulpq *ulpq,
 	sid = event->stream;
 	in  = &ulpq->asoc->ssnmap->in;
 
-	event_list = (struct sk_buff_head *) sctp_event2skb(event)->prev;
+	event_list = &ulpq->event;
 
 	/* We are holding the chunks by stream, by SSN.  */
 	sctp_skb_for_each(pos, &ulpq->lobby, tmp) {

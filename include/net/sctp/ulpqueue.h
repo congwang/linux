@@ -46,6 +46,7 @@ struct sctp_ulpq {
 	struct sctp_association *asoc;
 	struct sk_buff_head reasm;
 	struct sk_buff_head lobby;
+	struct sk_buff_head event;
 };
 
 /* Prototypes. */
