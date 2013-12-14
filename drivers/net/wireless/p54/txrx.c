@@ -121,7 +121,7 @@ static int p54_assign_address(struct p54_common *priv, struct sk_buff *skb)
 	}
 	if (unlikely(!target_skb)) {
 		if (priv->rx_end - last_addr >= len) {
-			target_skb = priv->tx_queue.prev;
+			target_skb = skb_peek_tail(&priv->tx_queue);
 			if (!skb_queue_empty(&priv->tx_queue)) {
 				info = IEEE80211_SKB_CB(target_skb);
 				range = (void *)info->rate_driver_data;
