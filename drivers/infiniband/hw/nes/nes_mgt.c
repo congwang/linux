@@ -553,12 +553,10 @@ static void queue_fpdus(struct sk_buff *skb, struct nes_vnic *nesvnic, struct ne
 	if (skb_queue_len(&nesqp->pau_list) == 0) {
 		skb_queue_head(&nesqp->pau_list, skb);
 	} else {
-		tmpskb = nesqp->pau_list.next;
-		while (tmpskb != (struct sk_buff *)&nesqp->pau_list) {
+		skb_queue_walk(&nesqp->pau_list, tmpskb) {
 			cb = (struct nes_rskb_cb *)&tmpskb->cb[0];
 			if (before(seqnum, cb->seqnum))
 				break;
-			tmpskb = tmpskb->next;
 		}
 		skb_insert(tmpskb, skb, &nesqp->pau_list);
 	}
