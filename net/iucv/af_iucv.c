@@ -1829,19 +1829,18 @@ static void iucv_callback_txdone(struct iucv_path *path,
 	struct sock *sk = path->private;
 	struct sk_buff *this = NULL;
 	struct sk_buff_head *list = &iucv_sk(sk)->send_skb_q;
-	struct sk_buff *list_skb = list->next;
+	struct sk_buff *skb;
 	unsigned long flags;
 
 	bh_lock_sock(sk);
 	if (!skb_queue_empty(list)) {
 		spin_lock_irqsave(&list->lock, flags);
 
-		while (list_skb != (struct sk_buff *)list) {
+		skb_queue_walk(list, skb) {
 			if (msg->tag == IUCV_SKB_CB(list_skb)->tag) {
-				this = list_skb;
+				this = skb;
 				break;
 			}
-			list_skb = list_skb->next;
 		}
 		if (this)
 			__skb_unlink(this, list);
