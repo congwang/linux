@@ -1300,7 +1300,7 @@ static int brcmf_fws_enq(struct brcmf_fws_info *fws,
 				__skb_queue_after(queue, p_tail, p);
 			} else {
 				/* Before tail */
-				__skb_insert(p, p_tail->prev, p_tail, queue);
+				__skb_queue_before(p, p_tail, queue);
 			}
 		}
 

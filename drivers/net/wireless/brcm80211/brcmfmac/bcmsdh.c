@@ -552,7 +552,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
 			    target_list->qlen);
 	seg_sz = target_list->qlen;
 	pkt_offset = 0;
-	pkt_next = target_list->next;
+	pkt_next = skb_peek(target_list);
 
 	memset(&mmc_req, 0, sizeof(struct mmc_request));
 	memset(&mmc_cmd, 0, sizeof(struct mmc_command));
@@ -632,7 +632,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
 	}
 
 	if (sdiodev->pdata && sdiodev->pdata->broken_sg_support && !write) {
-		local_pkt_next = local_list.next;
+		local_pkt_next = skb_peek(&local_list);
 		orig_offset = 0;
 		skb_queue_walk(pktlist, pkt_next) {
 			dst_offset = 0;
@@ -717,7 +717,7 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
 
 	if (pktq->qlen == 1)
 		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
-					 pktq->next);
+					 skb_peek(pktq));
 	else if (!sdiodev->sg_support) {
 		glom_skb = brcmu_pkt_buf_get_skb(totlen);
 		if (!glom_skb)
