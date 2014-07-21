@@ -184,6 +184,7 @@ struct Qdisc_ops {
 	int			priv_size;
 #define QDISC_F_BUILTIN		1
 #define QDISC_F_MQ		2
+#define QDISC_F_FIFO		4
 	unsigned int		flags;
 
 	int 			(*enqueue)(struct sk_buff *, struct Qdisc *);
