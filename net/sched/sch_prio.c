@@ -201,9 +201,9 @@ static int prio_tune(struct Qdisc *sch, struct nlattr *opt)
 		if (q->queues[i] == &noop_qdisc) {
 			struct Qdisc *child, *old;
 
-			child = qdisc_create_dflt(sch->dev_queue,
-						  &pfifo_qdisc_ops,
-						  TC_H_MAKE(sch->handle, i + 1));
+			child = qdisc_create_internal(sch->dev_queue,
+						      &pfifo_qdisc_ops,
+						      TC_H_MAKE(sch->handle, i + 1));
 			if (child) {
 				sch_tree_lock(sch);
 				old = q->queues[i];

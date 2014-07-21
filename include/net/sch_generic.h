@@ -403,12 +403,19 @@ void qdisc_destroy(struct Qdisc *qdisc);
 void qdisc_tree_decrease_qlen(struct Qdisc *qdisc, unsigned int n);
 struct Qdisc *qdisc_alloc(struct netdev_queue *dev_queue,
 			  const struct Qdisc_ops *ops);
-struct Qdisc *qdisc_create_dflt(struct netdev_queue *dev_queue,
-				const struct Qdisc_ops *ops, u32 parentid);
+struct Qdisc *qdisc_create_internal(struct netdev_queue *dev_queue,
+				    const struct Qdisc_ops *ops, u32 parentid);
 void __qdisc_calculate_pkt_len(struct sk_buff *skb,
 			       const struct qdisc_size_table *stab);
 void tcf_destroy(struct tcf_proto *tp);
 void tcf_destroy_chain(struct tcf_proto __rcu **fl);
+
+static inline
+struct Qdisc *qdisc_create_dflt(struct netdev_queue *dev_queue,
+				unsigned int parentid)
+{
+	return qdisc_create_internal(dev_queue, default_qdisc_ops, parentid);
+}
 
 /* Reset all TX qdiscs greater then index of a device.  */
 static inline void qdisc_reset_all_tx_gt(struct net_device *dev, unsigned int i)

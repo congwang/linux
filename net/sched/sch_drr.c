@@ -111,8 +111,8 @@ static int drr_change_class(struct Qdisc *sch, u32 classid, u32 parentid,
 	cl->refcnt	   = 1;
 	cl->common.classid = classid;
 	cl->quantum	   = quantum;
-	cl->qdisc	   = qdisc_create_dflt(sch->dev_queue,
-					       &pfifo_qdisc_ops, classid);
+	cl->qdisc	   = qdisc_create_internal(sch->dev_queue,
+						   &pfifo_qdisc_ops, classid);
 	if (cl->qdisc == NULL)
 		cl->qdisc = &noop_qdisc;
 
@@ -220,8 +220,9 @@ static int drr_graft_class(struct Qdisc *sch, unsigned long arg,
 	struct drr_class *cl = (struct drr_class *)arg;
 
 	if (new == NULL) {
-		new = qdisc_create_dflt(sch->dev_queue,
-					&pfifo_qdisc_ops, cl->common.classid);
+		new = qdisc_create_internal(sch->dev_queue,
+					    &pfifo_qdisc_ops,
+					    cl->common.classid);
 		if (new == NULL)
 			new = &noop_qdisc;
 	}

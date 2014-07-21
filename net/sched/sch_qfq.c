@@ -479,8 +479,8 @@ static int qfq_change_class(struct Qdisc *sch, u32 classid, u32 parentid,
 	cl->common.classid = classid;
 	cl->deficit = lmax;
 
-	cl->qdisc = qdisc_create_dflt(sch->dev_queue,
-				      &pfifo_qdisc_ops, classid);
+	cl->qdisc = qdisc_create_internal(sch->dev_queue,
+					  &pfifo_qdisc_ops, classid);
 	if (cl->qdisc == NULL)
 		cl->qdisc = &noop_qdisc;
 
@@ -613,8 +613,8 @@ static int qfq_graft_class(struct Qdisc *sch, unsigned long arg,
 	struct qfq_class *cl = (struct qfq_class *)arg;
 
 	if (new == NULL) {
-		new = qdisc_create_dflt(sch->dev_queue,
-					&pfifo_qdisc_ops, cl->common.classid);
+		new = qdisc_create_internal(sch->dev_queue,
+					    &pfifo_qdisc_ops, cl->common.classid);
 		if (new == NULL)
 			new = &noop_qdisc;
 	}

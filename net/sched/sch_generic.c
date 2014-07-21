@@ -623,9 +623,9 @@ errout:
 	return ERR_PTR(err);
 }
 
-struct Qdisc *qdisc_create_dflt(struct netdev_queue *dev_queue,
-				const struct Qdisc_ops *ops,
-				unsigned int parentid)
+struct Qdisc *qdisc_create_internal(struct netdev_queue *dev_queue,
+				    const struct Qdisc_ops *ops,
+				    unsigned int parentid)
 {
 	struct Qdisc *sch;
 
@@ -644,7 +644,7 @@ struct Qdisc *qdisc_create_dflt(struct netdev_queue *dev_queue,
 errout:
 	return NULL;
 }
-EXPORT_SYMBOL(qdisc_create_dflt);
+EXPORT_SYMBOL(qdisc_create_internal);
 
 /* Under qdisc_lock(qdisc) and BH! */
 
@@ -737,8 +737,7 @@ static void attach_one_default_qdisc(struct net_device *dev,
 	struct Qdisc *qdisc = &noqueue_qdisc;
 
 	if (dev->tx_queue_len) {
-		qdisc = qdisc_create_dflt(dev_queue,
-					  default_qdisc_ops, TC_H_ROOT);
+		qdisc = qdisc_create_dflt(dev_queue, TC_H_ROOT);
 		if (!qdisc) {
 			netdev_info(dev, "activation failed\n");
 			return;
@@ -761,7 +760,7 @@ static void attach_default_qdiscs(struct net_device *dev)
 		dev->qdisc = txq->qdisc_sleeping;
 		atomic_inc(&dev->qdisc->refcnt);
 	} else {
-		qdisc = qdisc_create_dflt(txq, &mq_qdisc_ops, TC_H_ROOT);
+		qdisc = qdisc_create_internal(txq, &mq_qdisc_ops, TC_H_ROOT);
 		if (qdisc) {
 			dev->qdisc = qdisc;
 			qdisc->ops->attach(qdisc);
