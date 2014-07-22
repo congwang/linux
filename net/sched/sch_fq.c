@@ -805,6 +805,7 @@ static int fq_dump_stats(struct Qdisc *sch, struct gnet_dump *d)
 
 static struct Qdisc_ops fq_qdisc_ops __read_mostly = {
 	.id		=	"fq",
+	.flags		=	QDISC_F_PARAM_LESS,
 	.priv_size	=	sizeof(struct fq_sched_data),
 
 	.enqueue	=	fq_enqueue,

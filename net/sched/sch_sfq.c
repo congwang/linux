@@ -913,6 +913,7 @@ static const struct Qdisc_class_ops sfq_class_ops = {
 static struct Qdisc_ops sfq_qdisc_ops __read_mostly = {
 	.cl_ops		=	&sfq_class_ops,
 	.id		=	"sfq",
+	.flags		=	QDISC_F_PARAM_LESS,
 	.priv_size	=	sizeof(struct sfq_sched_data),
 	.enqueue	=	sfq_enqueue,
 	.dequeue	=	sfq_dequeue,

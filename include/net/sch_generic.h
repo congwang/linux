@@ -185,6 +185,7 @@ struct Qdisc_ops {
 #define QDISC_F_BUILTIN		1
 #define QDISC_F_MQ		2
 #define QDISC_F_FIFO		4
+#define QDISC_F_PARAM_LESS	8
 	unsigned int		flags;
 
 	int 			(*enqueue)(struct sk_buff *, struct Qdisc *);

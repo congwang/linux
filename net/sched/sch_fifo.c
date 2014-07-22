@@ -96,7 +96,7 @@ nla_put_failure:
 struct Qdisc_ops pfifo_qdisc_ops __read_mostly = {
 	.id		=	"pfifo",
 	.priv_size	=	0,
-	.flags 		=	QDISC_F_FIFO,
+	.flags 		=	QDISC_F_FIFO | QDISC_F_PARAM_LESS,
 	.enqueue	=	pfifo_enqueue,
 	.dequeue	=	qdisc_dequeue_head,
 	.peek		=	qdisc_peek_head,
@@ -112,7 +112,7 @@ EXPORT_SYMBOL(pfifo_qdisc_ops);
 struct Qdisc_ops bfifo_qdisc_ops __read_mostly = {
 	.id		=	"bfifo",
 	.priv_size	=	0,
-	.flags 		=	QDISC_F_FIFO,
+	.flags 		=	QDISC_F_FIFO | QDISC_F_PARAM_LESS,
 	.enqueue	=	bfifo_enqueue,
 	.dequeue	=	qdisc_dequeue_head,
 	.peek		=	qdisc_peek_head,
@@ -128,7 +128,7 @@ EXPORT_SYMBOL(bfifo_qdisc_ops);
 struct Qdisc_ops pfifo_head_drop_qdisc_ops __read_mostly = {
 	.id		=	"pfifo_head_drop",
 	.priv_size	=	0,
-	.flags 		=	QDISC_F_FIFO,
+	.flags 		=	QDISC_F_FIFO | QDISC_F_PARAM_LESS,
 	.enqueue	=	pfifo_tail_enqueue,
 	.dequeue	=	qdisc_dequeue_head,
 	.peek		=	qdisc_peek_head,

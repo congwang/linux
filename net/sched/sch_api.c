@@ -227,6 +227,7 @@ static struct Qdisc_ops *qdisc_lookup_default(const char *name)
 int qdisc_set_default(const char *name)
 {
 	const struct Qdisc_ops *ops;
+	int err = 0;
 
 	if (!capable(CAP_NET_ADMIN))
 		return -EPERM;
@@ -243,13 +244,20 @@ int qdisc_set_default(const char *name)
 	}
 
 	if (ops) {
+		if (!(ops->flags & QDISC_F_PARAM_LESS)) {
+			err = -EINVAL;
+			goto unlock;
+		}
 		/* Set new default */
 		module_put(default_qdisc_ops->owner);
 		default_qdisc_ops = ops;
+	} else {
+		err = -ENOENT;
 	}
-	write_unlock(&qdisc_mod_lock);
 
-	return ops ? 0 : -ENOENT;
+unlock:
+	write_unlock(&qdisc_mod_lock);
+	return err;
 }
 
 /* We know handle. Find qdisc among all qdisc's attached to device
