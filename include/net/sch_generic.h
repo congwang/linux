@@ -48,7 +48,6 @@ struct Qdisc {
 	int 			(*enqueue)(struct sk_buff *skb, struct Qdisc *dev);
 	struct sk_buff *	(*dequeue)(struct Qdisc *dev);
 	unsigned int		flags;
-#define TCQ_F_BUILTIN		1
 #define TCQ_F_INGRESS		2
 #define TCQ_F_CAN_BYPASS	4
 #define TCQ_F_MQROOT		8
@@ -184,6 +183,8 @@ struct Qdisc_ops {
 	const struct Qdisc_class_ops	*cl_ops;
 	char			id[IFNAMSIZ];
 	int			priv_size;
+#define QDISC_F_BUILTIN		1
+	unsigned int		flags;
 
 	int 			(*enqueue)(struct sk_buff *, struct Qdisc *);
 	struct sk_buff *	(*dequeue)(struct Qdisc *);

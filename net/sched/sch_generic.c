@@ -392,6 +392,7 @@ static struct sk_buff *noop_dequeue(struct Qdisc *qdisc)
 
 struct Qdisc_ops noop_qdisc_ops __read_mostly = {
 	.id		=	"noop",
+	.flags		=	QDISC_F_BUILTIN,
 	.priv_size	=	0,
 	.enqueue	=	noop_enqueue,
 	.dequeue	=	noop_dequeue,
@@ -407,7 +408,6 @@ static struct netdev_queue noop_netdev_queue = {
 struct Qdisc noop_qdisc = {
 	.enqueue	=	noop_enqueue,
 	.dequeue	=	noop_dequeue,
-	.flags		=	TCQ_F_BUILTIN,
 	.ops		=	&noop_qdisc_ops,
 	.list		=	LIST_HEAD_INIT(noop_qdisc.list),
 	.q.lock		=	__SPIN_LOCK_UNLOCKED(noop_qdisc.q.lock),
@@ -418,6 +418,7 @@ EXPORT_SYMBOL(noop_qdisc);
 
 static struct Qdisc_ops noqueue_qdisc_ops __read_mostly = {
 	.id		=	"noqueue",
+	.flags		=	QDISC_F_BUILTIN,
 	.priv_size	=	0,
 	.enqueue	=	noop_enqueue,
 	.dequeue	=	noop_dequeue,
@@ -434,7 +435,6 @@ static struct netdev_queue noqueue_netdev_queue = {
 static struct Qdisc noqueue_qdisc = {
 	.enqueue	=	NULL,
 	.dequeue	=	noop_dequeue,
-	.flags		=	TCQ_F_BUILTIN,
 	.ops		=	&noqueue_qdisc_ops,
 	.list		=	LIST_HEAD_INIT(noqueue_qdisc.list),
 	.q.lock		=	__SPIN_LOCK_UNLOCKED(noqueue_qdisc.q.lock),
@@ -676,7 +676,7 @@ void qdisc_destroy(struct Qdisc *qdisc)
 {
 	const struct Qdisc_ops  *ops = qdisc->ops;
 
-	if (qdisc->flags & TCQ_F_BUILTIN ||
+	if (ops->flags & QDISC_F_BUILTIN ||
 	    !atomic_dec_and_test(&qdisc->refcnt))
 		return;
 
@@ -775,7 +775,7 @@ static void transition_one_qdisc(struct net_device *dev,
 	struct Qdisc *new_qdisc = dev_queue->qdisc_sleeping;
 	int *need_watchdog_p = _need_watchdog;
 
-	if (!(new_qdisc->flags & TCQ_F_BUILTIN))
+	if (!(new_qdisc->ops->flags & QDISC_F_BUILTIN))
 		clear_bit(__QDISC_STATE_DEACTIVATED, &new_qdisc->state);
 
 	rcu_assign_pointer(dev_queue->qdisc, new_qdisc);
@@ -824,7 +824,7 @@ static void dev_deactivate_queue(struct net_device *dev,
 	if (qdisc) {
 		spin_lock_bh(qdisc_lock(qdisc));
 
-		if (!(qdisc->flags & TCQ_F_BUILTIN))
+		if (!(qdisc->ops->flags & QDISC_F_BUILTIN))
 			set_bit(__QDISC_STATE_DEACTIVATED, &qdisc->state);
 
 		rcu_assign_pointer(dev_queue->qdisc, qdisc_default);

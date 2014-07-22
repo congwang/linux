@@ -260,7 +260,7 @@ static struct Qdisc *qdisc_match_from_root(struct Qdisc *root, u32 handle)
 {
 	struct Qdisc *q;
 
-	if (!(root->flags & TCQ_F_BUILTIN) &&
+	if (!(root->ops->flags & QDISC_F_BUILTIN) &&
 	    root->handle == handle)
 		return root;
 
@@ -1372,7 +1372,7 @@ nla_put_failure:
 
 static bool tc_qdisc_dump_ignore(struct Qdisc *q)
 {
-	return (q->flags & TCQ_F_BUILTIN) ? true : false;
+	return (q->ops->flags & QDISC_F_BUILTIN) ? true : false;
 }
 
 static int qdisc_notify(struct net *net, struct sk_buff *oskb,
