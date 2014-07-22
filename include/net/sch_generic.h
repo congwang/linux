@@ -50,7 +50,6 @@ struct Qdisc {
 	unsigned int		flags;
 #define TCQ_F_INGRESS		2
 #define TCQ_F_CAN_BYPASS	4
-#define TCQ_F_MQROOT		8
 #define TCQ_F_ONETXQUEUE	0x10 /* dequeue_skb() can assume all skbs are for
 				      * q->dev_queue : It can test
 				      * netif_xmit_frozen_or_stopped() before
@@ -184,6 +183,7 @@ struct Qdisc_ops {
 	char			id[IFNAMSIZ];
 	int			priv_size;
 #define QDISC_F_BUILTIN		1
+#define QDISC_F_MQ		2
 	unsigned int		flags;
 
 	int 			(*enqueue)(struct sk_buff *, struct Qdisc *);

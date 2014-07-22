@@ -66,7 +66,6 @@ static int mq_init(struct Qdisc *sch, struct nlattr *opt)
 		qdisc->flags |= TCQ_F_ONETXQUEUE;
 	}
 
-	sch->flags |= TCQ_F_MQROOT;
 	return 0;
 
 err:
@@ -237,6 +236,7 @@ static const struct Qdisc_class_ops mq_class_ops = {
 struct Qdisc_ops mq_qdisc_ops __read_mostly = {
 	.cl_ops		= &mq_class_ops,
 	.id		= "mq",
+	.flags		= QDISC_F_MQ,
 	.priv_size	= sizeof(struct mq_sched),
 	.init		= mq_init,
 	.destroy	= mq_destroy,

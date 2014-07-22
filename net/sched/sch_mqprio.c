@@ -155,7 +155,6 @@ static int mqprio_init(struct Qdisc *sch, struct nlattr *opt)
 	for (i = 0; i < TC_BITMASK + 1; i++)
 		netdev_set_prio_tc_map(dev, i, qopt->prio_tc_map[i]);
 
-	sch->flags |= TCQ_F_MQROOT;
 	return 0;
 
 err:
@@ -404,6 +403,7 @@ static const struct Qdisc_class_ops mqprio_class_ops = {
 static struct Qdisc_ops mqprio_qdisc_ops __read_mostly = {
 	.cl_ops		= &mqprio_class_ops,
 	.id		= "mqprio",
+	.flags		= QDISC_F_MQ,
 	.priv_size	= sizeof(struct mqprio_sched),
 	.init		= mqprio_init,
 	.destroy	= mqprio_destroy,

@@ -958,12 +958,12 @@ qdisc_create(struct net_device *dev, struct netdev_queue *dev_queue,
 			spinlock_t *root_lock;
 
 			err = -EOPNOTSUPP;
-			if (sch->flags & TCQ_F_MQROOT)
+			if (sch->ops->flags & QDISC_F_MQ)
 				goto err_out4;
 
 			if ((sch->parent != TC_H_ROOT) &&
 			    !(sch->flags & TCQ_F_INGRESS) &&
-			    (!p || !(p->flags & TCQ_F_MQROOT)))
+			    (!p || !(p->ops->flags & QDISC_F_MQ)))
 				root_lock = qdisc_root_sleeping_lock(sch);
 			else
 				root_lock = qdisc_lock(sch);
@@ -1029,7 +1029,7 @@ static int qdisc_change(struct Qdisc *sch, struct nlattr **tca)
 	if (tca[TCA_RATE]) {
 		/* NB: ignores errors from replace_estimator
 		   because change can't be undone. */
-		if (sch->flags & TCQ_F_MQROOT)
+		if (sch->ops->flags & QDISC_F_MQ)
 			goto out;
 		gen_replace_estimator(&sch->bstats,
 				      sch->cpu_bstats,
