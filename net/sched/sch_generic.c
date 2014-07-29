@@ -47,7 +47,7 @@ EXPORT_SYMBOL(default_qdisc_ops);
 
 static inline int dev_requeue_skb(struct sk_buff *skb, struct Qdisc *q)
 {
-	q->gso_skb = skb;
+	q->dequeued_skb = skb;
 	q->qstats.requeues++;
 	q->q.qlen++;	/* it's still part of the queue */
 	__netif_schedule(q);
@@ -82,7 +82,7 @@ static void try_bulk_dequeue_skb(struct Qdisc *q,
 static struct sk_buff *dequeue_skb(struct Qdisc *q, bool *validate,
 				   int *packets)
 {
-	struct sk_buff *skb = q->gso_skb;
+	struct sk_buff *skb = q->dequeued_skb;
 	const struct netdev_queue *txq = q->dev_queue;
 
 	*packets = 1;
@@ -91,7 +91,7 @@ static struct sk_buff *dequeue_skb(struct Qdisc *q, bool *validate,
 		/* check the reason of requeuing without tx lock first */
 		txq = skb_get_tx_queue(txq->dev, skb);
 		if (!netif_xmit_frozen_or_stopped(txq)) {
-			q->gso_skb = NULL;
+			q->dequeued_skb = NULL;
 			q->q.qlen--;
 		} else
 			skb = NULL;
@@ -654,9 +654,9 @@ void qdisc_reset(struct Qdisc *qdisc)
 	if (ops->reset)
 		ops->reset(qdisc);
 
-	if (qdisc->gso_skb) {
-		kfree_skb_list(qdisc->gso_skb);
-		qdisc->gso_skb = NULL;
+	if (qdisc->dequeued_skb) {
+		kfree_skb_list(qdisc->dequeued_skb);
+		qdisc->dequeued_skb = NULL;
 		qdisc->q.qlen = 0;
 	}
 }
@@ -694,7 +694,7 @@ void qdisc_destroy(struct Qdisc *qdisc)
 	module_put(ops->owner);
 	dev_put(qdisc_dev(qdisc));
 
-	kfree_skb_list(qdisc->gso_skb);
+	kfree_skb_list(qdisc->dequeued_skb);
 	/*
 	 * gen_estimator est_timer() might access qdisc->q.lock,
 	 * wait a RCU grace period before freeing qdisc.

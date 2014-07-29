@@ -80,7 +80,7 @@ struct Qdisc {
 
 	struct gnet_stats_rate_est64	rate_est;
 	struct Qdisc		*next_sched;
-	struct sk_buff		*gso_skb;
+	struct sk_buff		*dequeued_skb;
 	/*
 	 * For performance sake on SMP, we put highly modified fields at the end
 	 */
@@ -671,24 +671,24 @@ static inline struct sk_buff *qdisc_peek_head(struct Qdisc *sch)
 /* generic pseudo peek method for non-work-conserving qdisc */
 static inline struct sk_buff *qdisc_peek_dequeued(struct Qdisc *sch)
 {
-	/* we can reuse ->gso_skb because peek isn't called for root qdiscs */
-	if (!sch->gso_skb) {
-		sch->gso_skb = sch->dequeue(sch);
-		if (sch->gso_skb)
+	/* we can reuse ->dequeued_skb because peek isn't called for root qdiscs */
+	if (!sch->dequeued_skb) {
+		sch->dequeued_skb = sch->dequeue(sch);
+		if (sch->dequeued_skb)
 			/* it's still part of the queue */
 			sch->q.qlen++;
 	}
 
-	return sch->gso_skb;
+	return sch->dequeued_skb;
 }
 
 /* use instead of qdisc->dequeue() for all qdiscs queried with ->peek() */
 static inline struct sk_buff *qdisc_dequeue_peeked(struct Qdisc *sch)
 {
-	struct sk_buff *skb = sch->gso_skb;
+	struct sk_buff *skb = sch->dequeued_skb;
 
 	if (skb) {
-		sch->gso_skb = NULL;
+		sch->dequeued_skb = NULL;
 		sch->q.qlen--;
 	} else {
 		skb = sch->dequeue(sch);
