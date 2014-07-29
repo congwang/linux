@@ -518,6 +518,25 @@ static inline bool qdisc_is_percpu_stats(const struct Qdisc *q)
 	return q->flags & TCQ_F_CPUSTATS;
 }
 
+static inline void qdisc_warn_nonwc(void *func, struct Qdisc *qdisc)
+{
+	if (!(qdisc->flags & TCQ_F_WARN_NONWC)) {
+		pr_warn("%pf: %s qdisc %X: is non-work-conserving?\n",
+			func, qdisc->ops->id, qdisc->handle >> 16);
+		qdisc->flags |= TCQ_F_WARN_NONWC;
+	}
+}
+
+static inline struct sk_buff *qdisc_peek(struct Qdisc *sch, bool warn)
+{
+	struct sk_buff *skb;
+
+	skb = sch->ops->peek(sch);
+	if (!skb && warn)
+		qdisc_warn_nonwc(__builtin_return_address(0), sch);
+	return skb;
+}
+
 static inline void bstats_update(struct gnet_stats_basic_packed *bstats,
 				 const struct sk_buff *skb)
 {

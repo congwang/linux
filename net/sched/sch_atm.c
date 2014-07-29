@@ -462,7 +462,7 @@ static void sch_atm_dequeue(unsigned long data)
 		 * If traffic is properly shaped, this won't generate nasty
 		 * little bursts. Otherwise, it may ... (but that's okay)
 		 */
-		while ((skb = flow->q->ops->peek(flow->q))) {
+		while ((skb = qdisc_peek(flow->q, false))) {
 			if (!atm_may_send(flow->vcc, skb->truesize))
 				break;
 
@@ -516,7 +516,7 @@ static struct sk_buff *atm_tc_peek(struct Qdisc *sch)
 
 	pr_debug("atm_tc_peek(sch %p,[qdisc %p])\n", sch, p);
 
-	return p->link.q->ops->peek(p->link.q);
+	return qdisc_peek(p->link.q ,false);
 }
 
 static unsigned int atm_tc_drop(struct Qdisc *sch)

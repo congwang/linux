@@ -100,7 +100,7 @@ static struct sk_buff *prio_peek(struct Qdisc *sch)
 
 	for (prio = 0; prio < q->bands; prio++) {
 		struct Qdisc *qdisc = q->queues[prio];
-		struct sk_buff *skb = qdisc->ops->peek(qdisc);
+		struct sk_buff *skb = qdisc_peek(qdisc, false);
 		if (skb)
 			return skb;
 	}

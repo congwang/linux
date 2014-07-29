@@ -447,7 +447,7 @@ static struct sk_buff *sfb_peek(struct Qdisc *sch)
 	struct sfb_sched_data *q = qdisc_priv(sch);
 	struct Qdisc *child = q->qdisc;
 
-	return child->ops->peek(child);
+	return qdisc_peek(child, false);
 }
 
 /* No sfb_drop -- impossible since the child doesn't return the dropped skb. */

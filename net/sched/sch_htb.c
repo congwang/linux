@@ -850,7 +850,7 @@ next:
 		if (likely(skb != NULL))
 			break;
 
-		qdisc_warn_nonwc("htb", cl->un.leaf.q);
+		qdisc_warn_nonwc(__builtin_return_address(0), cl->un.leaf.q);
 		htb_next_rb_node(level ? &cl->parent->un.inner.clprio[prio].ptr:
 					 &q->hlevel[0].hprio[prio].ptr);
 		cl = htb_lookup_leaf(hprio, prio);

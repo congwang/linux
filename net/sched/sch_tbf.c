@@ -231,7 +231,7 @@ static struct sk_buff *tbf_dequeue(struct Qdisc *sch)
 	struct tbf_sched_data *q = qdisc_priv(sch);
 	struct sk_buff *skb;
 
-	skb = q->qdisc->ops->peek(q->qdisc);
+	skb = qdisc_peek(q->qdisc, false);
 
 	if (skb) {
 		s64 now;

@@ -881,11 +881,9 @@ qdisc_peek_len(struct Qdisc *sch)
 	struct sk_buff *skb;
 	unsigned int len;
 
-	skb = sch->ops->peek(sch);
-	if (skb == NULL) {
-		qdisc_warn_nonwc("qdisc_peek_len", sch);
+	skb = qdisc_peek(sch, true);
+	if (skb == NULL)
 		return 0;
-	}
 	len = qdisc_pkt_len(skb);
 
 	return len;
@@ -1650,7 +1648,7 @@ hfsc_dequeue(struct Qdisc *sch)
 
 	skb = qdisc_dequeue_peeked(cl->qdisc);
 	if (skb == NULL) {
-		qdisc_warn_nonwc("HFSC", cl->qdisc);
+		qdisc_warn_nonwc(__builtin_return_address(0), cl->qdisc);
 		return NULL;
 	}
 

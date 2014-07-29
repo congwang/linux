@@ -142,7 +142,7 @@ static struct sk_buff *multiq_peek(struct Qdisc *sch)
 		if (!netif_xmit_stopped(
 		    netdev_get_tx_queue(qdisc_dev(sch), curband))) {
 			qdisc = q->queues[curband];
-			skb = qdisc->ops->peek(qdisc);
+			skb = qdisc_peek(qdisc, false);
 			if (skb)
 				return skb;
 		}

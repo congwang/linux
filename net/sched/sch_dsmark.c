@@ -319,7 +319,7 @@ static struct sk_buff *dsmark_peek(struct Qdisc *sch)
 
 	pr_debug("%s(sch %p,[qdisc %p])\n", __func__, sch, p);
 
-	return p->q->ops->peek(p->q);
+	return qdisc_peek(p->q, false);
 }
 
 static unsigned int dsmark_drop(struct Qdisc *sch)

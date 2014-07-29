@@ -1006,7 +1006,7 @@ static void agg_dequeue(struct qfq_aggregate *agg,
 
 	if (cl->qdisc->q.qlen == 0) /* no more packets, remove from list */
 		list_del(&cl->alist);
-	else if (cl->deficit < qdisc_pkt_len(cl->qdisc->ops->peek(cl->qdisc))) {
+	else if (cl->deficit < qdisc_pkt_len(qdisc_peek(cl->qdisc, false))) {
 		cl->deficit += agg->lmax;
 		list_move_tail(&cl->alist, &agg->active);
 	}
@@ -1019,10 +1019,8 @@ static inline struct sk_buff *qfq_peek_skb(struct qfq_aggregate *agg,
 	struct sk_buff *skb;
 
 	*cl = list_first_entry(&agg->active, struct qfq_class, alist);
-	skb = (*cl)->qdisc->ops->peek((*cl)->qdisc);
-	if (skb == NULL)
-		WARN_ONCE(1, "qfq_dequeue: non-workconserving leaf\n");
-	else
+	skb = qdisc_peek((*cl)->qdisc, true);
+	if (skb != NULL)
 		*len = qdisc_pkt_len(skb);
 
 	return skb;
@@ -1260,7 +1258,7 @@ static int qfq_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 	agg = cl->agg;
 	/* if the queue was not empty, then done here */
 	if (cl->qdisc->q.qlen != 1) {
-		if (unlikely(skb == cl->qdisc->ops->peek(cl->qdisc)) &&
+		if (unlikely(skb == qdisc_peek(cl->qdisc, false)) &&
 		    list_first_entry(&agg->active, struct qfq_class, alist)
 		    == cl && cl->deficit < qdisc_pkt_len(skb))
 			list_move_tail(&cl->alist, &agg->active);

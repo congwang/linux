@@ -131,7 +131,7 @@ static struct sk_buff *red_peek(struct Qdisc *sch)
 	struct red_sched_data *q = qdisc_priv(sch);
 	struct Qdisc *child = q->qdisc;
 
-	return child->ops->peek(child);
+	return qdisc_peek(child, false);
 }
 
 static unsigned int red_drop(struct Qdisc *sch)
