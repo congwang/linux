@@ -128,7 +128,7 @@ static void choke_drop_by_idx(struct Qdisc *sch, unsigned int idx)
 		choke_zap_tail_holes(q);
 
 	qdisc_qstats_backlog_dec(sch, skb);
-	qdisc_drop(skb, sch);
+	qdisc_drop_skb(skb, sch);
 	qdisc_tree_decrease_qlen(sch, 1);
 	--sch->q.qlen;
 }
@@ -337,10 +337,10 @@ static int choke_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 	}
 
 	q->stats.pdrop++;
-	return qdisc_drop(skb, sch);
+	return qdisc_drop_skb(skb, sch);
 
 congestion_drop:
-	qdisc_drop(skb, sch);
+	qdisc_drop_skb(skb, sch);
 	return NET_XMIT_CN;
 
 other_drop:
@@ -462,7 +462,7 @@ static int choke_change(struct Qdisc *sch, struct nlattr *opt)
 				}
 				qdisc_qstats_backlog_dec(sch, skb);
 				--sch->q.qlen;
-				qdisc_drop(skb, sch);
+				qdisc_drop_skb(skb, sch);
 			}
 			qdisc_tree_decrease_qlen(sch, oqlen - sch->q.qlen);
 			q->head = 0;

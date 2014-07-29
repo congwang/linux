@@ -236,10 +236,10 @@ static int gred_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 
 	q->stats.pdrop++;
 drop:
-	return qdisc_drop(skb, sch);
+	return qdisc_drop_skb(skb, sch);
 
 congestion_drop:
-	qdisc_drop(skb, sch);
+	qdisc_drop_skb(skb, sch);
 	return NET_XMIT_CN;
 }
 
@@ -302,7 +302,7 @@ static unsigned int gred_drop(struct Qdisc *sch)
 			}
 		}
 
-		qdisc_drop(skb, sch);
+		qdisc_drop_skb(skb, sch);
 		return len;
 	}
 

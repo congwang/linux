@@ -297,7 +297,7 @@ static struct sk_buff *codel_dequeue(struct Qdisc *sch,
 								  vars->rec_inv_sqrt);
 					goto end;
 				}
-				qdisc_drop(skb, sch);
+				qdisc_drop_skb(skb, sch);
 				stats->drop_count++;
 				skb = dequeue_func(vars, sch);
 				if (!codel_should_drop(skb, sch,
@@ -319,7 +319,7 @@ static struct sk_buff *codel_dequeue(struct Qdisc *sch,
 		if (params->ecn && INET_ECN_set_ce(skb)) {
 			stats->ecn_mark++;
 		} else {
-			qdisc_drop(skb, sch);
+			qdisc_drop_skb(skb, sch);
 			stats->drop_count++;
 
 			skb = dequeue_func(vars, sch);

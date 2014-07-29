@@ -19,7 +19,7 @@
 
 static int blackhole_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 {
-	qdisc_drop(skb, sch);
+	qdisc_drop_skb(skb, sch);
 	return NET_XMIT_SUCCESS;
 }
 

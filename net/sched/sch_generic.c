@@ -489,7 +489,7 @@ static int pfifo_fast_enqueue(struct sk_buff *skb, struct Qdisc *qdisc)
 		return __qdisc_enqueue_tail(skb, qdisc, list);
 	}
 
-	return qdisc_drop(skb, qdisc);
+	return qdisc_drop_skb(skb, qdisc);
 }
 
 static struct sk_buff *pfifo_fast_dequeue(struct Qdisc *qdisc)

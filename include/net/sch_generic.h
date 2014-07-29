@@ -732,7 +732,7 @@ static inline unsigned int qdisc_queue_drop(struct Qdisc *sch)
 	return __qdisc_queue_drop(sch, &sch->q);
 }
 
-static inline int qdisc_drop(struct sk_buff *skb, struct Qdisc *sch)
+static inline int qdisc_drop_skb(struct sk_buff *skb, struct Qdisc *sch)
 {
 	kfree_skb(skb);
 	qdisc_qstats_drop(sch);

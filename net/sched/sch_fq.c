@@ -360,12 +360,12 @@ static int fq_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 	struct fq_flow *f;
 
 	if (unlikely(sch->q.qlen >= sch->limit))
-		return qdisc_drop(skb, sch);
+		return qdisc_drop_skb(skb, sch);
 
 	f = fq_classify(skb, q);
 	if (unlikely(f->qlen >= q->flow_plimit && f != &q->internal)) {
 		q->stat_flows_plimit++;
-		return qdisc_drop(skb, sch);
+		return qdisc_drop_skb(skb, sch);
 	}
 
 	f->qlen++;

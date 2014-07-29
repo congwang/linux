@@ -101,7 +101,7 @@ static int codel_qdisc_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 	}
 	q = qdisc_priv(sch);
 	q->drop_overlimit++;
-	return qdisc_drop(skb, sch);
+	return qdisc_drop_skb(skb, sch);
 }
 
 static const struct nla_policy codel_policy[TCA_CODEL_MAX + 1] = {
@@ -150,7 +150,7 @@ static int codel_change(struct Qdisc *sch, struct nlattr *opt)
 		struct sk_buff *skb = __skb_dequeue(&sch->q);
 
 		qdisc_qstats_backlog_dec(sch, skb);
-		qdisc_drop(skb, sch);
+		qdisc_drop_skb(skb, sch);
 	}
 	qdisc_tree_decrease_qlen(sch, qlen - sch->q.qlen);
 

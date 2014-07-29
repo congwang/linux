@@ -105,7 +105,7 @@ static int red_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 	return ret;
 
 congestion_drop:
-	qdisc_drop(skb, sch);
+	qdisc_drop_skb(skb, sch);
 	return NET_XMIT_CN;
 }
 
