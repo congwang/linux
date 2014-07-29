@@ -134,7 +134,7 @@ static unsigned int prio_drop(struct Qdisc *sch)
 
 	for (prio = q->bands-1; prio >= 0; prio--) {
 		qdisc = q->queues[prio];
-		if (qdisc->ops->drop && (len = qdisc->ops->drop(qdisc)) != 0) {
+		if ((len = qdisc_drop(qdisc)) != 0) {
 			sch->q.qlen--;
 			return len;
 		}

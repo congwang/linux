@@ -140,7 +140,7 @@ static unsigned int red_drop(struct Qdisc *sch)
 	struct Qdisc *child = q->qdisc;
 	unsigned int len;
 
-	if (child->ops->drop && (len = child->ops->drop(child)) > 0) {
+	if ((len = qdisc_drop(child)) > 0) {
 		q->stats.other++;
 		qdisc_qstats_drop(sch);
 		sch->q.qlen--;

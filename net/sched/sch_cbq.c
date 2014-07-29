@@ -542,9 +542,8 @@ static void cbq_ovl_lowprio(struct cbq_class *cl)
 
 static void cbq_ovl_drop(struct cbq_class *cl)
 {
-	if (cl->q->ops->drop)
-		if (cl->q->ops->drop(cl->q))
-			cl->qdisc->q.qlen--;
+	if (qdisc_drop(cl->q))
+		cl->qdisc->q.qlen--;
 	cl->xstats.overactions++;
 	cbq_ovl_classic(cl);
 }
@@ -1180,7 +1179,7 @@ static unsigned int cbq_drop(struct Qdisc *sch)
 
 		cl = cl_head;
 		do {
-			if (cl->q->ops->drop && (len = cl->q->ops->drop(cl->q))) {
+			if ((len = qdisc_drop(cl->q))) {
 				sch->q.qlen--;
 				if (!cl->q->q.qlen)
 					cbq_deactivate_class(cl);

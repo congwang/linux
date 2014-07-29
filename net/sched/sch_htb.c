@@ -953,8 +953,7 @@ static unsigned int htb_drop(struct Qdisc *sch)
 			struct htb_class *cl = list_entry(p, struct htb_class,
 							  un.leaf.drop_list);
 			unsigned int len;
-			if (cl->un.leaf.q->ops->drop &&
-			    (len = cl->un.leaf.q->ops->drop(cl->un.leaf.q))) {
+			if ((len = qdisc_drop(cl->un.leaf.q))) {
 				sch->q.qlen--;
 				if (!cl->un.leaf.q->q.qlen)
 					htb_deactivate(q, cl);

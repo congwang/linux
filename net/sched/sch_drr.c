@@ -424,14 +424,12 @@ static unsigned int drr_drop(struct Qdisc *sch)
 	unsigned int len;
 
 	list_for_each_entry(cl, &q->active, alist) {
-		if (cl->qdisc->ops->drop) {
-			len = cl->qdisc->ops->drop(cl->qdisc);
-			if (len > 0) {
-				sch->q.qlen--;
-				if (cl->qdisc->q.qlen == 0)
-					list_del(&cl->alist);
-				return len;
-			}
+		len = qdisc_drop(cl->qdisc);
+		if (len > 0) {
+			sch->q.qlen--;
+			if (cl->qdisc->q.qlen == 0)
+				list_del(&cl->alist);
+			return len;
 		}
 	}
 	return 0;

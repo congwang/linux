@@ -1432,11 +1432,7 @@ static unsigned int qfq_drop_from_slot(struct qfq_sched *q,
 
 	hlist_for_each_entry(agg, slot, next) {
 		list_for_each_entry(cl, &agg->active, alist) {
-
-			if (!cl->qdisc->ops->drop)
-				continue;
-
-			len = cl->qdisc->ops->drop(cl->qdisc);
+			len = qdisc_drop(cl->qdisc);
 			if (len > 0) {
 				if (cl->qdisc->q.qlen == 0)
 					qfq_deactivate_class(q, cl);

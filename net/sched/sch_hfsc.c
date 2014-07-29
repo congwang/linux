@@ -1686,8 +1686,7 @@ hfsc_drop(struct Qdisc *sch)
 	unsigned int len;
 
 	list_for_each_entry(cl, &q->droplist, dlist) {
-		if (cl->qdisc->ops->drop != NULL &&
-		    (len = cl->qdisc->ops->drop(cl->qdisc)) > 0) {
+		if ((len = qdisc_drop(cl->qdisc)) > 0) {
 			if (cl->qdisc->q.qlen == 0) {
 				update_vf(cl, 0, 0);
 				set_passive(cl);

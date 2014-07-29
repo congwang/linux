@@ -160,12 +160,10 @@ static unsigned int multiq_drop(struct Qdisc *sch)
 
 	for (band = q->bands - 1; band >= 0; band--) {
 		qdisc = q->queues[band];
-		if (qdisc->ops->drop) {
-			len = qdisc->ops->drop(qdisc);
-			if (len != 0) {
-				sch->q.qlen--;
-				return len;
-			}
+		len = qdisc_drop(qdisc);
+		if (len != 0) {
+			sch->q.qlen--;
+			return len;
 		}
 	}
 	return 0;

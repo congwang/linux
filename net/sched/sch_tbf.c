@@ -214,7 +214,7 @@ static unsigned int tbf_drop(struct Qdisc *sch)
 	struct tbf_sched_data *q = qdisc_priv(sch);
 	unsigned int len = 0;
 
-	if (q->qdisc->ops->drop && (len = q->qdisc->ops->drop(q->qdisc)) != 0) {
+	if ((len = qdisc_drop(q->qdisc)) != 0) {
 		sch->q.qlen--;
 		qdisc_qstats_drop(sch);
 	}

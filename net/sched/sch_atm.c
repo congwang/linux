@@ -527,7 +527,7 @@ static unsigned int atm_tc_drop(struct Qdisc *sch)
 
 	pr_debug("atm_tc_drop(sch %p,[qdisc %p])\n", sch, p);
 	list_for_each_entry(flow, &p->flows, list) {
-		if (flow->q->ops->drop && (len = flow->q->ops->drop(flow->q)))
+		if ((len = qdisc_drop(flow->q)))
 			return len;
 	}
 	return 0;

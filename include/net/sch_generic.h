@@ -740,6 +740,14 @@ static inline int qdisc_drop_skb(struct sk_buff *skb, struct Qdisc *sch)
 	return NET_XMIT_DROP;
 }
 
+static inline unsigned int qdisc_drop(struct Qdisc *sch)
+{
+	if (sch->ops->drop)
+		return sch->ops->drop(sch);
+	else
+		return 0;
+}
+
 static inline int qdisc_reshape_fail(struct sk_buff *skb, struct Qdisc *sch)
 {
 	qdisc_qstats_drop(sch);

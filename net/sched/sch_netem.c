@@ -540,8 +540,8 @@ static unsigned int netem_drop(struct Qdisc *sch)
 			kfree_skb(skb);
 		}
 	}
-	if (!len && q->qdisc && q->qdisc->ops->drop)
-	    len = q->qdisc->ops->drop(q->qdisc);
+	if (!len && q->qdisc)
+	    len = qdisc_drop(q->qdisc);
 	if (len)
 		qdisc_qstats_drop(sch);
 

@@ -329,10 +329,7 @@ static unsigned int dsmark_drop(struct Qdisc *sch)
 
 	pr_debug("%s(sch %p,[qdisc %p])\n", __func__, sch, p);
 
-	if (p->q->ops->drop == NULL)
-		return 0;
-
-	len = p->q->ops->drop(p->q);
+	len = qdisc_drop(p->q);
 	if (len)
 		sch->q.qlen--;
 
