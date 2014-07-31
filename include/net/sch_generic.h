@@ -359,12 +359,14 @@ struct Qdisc_class_common {
 struct Qdisc_class_hash {
 	struct hlist_head	*hash;
 	unsigned int		hashsize;
-	unsigned int		hashmask;
 	unsigned int		hashelems;
 };
 
-static inline unsigned int qdisc_class_hash(u32 id, u32 mask)
+static inline
+unsigned int qdisc_class_hash(unsigned int id, unsigned int hashsize)
 {
+	unsigned int mask = hashsize- 1;
+
 	id ^= id >> 8;
 	id ^= id >> 4;
 	return id & mask;
@@ -376,7 +378,7 @@ qdisc_class_find(const struct Qdisc_class_hash *hash, u32 id)
 	struct Qdisc_class_common *cl;
 	unsigned int h;
 
-	h = qdisc_class_hash(id, hash->hashmask);
+	h = qdisc_class_hash(id, hash->hashsize);
 	hlist_for_each_entry(cl, &hash->hash[h], hnode) {
 		if (cl->classid == id)
 			return cl;

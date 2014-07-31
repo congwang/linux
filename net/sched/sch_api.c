@@ -647,14 +647,13 @@ void qdisc_class_hash_grow(struct Qdisc *sch, struct Qdisc_class_hash *clhash)
 	struct Qdisc_class_common *cl;
 	struct hlist_node *next;
 	struct hlist_head *nhash, *ohash;
-	unsigned int nsize, nmask, osize;
+	unsigned int nsize, osize;
 	unsigned int i, h;
 
 	/* Rehash when load factor exceeds 0.75 */
 	if (clhash->hashelems * 4 <= clhash->hashsize * 3)
 		return;
 	nsize = clhash->hashsize * 2;
-	nmask = nsize - 1;
 	nhash = qdisc_class_hash_alloc(nsize);
 	if (nhash == NULL)
 		return;
@@ -665,13 +664,12 @@ void qdisc_class_hash_grow(struct Qdisc *sch, struct Qdisc_class_hash *clhash)
 	sch_tree_lock(sch);
 	for (i = 0; i < osize; i++) {
 		hlist_for_each_entry_safe(cl, next, &ohash[i], hnode) {
-			h = qdisc_class_hash(cl->classid, nmask);
+			h = qdisc_class_hash(cl->classid, nsize);
 			hlist_add_head(&cl->hnode, &nhash[h]);
 		}
 	}
 	clhash->hash     = nhash;
 	clhash->hashsize = nsize;
-	clhash->hashmask = nmask;
 	sch_tree_unlock(sch);
 
 	qdisc_class_hash_free(ohash, osize);
@@ -686,7 +684,6 @@ int qdisc_class_hash_init(struct Qdisc_class_hash *clhash)
 	if (clhash->hash == NULL)
 		return -ENOMEM;
 	clhash->hashsize  = size;
-	clhash->hashmask  = size - 1;
 	clhash->hashelems = 0;
 	return 0;
 }
@@ -704,7 +701,7 @@ void qdisc_class_hash_insert(struct Qdisc_class_hash *clhash,
 	unsigned int h;
 
 	INIT_HLIST_NODE(&cl->hnode);
-	h = qdisc_class_hash(cl->classid, clhash->hashmask);
+	h = qdisc_class_hash(cl->classid, clhash->hashsize);
 	hlist_add_head(&cl->hnode, &clhash->hash[h]);
 	clhash->hashelems++;
 }
