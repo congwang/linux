@@ -378,11 +378,14 @@ static struct tc_action_ops *tc_lookup_action(struct nlattr *kind)
 	return res;
 }
 
-int tcf_action_exec(struct sk_buff *skb, const struct list_head *actions,
-		    struct tcf_result *res)
+int tcf_act_exec(struct sk_buff *skb, const struct list_head *actions,
+		 struct tcf_result *res)
 {
 	const struct tc_action *a;
 	int ret = -1;
+
+	if (list_empty(actions))
+		return 0;
 
 	if (skb->tc_verd & TC_NCLS) {
 		skb->tc_verd = CLR_TC_NCLS(skb->tc_verd);
@@ -405,7 +408,7 @@ repeat:
 exec_done:
 	return ret;
 }
-EXPORT_SYMBOL(tcf_action_exec);
+EXPORT_SYMBOL(tcf_act_exec);
 
 int tcf_action_destroy(struct list_head *actions, int bind)
 {

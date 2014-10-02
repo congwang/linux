@@ -53,7 +53,7 @@ struct route4_filter {
 	int			iif;
 
 	struct tcf_result	res;
-	struct tcf_exts		exts;
+	struct list_head	actions;
 	u32			handle;
 	struct route4_bucket	*bkt;
 	struct tcf_proto	*tp;
@@ -113,8 +113,8 @@ static inline int route4_hash_wild(void)
 #define ROUTE4_APPLY_RESULT()					\
 {								\
 	*res = f->res;						\
-	if (tcf_exts_is_available(&f->exts)) {			\
-		int r = tcf_exts_exec(skb, &f->exts, res);	\
+	if (tcf_act_is_available(&f->actions)) {		\
+		int r = tcf_act_exec(skb, &f->actions, res);	\
 		if (r < 0) {					\
 			dont_cache = 1;				\
 			continue;				\
@@ -270,7 +270,7 @@ route4_delete_filter(struct rcu_head *head)
 {
 	struct route4_filter *f = container_of(head, struct route4_filter, rcu);
 
-	tcf_exts_destroy(&f->exts);
+	tcf_act_destroy(&f->actions);
 	kfree(f);
 }
 
@@ -377,10 +377,9 @@ static int route4_set_parms(struct net *net, struct tcf_proto *tp,
 	struct route4_filter *fp;
 	unsigned int h1;
 	struct route4_bucket *b;
-	struct tcf_exts e;
+	struct list_head actions;
 
-	tcf_exts_init(&e, TCA_ROUTE4_ACT, TCA_ROUTE4_POLICE);
-	err = tcf_exts_validate(net, tp, tb, est, &e, ovr);
+	err = tcf_act_validate(net, tp, tb, est, &actions, ovr);
 	if (err < 0)
 		return err;
 
@@ -452,11 +451,11 @@ static int route4_set_parms(struct net *net, struct tcf_proto *tp,
 		tcf_bind_filter(tp, &f->res, base);
 	}
 
-	tcf_exts_change(tp, &f->exts, &e);
+	tcf_act_change(tp, &f->actions, &actions);
 
 	return 0;
 errout:
-	tcf_exts_destroy(&e);
+	tcf_act_destroy(&actions);
 	return err;
 }
 
@@ -499,7 +498,7 @@ static int route4_change(struct net *net, struct sk_buff *in_skb,
 	if (!f)
 		goto errout;
 
-	tcf_exts_init(&f->exts, TCA_ROUTE4_ACT, TCA_ROUTE4_POLICE);
+	INIT_LIST_HEAD(&f->actions);
 	if (fold) {
 		f->id = fold->id;
 		f->iif = fold->iif;
@@ -628,12 +627,12 @@ static int route4_dump(struct net *net, struct tcf_proto *tp, unsigned long fh,
 	    nla_put_u32(skb, TCA_ROUTE4_CLASSID, f->res.classid))
 		goto nla_put_failure;
 
-	if (tcf_exts_dump(skb, &f->exts) < 0)
+	if (tcf_act_dump(skb, tp, &f->actions) < 0)
 		goto nla_put_failure;
 
 	nla_nest_end(skb, nest);
 
-	if (tcf_exts_dump_stats(skb, &f->exts) < 0)
+	if (tcf_act_dump_stats(skb, &f->actions) < 0)
 		goto nla_put_failure;
 
 	return skb->len;
@@ -645,6 +644,8 @@ nla_put_failure:
 
 static struct tcf_proto_ops cls_route4_ops __read_mostly = {
 	.kind		=	"route",
+	.action		=	TCA_ROUTE4_ACT,
+	.police		=	TCA_ROUTE4_POLICE,
 	.classify	=	route4_classify,
 	.init		=	route4_init,
 	.destroy	=	route4_destroy,

@@ -56,88 +56,68 @@ tcf_unbind_filter(struct tcf_proto *tp, struct tcf_result *r)
 		tp->q->ops->cl_ops->unbind_tcf(tp->q, cl);
 }
 
-struct tcf_exts {
-#ifdef CONFIG_NET_CLS_ACT
-	__u32	type; /* for backward compat(TCA_OLD_COMPAT) */
-	struct list_head actions;
-#endif
-	/* Map to export classifier specific extension TLV types to the
-	 * generic extensions API. Unsupported extensions must be set to 0.
-	 */
-	int action;
-	int police;
-};
-
-static inline void tcf_exts_init(struct tcf_exts *exts, int action, int police)
-{
-#ifdef CONFIG_NET_CLS_ACT
-	exts->type = 0;
-	INIT_LIST_HEAD(&exts->actions);
-#endif
-	exts->action = action;
-	exts->police = police;
-}
-
 /**
- * tcf_exts_is_predicative - check if a predicative extension is present
- * @exts: tc filter extensions handle
+ * tcf_act_is_predicative - check if a predicative action is present
+ * @actions: tc filter actions
  *
- * Returns 1 if a predicative extension is present, i.e. an extension which
+ * Returns 1 if a predicative action is present, i.e. an action which
  * might cause further actions and thus overrule the regular tcf_result.
  */
 static inline int
-tcf_exts_is_predicative(struct tcf_exts *exts)
+tcf_act_is_predicative(struct list_head *actions)
 {
 #ifdef CONFIG_NET_CLS_ACT
-	return !list_empty(&exts->actions);
+	return !list_empty(actions);
 #else
 	return 0;
 #endif
 }
 
 /**
- * tcf_exts_is_available - check if at least one extension is present
- * @exts: tc filter extensions handle
+ * tcf_act_is_available - check if at least one action is present
+ * @actions: tc filter actions
  *
- * Returns 1 if at least one extension is present.
+ * Returns 1 if at least one action is present.
  */
 static inline int
-tcf_exts_is_available(struct tcf_exts *exts)
+tcf_act_is_available(struct list_head *actions)
 {
-	/* All non-predicative extensions must be added here. */
-	return tcf_exts_is_predicative(exts);
+	/* All non-predicative actions must be added here. */
+	return tcf_act_is_predicative(actions);
 }
 
 /**
- * tcf_exts_exec - execute tc filter extensions
+ * tcf_act_exec - execute tc filter actions
  * @skb: socket buffer
- * @exts: tc filter extensions handle
+ * @actions: list of actions
  * @res: desired result
  *
- * Executes all configured extensions. Returns 0 on a normal execution,
+ * Executes all configured actions. Returns 0 on a normal execution,
  * a negative number if the filter must be considered unmatched or
  * a positive action code (TC_ACT_*) which must be returned to the
  * underlying layer.
  */
-static inline int
-tcf_exts_exec(struct sk_buff *skb, struct tcf_exts *exts,
-	       struct tcf_result *res)
-{
 #ifdef CONFIG_NET_CLS_ACT
-	if (!list_empty(&exts->actions))
-		return tcf_action_exec(skb, &exts->actions, res);
-#endif
+int tcf_act_exec(struct sk_buff *skb, struct list_head *actions,
+		 struct tcf_result *res);
+#else
+static inline
+int tcf_act_exec(struct sk_buff *skb, struct list_head *actions,
+		 struct tcf_result *res)
+{
 	return 0;
 }
+#endif
 
-int tcf_exts_validate(struct net *net, struct tcf_proto *tp,
+int tcf_act_validate(struct net *net, struct tcf_proto *tp,
 		      struct nlattr **tb, struct nlattr *rate_tlv,
-		      struct tcf_exts *exts, bool ovr);
-void tcf_exts_destroy(struct tcf_exts *exts);
-void tcf_exts_change(struct tcf_proto *tp, struct tcf_exts *dst,
-		     struct tcf_exts *src);
-int tcf_exts_dump(struct sk_buff *skb, struct tcf_exts *exts);
-int tcf_exts_dump_stats(struct sk_buff *skb, struct tcf_exts *exts);
+		      struct list_head *actions, bool ovr);
+void tcf_act_destroy(struct list_head *actions);
+void tcf_act_change(struct tcf_proto *tp, struct list_head *dst,
+		     struct list_head *src);
+int tcf_act_dump(struct sk_buff *skb, const struct tcf_proto *tp,
+		 struct list_head *actions);
+int tcf_act_dump_stats(struct sk_buff *skb, struct list_head *actions);
 
 /**
  * struct tcf_pkt_info - packet information

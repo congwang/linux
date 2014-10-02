@@ -29,7 +29,7 @@ struct basic_head {
 
 struct basic_filter {
 	u32			handle;
-	struct tcf_exts		exts;
+	struct list_head	actions;
 	struct tcf_ematch_tree	ematches;
 	struct tcf_result	res;
 	struct tcf_proto	*tp;
@@ -48,7 +48,7 @@ static int basic_classify(struct sk_buff *skb, const struct tcf_proto *tp,
 		if (!tcf_em_tree_match(skb, &f->ematches, NULL))
 			continue;
 		*res = f->res;
-		r = tcf_exts_exec(skb, &f->exts, res);
+		r = tcf_act_exec(skb, &f->actions, res);
 		if (r < 0)
 			continue;
 		return r;
@@ -92,7 +92,7 @@ static void basic_delete_filter(struct rcu_head *head)
 {
 	struct basic_filter *f = container_of(head, struct basic_filter, rcu);
 
-	tcf_exts_destroy(&f->exts);
+	tcf_act_destroy(&f->actions);
 	tcf_em_tree_destroy(&f->ematches);
 	kfree(f);
 }
@@ -138,11 +138,10 @@ static int basic_set_parms(struct net *net, struct tcf_proto *tp,
 			   struct nlattr *est, bool ovr)
 {
 	int err;
-	struct tcf_exts e;
 	struct tcf_ematch_tree t;
+	struct list_head actions;
 
-	tcf_exts_init(&e, TCA_BASIC_ACT, TCA_BASIC_POLICE);
-	err = tcf_exts_validate(net, tp, tb, est, &e, ovr);
+	err = tcf_act_validate(net, tp, tb, est, &actions, ovr);
 	if (err < 0)
 		return err;
 
@@ -155,13 +154,13 @@ static int basic_set_parms(struct net *net, struct tcf_proto *tp,
 		tcf_bind_filter(tp, &f->res, base);
 	}
 
-	tcf_exts_change(tp, &f->exts, &e);
+	tcf_act_change(tp, &f->actions, &actions);
 	tcf_em_tree_change(tp, &f->ematches, &t);
 	f->tp = tp;
 
 	return 0;
 errout:
-	tcf_exts_destroy(&e);
+	tcf_act_destroy(&actions);
 	return err;
 }
 
@@ -193,7 +192,7 @@ static int basic_change(struct net *net, struct sk_buff *in_skb,
 	if (fnew == NULL)
 		goto errout;
 
-	tcf_exts_init(&fnew->exts, TCA_BASIC_ACT, TCA_BASIC_POLICE);
+	INIT_LIST_HEAD(&fnew->actions);
 	err = -EINVAL;
 	if (handle) {
 		fnew->handle = handle;
@@ -271,13 +270,13 @@ static int basic_dump(struct net *net, struct tcf_proto *tp, unsigned long fh,
 	    nla_put_u32(skb, TCA_BASIC_CLASSID, f->res.classid))
 		goto nla_put_failure;
 
-	if (tcf_exts_dump(skb, &f->exts) < 0 ||
+	if (tcf_act_dump(skb, tp, &f->actions) < 0 ||
 	    tcf_em_tree_dump(skb, &f->ematches, TCA_BASIC_EMATCHES) < 0)
 		goto nla_put_failure;
 
 	nla_nest_end(skb, nest);
 
-	if (tcf_exts_dump_stats(skb, &f->exts) < 0)
+	if (tcf_act_dump_stats(skb, &f->actions) < 0)
 		goto nla_put_failure;
 
 	return skb->len;
@@ -289,6 +288,8 @@ nla_put_failure:
 
 static struct tcf_proto_ops cls_basic_ops __read_mostly = {
 	.kind		=	"basic",
+	.police		=	TCA_BASIC_POLICE,
+	.action		=	TCA_BASIC_ACT,
 	.classify	=	basic_classify,
 	.init		=	basic_init,
 	.destroy	=	basic_destroy,

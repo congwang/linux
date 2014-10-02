@@ -48,7 +48,7 @@ struct tc_u_knode {
 	struct tc_u_knode __rcu	*next;
 	u32			handle;
 	struct tc_u_hnode __rcu	*ht_up;
-	struct tcf_exts		exts;
+	struct list_head	actions;
 #ifdef CONFIG_NET_CLS_IND
 	int			ifindex;
 #endif
@@ -173,7 +173,7 @@ check_terminal:
 #ifdef CONFIG_CLS_U32_PERF
 				__this_cpu_inc(n->pf->rhit);
 #endif
-				r = tcf_exts_exec(skb, &n->exts, res);
+				r = tcf_act_exec(skb, &n->actions, res);
 				if (r < 0) {
 					n = rcu_dereference_bh(n->next);
 					goto next_knode;
@@ -358,7 +358,7 @@ static int u32_destroy_key(struct tcf_proto *tp,
 			   struct tc_u_knode *n,
 			   bool free_pf)
 {
-	tcf_exts_destroy(&n->exts);
+	tcf_act_destroy(&n->actions);
 	if (n->ht_down)
 		n->ht_down->refcnt--;
 #ifdef CONFIG_CLS_U32_PERF
@@ -560,10 +560,9 @@ static int u32_set_parms(struct net *net, struct tcf_proto *tp,
 			 struct nlattr *est, bool ovr)
 {
 	int err;
-	struct tcf_exts e;
+	struct list_head actions;
 
-	tcf_exts_init(&e, TCA_U32_ACT, TCA_U32_POLICE);
-	err = tcf_exts_validate(net, tp, tb, est, &e, ovr);
+	err = tcf_act_validate(net, tp, tb, est, &actions, ovr);
 	if (err < 0)
 		return err;
 
@@ -603,11 +602,11 @@ static int u32_set_parms(struct net *net, struct tcf_proto *tp,
 		n->ifindex = ret;
 	}
 #endif
-	tcf_exts_change(tp, &n->exts, &e);
+	tcf_act_change(tp, &n->actions, &actions);
 
 	return 0;
 errout:
-	tcf_exts_destroy(&e);
+	tcf_act_destroy(&actions);
 	return err;
 }
 
@@ -681,8 +680,7 @@ static struct tc_u_knode *u32_init_knode(struct tcf_proto *tp,
 #endif
 	new->tp = tp;
 	memcpy(&new->sel, s, sizeof(*s) + s->nkeys*sizeof(struct tc_u32_key));
-
-	tcf_exts_init(&new->exts, TCA_U32_ACT, TCA_U32_POLICE);
+	INIT_LIST_HEAD(&new->actions);
 
 	return new;
 }
@@ -810,7 +808,7 @@ static int u32_change(struct net *net, struct sk_buff *in_skb,
 	RCU_INIT_POINTER(n->ht_up, ht);
 	n->handle = handle;
 	n->fshift = s->hmask ? ffs(ntohl(s->hmask)) - 1 : 0;
-	tcf_exts_init(&n->exts, TCA_U32_ACT, TCA_U32_POLICE);
+	INIT_LIST_HEAD(&n->actions);
 	n->tp = tp;
 
 #ifdef CONFIG_CLS_U32_MARK
@@ -965,7 +963,7 @@ static int u32_dump(struct net *net, struct tcf_proto *tp, unsigned long fh,
 		}
 #endif
 
-		if (tcf_exts_dump(skb, &n->exts) < 0)
+		if (tcf_act_dump(skb, tp, &n->actions) < 0)
 			goto nla_put_failure;
 
 #ifdef CONFIG_NET_CLS_IND
@@ -1006,7 +1004,7 @@ static int u32_dump(struct net *net, struct tcf_proto *tp, unsigned long fh,
 	nla_nest_end(skb, nest);
 
 	if (TC_U32_KEY(n->handle))
-		if (tcf_exts_dump_stats(skb, &n->exts) < 0)
+		if (tcf_act_dump_stats(skb, &n->actions) < 0)
 			goto nla_put_failure;
 	return skb->len;
 
@@ -1017,6 +1015,8 @@ nla_put_failure:
 
 static struct tcf_proto_ops cls_u32_ops __read_mostly = {
 	.kind		=	"u32",
+	.action		=	TCA_U32_ACT,
+	.police		=	TCA_U32_POLICE,
 	.classify	=	u32_classify,
 	.init		=	u32_init,
 	.destroy	=	u32_destroy,

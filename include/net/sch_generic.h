@@ -211,6 +211,8 @@ struct tcf_result {
 struct tcf_proto_ops {
 	struct list_head	head;
 	char			kind[IFNAMSIZ];
+	int			action;
+	int			police;
 
 	int			(*classify)(struct sk_buff *,
 					    const struct tcf_proto *,

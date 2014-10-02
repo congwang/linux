@@ -20,7 +20,7 @@
 
 struct cls_cgroup_head {
 	u32			handle;
-	struct tcf_exts		exts;
+	struct list_head	actions;
 	struct tcf_ematch_tree	ematches;
 	struct tcf_proto	*tp;
 	struct rcu_head		rcu;
@@ -59,7 +59,7 @@ static int cls_cgroup_classify(struct sk_buff *skb, const struct tcf_proto *tp,
 
 	res->classid = classid;
 	res->class = 0;
-	return tcf_exts_exec(skb, &head->exts, res);
+	return tcf_act_exec(skb, &head->actions, res);
 }
 
 static unsigned long cls_cgroup_get(struct tcf_proto *tp, u32 handle)
@@ -86,7 +86,7 @@ static void cls_cgroup_destroy_rcu(struct rcu_head *root)
 						    struct cls_cgroup_head,
 						    rcu);
 
-	tcf_exts_destroy(&head->exts);
+	tcf_act_destroy(&head->actions);
 	tcf_em_tree_destroy(&head->ematches);
 	kfree(head);
 }
@@ -100,7 +100,7 @@ static int cls_cgroup_change(struct net *net, struct sk_buff *in_skb,
 	struct cls_cgroup_head *head = rtnl_dereference(tp->root);
 	struct cls_cgroup_head *new;
 	struct tcf_ematch_tree t;
-	struct tcf_exts e;
+	struct list_head actions;
 	int err;
 
 	if (!tca[TCA_OPTIONS])
@@ -116,7 +116,7 @@ static int cls_cgroup_change(struct net *net, struct sk_buff *in_skb,
 	if (!new)
 		return -ENOBUFS;
 
-	tcf_exts_init(&new->exts, TCA_CGROUP_ACT, TCA_CGROUP_POLICE);
+	INIT_LIST_HEAD(&new->actions);
 	if (head)
 		new->handle = head->handle;
 	else
@@ -128,18 +128,17 @@ static int cls_cgroup_change(struct net *net, struct sk_buff *in_skb,
 	if (err < 0)
 		goto errout;
 
-	tcf_exts_init(&e, TCA_CGROUP_ACT, TCA_CGROUP_POLICE);
-	err = tcf_exts_validate(net, tp, tb, tca[TCA_RATE], &e, ovr);
+	err = tcf_act_validate(net, tp, tb, tca[TCA_RATE], &actions, ovr);
 	if (err < 0)
 		goto errout;
 
 	err = tcf_em_tree_validate(tp, tb[TCA_CGROUP_EMATCHES], &t);
 	if (err < 0) {
-		tcf_exts_destroy(&e);
+		tcf_act_destroy(&actions);
 		goto errout;
 	}
 
-	tcf_exts_change(tp, &new->exts, &e);
+	tcf_act_change(tp, &new->actions, &actions);
 	tcf_em_tree_change(tp, &new->ematches, &t);
 
 	rcu_assign_pointer(tp->root, new);
@@ -194,13 +193,13 @@ static int cls_cgroup_dump(struct net *net, struct tcf_proto *tp, unsigned long 
 	if (nest == NULL)
 		goto nla_put_failure;
 
-	if (tcf_exts_dump(skb, &head->exts) < 0 ||
+	if (tcf_act_dump(skb, tp, &head->actions) < 0 ||
 	    tcf_em_tree_dump(skb, &head->ematches, TCA_CGROUP_EMATCHES) < 0)
 		goto nla_put_failure;
 
 	nla_nest_end(skb, nest);
 
-	if (tcf_exts_dump_stats(skb, &head->exts) < 0)
+	if (tcf_act_dump_stats(skb, &head->actions) < 0)
 		goto nla_put_failure;
 
 	return skb->len;
@@ -212,6 +211,8 @@ nla_put_failure:
 
 static struct tcf_proto_ops cls_cgroup_ops __read_mostly = {
 	.kind		=	"cgroup",
+	.action		=	TCA_CGROUP_ACT,
+	.police		=	TCA_CGROUP_POLICE,
 	.init		=	cls_cgroup_init,
 	.change		=	cls_cgroup_change,
 	.classify	=	cls_cgroup_classify,

@@ -93,7 +93,7 @@ struct rsvp_filter {
 	u8				tunnelhdr;
 
 	struct tcf_result		res;
-	struct tcf_exts			exts;
+	struct list_head		actions;
 
 	u32				handle;
 	struct rsvp_session		*sess;
@@ -121,7 +121,7 @@ static inline unsigned int hash_src(__be32 *src)
 
 #define RSVP_APPLY_RESULT()				\
 {							\
-	int r = tcf_exts_exec(skb, &f->exts, res);	\
+	int r = tcf_act_exec(skb, &f->actions, res);	\
 	if (r < 0)					\
 		continue;				\
 	else if (r > 0)					\
@@ -291,7 +291,7 @@ static void
 rsvp_delete_filter(struct tcf_proto *tp, struct rsvp_filter *f)
 {
 	tcf_unbind_filter(tp, &f->res);
-	tcf_exts_destroy(&f->exts);
+	tcf_act_destroy(&f->actions);
 	kfree_rcu(f, rcu);
 }
 
@@ -461,7 +461,7 @@ static int rsvp_change(struct net *net, struct sk_buff *in_skb,
 	struct tc_rsvp_pinfo *pinfo = NULL;
 	struct nlattr *opt = tca[TCA_OPTIONS];
 	struct nlattr *tb[TCA_RSVP_MAX + 1];
-	struct tcf_exts e;
+	struct list_head actions;
 	unsigned int h1, h2;
 	__be32 *dst;
 	int err;
@@ -473,8 +473,7 @@ static int rsvp_change(struct net *net, struct sk_buff *in_skb,
 	if (err < 0)
 		return err;
 
-	tcf_exts_init(&e, TCA_RSVP_ACT, TCA_RSVP_POLICE);
-	err = tcf_exts_validate(net, tp, tb, tca[TCA_RATE], &e, ovr);
+	err = tcf_act_validate(net, tp, tb, tca[TCA_RATE], &actions, ovr);
 	if (err < 0)
 		return err;
 
@@ -492,14 +491,14 @@ static int rsvp_change(struct net *net, struct sk_buff *in_skb,
 			goto errout2;
 		}
 
-		tcf_exts_init(&n->exts, TCA_RSVP_ACT, TCA_RSVP_POLICE);
+		INIT_LIST_HEAD(&n->actions);
 
 		if (tb[TCA_RSVP_CLASSID]) {
 			n->res.classid = nla_get_u32(tb[TCA_RSVP_CLASSID]);
 			tcf_bind_filter(tp, &n->res, base);
 		}
 
-		tcf_exts_change(tp, &n->exts, &e);
+		tcf_act_change(tp, &n->actions, &actions);
 		rsvp_replace(tp, n, handle);
 		return 0;
 	}
@@ -516,7 +515,7 @@ static int rsvp_change(struct net *net, struct sk_buff *in_skb,
 	if (f == NULL)
 		goto errout2;
 
-	tcf_exts_init(&f->exts, TCA_RSVP_ACT, TCA_RSVP_POLICE);
+	INIT_LIST_HEAD(&f->actions);
 	h2 = 16;
 	if (tb[TCA_RSVP_SRC]) {
 		memcpy(f->src, nla_data(tb[TCA_RSVP_SRC]), sizeof(f->src));
@@ -570,7 +569,7 @@ insert:
 			if (f->tunnelhdr == 0)
 				tcf_bind_filter(tp, &f->res, base);
 
-			tcf_exts_change(tp, &f->exts, &e);
+			tcf_act_change(tp, &f->actions, &actions);
 
 			fp = &s->ht[h2];
 			for (nfp = rtnl_dereference(*fp); nfp;
@@ -615,7 +614,7 @@ insert:
 errout:
 	kfree(f);
 errout2:
-	tcf_exts_destroy(&e);
+	tcf_act_destroy(&actions);
 	return err;
 }
 
@@ -688,12 +687,12 @@ static int rsvp_dump(struct net *net, struct tcf_proto *tp, unsigned long fh,
 	    nla_put(skb, TCA_RSVP_SRC, sizeof(f->src), f->src))
 		goto nla_put_failure;
 
-	if (tcf_exts_dump(skb, &f->exts) < 0)
+	if (tcf_act_dump(skb, tp, &f->actions) < 0)
 		goto nla_put_failure;
 
 	nla_nest_end(skb, nest);
 
-	if (tcf_exts_dump_stats(skb, &f->exts) < 0)
+	if (tcf_act_dump_stats(skb, &f->actions) < 0)
 		goto nla_put_failure;
 	return skb->len;
 
@@ -704,6 +703,8 @@ nla_put_failure:
 
 static struct tcf_proto_ops RSVP_OPS __read_mostly = {
 	.kind		=	RSVP_ID,
+	.action		=	TCA_RSVP_ACT,
+	.police		=	TCA_RSVP_POLICE,
 	.classify	=	rsvp_classify,
 	.init		=	rsvp_init,
 	.destroy	=	rsvp_destroy,

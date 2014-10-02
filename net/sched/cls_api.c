@@ -496,90 +496,94 @@ out:
 	return skb->len;
 }
 
-void tcf_exts_destroy(struct tcf_exts *exts)
+void tcf_act_destroy(struct list_head *actions)
 {
 #ifdef CONFIG_NET_CLS_ACT
-	tcf_action_destroy(&exts->actions, TCA_ACT_UNBIND);
-	INIT_LIST_HEAD(&exts->actions);
+	tcf_action_destroy(actions, TCA_ACT_UNBIND);
+	INIT_LIST_HEAD(actions);
 #endif
 }
-EXPORT_SYMBOL(tcf_exts_destroy);
+EXPORT_SYMBOL(tcf_act_destroy);
 
-int tcf_exts_validate(struct net *net, struct tcf_proto *tp, struct nlattr **tb,
-		  struct nlattr *rate_tlv, struct tcf_exts *exts, bool ovr)
+int tcf_act_validate(struct net *net, struct tcf_proto *tp, struct nlattr **tb,
+		     struct nlattr *rate_tlv, struct list_head *actions,
+		     bool ovr)
 {
+	int police = tp->ops->police;
+	int action = tp->ops->action;
+
 #ifdef CONFIG_NET_CLS_ACT
 	{
 		struct tc_action *act;
 
-		INIT_LIST_HEAD(&exts->actions);
-		if (exts->police && tb[exts->police]) {
-			act = tcf_action_init_1(net, tb[exts->police], rate_tlv,
+		INIT_LIST_HEAD(actions);
+		if (police && tb[police]) {
+			act = tcf_action_init_1(net, tb[police], rate_tlv,
 						"police", ovr,
 						TCA_ACT_BIND);
 			if (IS_ERR(act))
 				return PTR_ERR(act);
 
-			act->type = exts->type = TCA_OLD_COMPAT;
-			list_add(&act->list, &exts->actions);
-		} else if (exts->action && tb[exts->action]) {
+			act->type = TCA_OLD_COMPAT;
+			list_add(&act->list, actions);
+		} else if (action && tb[action]) {
 			int err;
-			err = tcf_action_init(net, tb[exts->action], rate_tlv,
+			err = tcf_action_init(net, tb[action], rate_tlv,
 					      NULL, ovr,
-					      TCA_ACT_BIND, &exts->actions);
+					      TCA_ACT_BIND, actions);
 			if (err)
 				return err;
 		}
 	}
 #else
-	if ((exts->action && tb[exts->action]) ||
-	    (exts->police && tb[exts->police]))
+	if ((action && tb[action]) ||
+	    (police && tb[police]))
 		return -EOPNOTSUPP;
 #endif
 
 	return 0;
 }
-EXPORT_SYMBOL(tcf_exts_validate);
+EXPORT_SYMBOL(tcf_act_validate);
 
-void tcf_exts_change(struct tcf_proto *tp, struct tcf_exts *dst,
-		     struct tcf_exts *src)
+void tcf_act_change(struct tcf_proto *tp, struct list_head *dst,
+		    struct list_head *src)
 {
 #ifdef CONFIG_NET_CLS_ACT
 	LIST_HEAD(tmp);
 	tcf_tree_lock(tp);
-	list_splice_init(&dst->actions, &tmp);
-	list_splice(&src->actions, &dst->actions);
-	dst->type = src->type;
+	list_splice_init(dst, &tmp);
+	list_splice(src, dst);
 	tcf_tree_unlock(tp);
 	tcf_action_destroy(&tmp, TCA_ACT_UNBIND);
 #endif
 }
-EXPORT_SYMBOL(tcf_exts_change);
+EXPORT_SYMBOL(tcf_act_change);
 
-#define tcf_exts_first_act(ext) \
-		list_first_entry(&(exts)->actions, struct tc_action, list)
+#define tcf_act_first_act(actions) \
+		list_first_entry(actions, struct tc_action, list)
 
-int tcf_exts_dump(struct sk_buff *skb, struct tcf_exts *exts)
+int tcf_act_dump(struct sk_buff *skb, const struct tcf_proto *tp,
+		 struct list_head *actions)
 {
 #ifdef CONFIG_NET_CLS_ACT
 	struct nlattr *nest;
 
-	if (exts->action && !list_empty(&exts->actions)) {
+	if (tp->ops->action && !list_empty(actions)) {
+		struct tc_action *act = tcf_act_first_act(actions);
 		/*
 		 * again for backward compatible mode - we want
 		 * to work with both old and new modes of entering
 		 * tc data even if iproute2  was newer - jhs
 		 */
-		if (exts->type != TCA_OLD_COMPAT) {
-			nest = nla_nest_start(skb, exts->action);
+		if (act->type != TCA_OLD_COMPAT) {
+			nest = nla_nest_start(skb, tp->ops->action);
 			if (nest == NULL)
 				goto nla_put_failure;
-			if (tcf_action_dump(skb, &exts->actions, 0, 0) < 0)
+			if (tcf_action_dump(skb, actions, 0, 0) < 0)
 				goto nla_put_failure;
 			nla_nest_end(skb, nest);
-		} else if (exts->police) {
-			struct tc_action *act = tcf_exts_first_act(exts);
-			nest = nla_nest_start(skb, exts->police);
+		} else if (tp->ops->police) {
+			nest = nla_nest_start(skb, tp->ops->police);
 			if (nest == NULL || !act)
 				goto nla_put_failure;
 			if (tcf_action_dump_old(skb, act, 0, 0) < 0)
@@ -596,19 +600,19 @@ nla_put_failure:
 	return 0;
 #endif
 }
-EXPORT_SYMBOL(tcf_exts_dump);
+EXPORT_SYMBOL(tcf_act_dump);
 
 
-int tcf_exts_dump_stats(struct sk_buff *skb, struct tcf_exts *exts)
+int tcf_act_dump_stats(struct sk_buff *skb, struct list_head *actions)
 {
 #ifdef CONFIG_NET_CLS_ACT
-	struct tc_action *a = tcf_exts_first_act(exts);
+	struct tc_action *a = tcf_act_first_act(actions);
 	if (tcf_action_copy_stats(skb, a, 1) < 0)
 		return -1;
 #endif
 	return 0;
 }
-EXPORT_SYMBOL(tcf_exts_dump_stats);
+EXPORT_SYMBOL(tcf_act_dump_stats);
 
 static int __init tc_filter_init(void)
 {

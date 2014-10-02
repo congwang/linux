@@ -33,7 +33,7 @@ struct cls_bpf_head {
 struct cls_bpf_prog {
 	struct bpf_prog *filter;
 	struct sock_filter *bpf_ops;
-	struct tcf_exts exts;
+	struct list_head actions;
 	struct tcf_result res;
 	struct list_head link;
 	u32 handle;
@@ -66,7 +66,7 @@ static int cls_bpf_classify(struct sk_buff *skb, const struct tcf_proto *tp,
 		if (filter_res != -1)
 			res->classid = filter_res;
 
-		ret = tcf_exts_exec(skb, &prog->exts, res);
+		ret = tcf_act_exec(skb, &prog->actions, res);
 		if (ret < 0)
 			continue;
 
@@ -92,8 +92,7 @@ static int cls_bpf_init(struct tcf_proto *tp)
 
 static void cls_bpf_delete_prog(struct tcf_proto *tp, struct cls_bpf_prog *prog)
 {
-	tcf_exts_destroy(&prog->exts);
-
+	tcf_act_destroy(&prog->actions);
 	bpf_prog_destroy(prog->filter);
 
 	kfree(prog->bpf_ops);
@@ -168,7 +167,7 @@ static int cls_bpf_modify_existing(struct net *net, struct tcf_proto *tp,
 				   struct nlattr *est, bool ovr)
 {
 	struct sock_filter *bpf_ops;
-	struct tcf_exts exts;
+	struct list_head actions;
 	struct sock_fprog_kern tmp;
 	struct bpf_prog *fp;
 	u16 bpf_size, bpf_len;
@@ -178,8 +177,7 @@ static int cls_bpf_modify_existing(struct net *net, struct tcf_proto *tp,
 	if (!tb[TCA_BPF_OPS_LEN] || !tb[TCA_BPF_OPS] || !tb[TCA_BPF_CLASSID])
 		return -EINVAL;
 
-	tcf_exts_init(&exts, TCA_BPF_ACT, TCA_BPF_POLICE);
-	ret = tcf_exts_validate(net, tp, tb, est, &exts, ovr);
+	ret = tcf_act_validate(net, tp, tb, est, &actions, ovr);
 	if (ret < 0)
 		return ret;
 
@@ -212,13 +210,13 @@ static int cls_bpf_modify_existing(struct net *net, struct tcf_proto *tp,
 	prog->res.classid = classid;
 
 	tcf_bind_filter(tp, &prog->res, base);
-	tcf_exts_change(tp, &prog->exts, &exts);
+	tcf_act_change(tp, &prog->actions, &actions);
 
 	return 0;
 errout_free:
 	kfree(bpf_ops);
 errout:
-	tcf_exts_destroy(&exts);
+	tcf_act_destroy(&actions);
 	return ret;
 }
 
@@ -259,7 +257,7 @@ static int cls_bpf_change(struct net *net, struct sk_buff *in_skb,
 	if (!prog)
 		return -ENOBUFS;
 
-	tcf_exts_init(&prog->exts, TCA_BPF_ACT, TCA_BPF_POLICE);
+	INIT_LIST_HEAD(&prog->actions);
 
 	if (oldprog) {
 		if (handle && oldprog->handle != handle) {
@@ -324,12 +322,12 @@ static int cls_bpf_dump(struct net *net, struct tcf_proto *tp, unsigned long fh,
 
 	memcpy(nla_data(nla), prog->bpf_ops, nla_len(nla));
 
-	if (tcf_exts_dump(skb, &prog->exts) < 0)
+	if (tcf_act_dump(skb, tp, &prog->actions) < 0)
 		goto nla_put_failure;
 
 	nla_nest_end(skb, nest);
 
-	if (tcf_exts_dump_stats(skb, &prog->exts) < 0)
+	if (tcf_act_dump_stats(skb, &prog->actions) < 0)
 		goto nla_put_failure;
 
 	return skb->len;
@@ -358,6 +356,8 @@ skip:
 
 static struct tcf_proto_ops cls_bpf_ops __read_mostly = {
 	.kind		=	"bpf",
+	.action		=	TCA_BPF_ACT,
+	.police		=	TCA_BPF_POLICE,
 	.owner		=	THIS_MODULE,
 	.classify	=	cls_bpf_classify,
 	.init		=	cls_bpf_init,

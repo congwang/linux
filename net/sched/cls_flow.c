@@ -39,7 +39,7 @@ struct flow_head {
 
 struct flow_filter {
 	struct list_head	list;
-	struct tcf_exts		exts;
+	struct list_head	actions;
 	struct tcf_ematch_tree	ematches;
 	struct tcf_proto	*tp;
 	struct timer_list	perturb_timer;
@@ -317,7 +317,7 @@ static int flow_classify(struct sk_buff *skb, const struct tcf_proto *tp,
 		res->class   = 0;
 		res->classid = TC_H_MAKE(f->baseclass, f->baseclass + classid);
 
-		r = tcf_exts_exec(skb, &f->exts, res);
+		r = tcf_act_exec(skb, &f->actions, res);
 		if (r < 0)
 			continue;
 		return r;
@@ -354,7 +354,7 @@ static void flow_destroy_filter(struct rcu_head *head)
 	struct flow_filter *f = container_of(head, struct flow_filter, rcu);
 
 	del_timer_sync(&f->perturb_timer);
-	tcf_exts_destroy(&f->exts);
+	tcf_act_destroy(&f->actions);
 	tcf_em_tree_destroy(&f->ematches);
 	kfree(f);
 }
@@ -368,7 +368,7 @@ static int flow_change(struct net *net, struct sk_buff *in_skb,
 	struct flow_filter *fold, *fnew;
 	struct nlattr *opt = tca[TCA_OPTIONS];
 	struct nlattr *tb[TCA_FLOW_MAX + 1];
-	struct tcf_exts e;
+	struct list_head actions;
 	struct tcf_ematch_tree t;
 	unsigned int nkeys = 0;
 	unsigned int perturb_period = 0;
@@ -405,8 +405,7 @@ static int flow_change(struct net *net, struct sk_buff *in_skb,
 			return -EOPNOTSUPP;
 	}
 
-	tcf_exts_init(&e, TCA_FLOW_ACT, TCA_FLOW_POLICE);
-	err = tcf_exts_validate(net, tp, tb, tca[TCA_RATE], &e, ovr);
+	err = tcf_act_validate(net, tp, tb, tca[TCA_RATE], &actions, ovr);
 	if (err < 0)
 		return err;
 
@@ -483,14 +482,14 @@ static int flow_change(struct net *net, struct sk_buff *in_skb,
 		fnew->mask  = ~0U;
 		fnew->tp = tp;
 		get_random_bytes(&fnew->hashrnd, 4);
-		tcf_exts_init(&fnew->exts, TCA_FLOW_ACT, TCA_FLOW_POLICE);
+		INIT_LIST_HEAD(&fnew->actions);
 	}
 
 	fnew->perturb_timer.function = flow_perturbation;
 	fnew->perturb_timer.data = (unsigned long)fnew;
 	init_timer_deferrable(&fnew->perturb_timer);
 
-	tcf_exts_change(tp, &fnew->exts, &e);
+	tcf_act_change(tp, &fnew->actions, &actions);
 	tcf_em_tree_change(tp, &fnew->ematches, &t);
 
 	netif_keep_dst(qdisc_dev(tp->q));
@@ -535,7 +534,7 @@ err2:
 	tcf_em_tree_destroy(&t);
 	kfree(fnew);
 err1:
-	tcf_exts_destroy(&e);
+	tcf_act_destroy(&actions);
 	return err;
 }
 
@@ -630,7 +629,7 @@ static int flow_dump(struct net *net, struct tcf_proto *tp, unsigned long fh,
 	    nla_put_u32(skb, TCA_FLOW_PERTURB, f->perturb_period / HZ))
 		goto nla_put_failure;
 
-	if (tcf_exts_dump(skb, &f->exts) < 0)
+	if (tcf_act_dump(skb, tp, &f->actions) < 0)
 		goto nla_put_failure;
 #ifdef CONFIG_NET_EMATCH
 	if (f->ematches.hdr.nmatches &&
@@ -639,7 +638,7 @@ static int flow_dump(struct net *net, struct tcf_proto *tp, unsigned long fh,
 #endif
 	nla_nest_end(skb, nest);
 
-	if (tcf_exts_dump_stats(skb, &f->exts) < 0)
+	if (tcf_act_dump_stats(skb, &f->actions) < 0)
 		goto nla_put_failure;
 
 	return skb->len;
@@ -668,6 +667,8 @@ skip:
 
 static struct tcf_proto_ops cls_flow_ops __read_mostly = {
 	.kind		= "flow",
+	.action		= TCA_FLOW_ACT,
+	.police		= TCA_FLOW_POLICE,
 	.classify	= flow_classify,
 	.init		= flow_init,
 	.destroy	= flow_destroy,
