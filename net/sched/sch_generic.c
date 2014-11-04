@@ -585,7 +585,6 @@ struct Qdisc *qdisc_alloc(struct netdev_queue *dev_queue,
 	void *p;
 	struct Qdisc *sch;
 	unsigned int size = QDISC_ALIGN(sizeof(*sch)) + ops->priv_size;
-	int err = -ENOBUFS;
 	struct net_device *dev = dev_queue->dev;
 
 	p = kzalloc_node(size, GFP_KERNEL,
@@ -620,7 +619,7 @@ struct Qdisc *qdisc_alloc(struct netdev_queue *dev_queue,
 
 	return sch;
 errout:
-	return ERR_PTR(err);
+	return NULL;
 }
 
 struct Qdisc *qdisc_create_internal(struct netdev_queue *dev_queue,
@@ -633,7 +632,7 @@ struct Qdisc *qdisc_create_internal(struct netdev_queue *dev_queue,
 		goto errout;
 
 	sch = qdisc_alloc(dev_queue, ops);
-	if (IS_ERR(sch))
+	if (!sch)
 		goto errout;
 	sch->parent = parentid;
 

@@ -905,8 +905,8 @@ qdisc_create(struct net_device *dev, struct netdev_queue *dev_queue,
 		goto err_out;
 
 	sch = qdisc_alloc(dev_queue, ops);
-	if (IS_ERR(sch)) {
-		err = PTR_ERR(sch);
+	if (!sch) {
+		err = -ENOBUFS;
 		goto err_out2;
 	}
 
