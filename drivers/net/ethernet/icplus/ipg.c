@@ -1836,7 +1836,7 @@ static int ipg_nic_stop(struct net_device *dev)
 }
 
 static netdev_tx_t ipg_nic_hard_start_xmit(struct sk_buff *skb,
-					   struct net_device *dev)
+					   struct net_device *dev, unsigned int queue)
 {
 	struct ipg_nic_private *sp = netdev_priv(dev);
 	void __iomem *ioaddr = sp->ioaddr;

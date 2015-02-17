@@ -1993,7 +1993,8 @@ static unsigned int tile_net_tx_frags(struct frag *frags,
 }
 
 /* Help the kernel transmit a packet. */
-static int tile_net_tx(struct sk_buff *skb, struct net_device *dev)
+static int tile_net_tx(struct sk_buff *skb,
+		       struct net_device *dev, unsigned int queue)
 {
 	struct tile_net_info *info = this_cpu_ptr(&per_cpu_info);
 	struct tile_net_priv *priv = netdev_priv(dev);

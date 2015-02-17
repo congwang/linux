@@ -1056,7 +1056,7 @@ static void ns83820_cleanup_tx(struct ns83820 *dev)
  * the tx fifo (hence the MAX_FRAG_LEN).
  */
 static netdev_tx_t ns83820_hard_start_xmit(struct sk_buff *skb,
-					   struct net_device *ndev)
+					   struct net_device *ndev, unsigned int queue)
 {
 	struct ns83820 *dev = PRIV(ndev);
 	u32 free_idx, cmdsts, extsts;

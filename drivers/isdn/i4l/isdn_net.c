@@ -178,7 +178,7 @@ static __inline__ void isdn_net_zero_frame_cnt(isdn_net_local *lp)
 
 static int isdn_net_force_dial_lp(isdn_net_local *);
 static netdev_tx_t isdn_net_start_xmit(struct sk_buff *,
-				       struct net_device *);
+				       struct net_device *, unsigned int);
 
 static void isdn_net_ciscohdlck_connected(isdn_net_local *lp);
 static void isdn_net_ciscohdlck_disconnected(isdn_net_local *lp);
@@ -1163,7 +1163,8 @@ static void isdn_net_tx_timeout(struct net_device *ndev)
  * and start dialing.
  */
 static netdev_tx_t
-isdn_net_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+isdn_net_start_xmit(struct sk_buff *skb,
+		    struct net_device *ndev, unsigned int queue)
 {
 	isdn_net_local *lp = netdev_priv(ndev);
 #ifdef CONFIG_ISDN_X25

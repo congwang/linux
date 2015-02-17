@@ -1271,7 +1271,8 @@ static int octeon_mgmt_stop(struct net_device *netdev)
 	return 0;
 }
 
-static int octeon_mgmt_xmit(struct sk_buff *skb, struct net_device *netdev)
+static int octeon_mgmt_xmit(struct sk_buff *skb,
+			    struct net_device *netdev, unsigned int queue)
 {
 	struct octeon_mgmt *p = netdev_priv(netdev);
 	union mgmt_port_ring_entry re;

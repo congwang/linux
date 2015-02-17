@@ -105,7 +105,8 @@ static const struct ethtool_ops veth_ethtool_ops = {
 	.get_ethtool_stats	= veth_get_ethtool_stats,
 };
 
-static netdev_tx_t veth_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t veth_xmit(struct sk_buff *skb,
+			     struct net_device *dev, unsigned int queue)
 {
 	struct veth_priv *priv = netdev_priv(dev);
 	struct net_device *rcv;

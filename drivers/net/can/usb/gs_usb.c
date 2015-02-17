@@ -452,7 +452,8 @@ static void gs_usb_xmit_callback(struct urb *urb)
 		netif_wake_queue(netdev);
 }
 
-static netdev_tx_t gs_can_start_xmit(struct sk_buff *skb, struct net_device *netdev)
+static netdev_tx_t gs_can_start_xmit(struct sk_buff *skb,
+				     struct net_device *netdev, unsigned int queue)
 {
 	struct gs_can *dev = netdev_priv(netdev);
 	struct net_device_stats *stats = &dev->netdev->stats;

@@ -511,7 +511,8 @@ static void smc911x_hardware_send_pkt(struct net_device *dev)
  * now, or set the card to generates an interrupt when ready
  * for the packet.
  */
-static int smc911x_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int smc911x_hard_start_xmit(struct sk_buff *skb,
+				   struct net_device *dev, unsigned int queue)
 {
 	struct smc911x_local *lp = netdev_priv(dev);
 	unsigned int free;

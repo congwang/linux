@@ -108,7 +108,8 @@ static void netx_eth_set_multicast_list(struct net_device *ndev)
 }
 
 static int
-netx_eth_hard_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+netx_eth_hard_start_xmit(struct sk_buff *skb,
+			 struct net_device *ndev, unsigned int queue)
 {
 	struct netx_eth_priv *priv = netdev_priv(ndev);
 	unsigned char *buf = skb->data;

@@ -188,7 +188,8 @@ static void dlci_receive(struct sk_buff *skb, struct net_device *dev)
 		dev_kfree_skb(skb);
 }
 
-static netdev_tx_t dlci_transmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t dlci_transmit(struct sk_buff *skb,
+				 struct net_device *dev, unsigned int queue)
 {
 	struct dlci_local *dlp = netdev_priv(dev);
 

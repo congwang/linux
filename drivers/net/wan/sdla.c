@@ -657,7 +657,7 @@ static int sdla_dlci_conf(struct net_device *slave, struct net_device *master, i
 
 /* NOTE: the DLCI driver deals with freeing the SKB!! */
 static netdev_tx_t sdla_transmit(struct sk_buff *skb,
-				 struct net_device *dev)
+				 struct net_device *dev, unsigned int queue)
 {
 	struct frad_local *flp;
 	int               ret, addr, accept, i;

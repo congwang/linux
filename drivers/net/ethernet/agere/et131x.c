@@ -3809,7 +3809,8 @@ static void et131x_multicast(struct net_device *netdev)
 		et131x_set_packet_filter(adapter);
 }
 
-static netdev_tx_t et131x_tx(struct sk_buff *skb, struct net_device *netdev)
+static netdev_tx_t et131x_tx(struct sk_buff *skb,
+			     struct net_device *netdev, unsigned int queue)
 {
 	struct et131x_adapter *adapter = netdev_priv(netdev);
 	struct tx_ring *tx_ring = &adapter->tx_ring;

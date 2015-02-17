@@ -620,7 +620,8 @@ static int sh_irda_init_iobuf(struct sh_irda_self *self, int rxsize, int txsize)
 
 
 ************************************************************************/
-static int sh_irda_hard_xmit(struct sk_buff *skb, struct net_device *ndev)
+static int sh_irda_hard_xmit(struct sk_buff *skb,
+			     struct net_device *ndev, unsigned int queue)
 {
 	struct sh_irda_self *self = netdev_priv(ndev);
 	struct device *dev = &self->ndev->dev;

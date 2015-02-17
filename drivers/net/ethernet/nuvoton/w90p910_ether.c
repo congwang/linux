@@ -633,7 +633,8 @@ static int w90p910_send_frame(struct net_device *dev,
 	return 0;
 }
 
-static int w90p910_ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int w90p910_ether_start_xmit(struct sk_buff *skb,
+				    struct net_device *dev, unsigned int queue)
 {
 	struct w90p910_ether *ether = netdev_priv(dev);
 

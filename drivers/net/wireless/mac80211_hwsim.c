@@ -679,7 +679,7 @@ DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_group,
 			"%llx\n");
 
 static netdev_tx_t hwsim_mon_xmit(struct sk_buff *skb,
-					struct net_device *dev)
+					struct net_device *dev, unsigned int queue)
 {
 	/* TODO: allow packet injection */
 	dev_kfree_skb(skb);

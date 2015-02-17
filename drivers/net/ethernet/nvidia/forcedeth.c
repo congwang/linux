@@ -2182,7 +2182,8 @@ static void nv_gear_backoff_reseed(struct net_device *dev)
  * nv_start_xmit: dev->hard_start_xmit function
  * Called with netif_tx_lock held.
  */
-static netdev_tx_t nv_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t nv_start_xmit(struct sk_buff *skb,
+				 struct net_device *dev, unsigned int queue)
 {
 	struct fe_priv *np = netdev_priv(dev);
 	u32 tx_flags = 0;
@@ -2329,7 +2330,7 @@ static netdev_tx_t nv_start_xmit(struct sk_buff *skb, struct net_device *dev)
 }
 
 static netdev_tx_t nv_start_xmit_optimized(struct sk_buff *skb,
-					   struct net_device *dev)
+					   struct net_device *dev, unsigned int queue)
 {
 	struct fe_priv *np = netdev_priv(dev);
 	u32 tx_flags = 0;

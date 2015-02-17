@@ -471,7 +471,8 @@ static void at91_chip_stop(struct net_device *dev, enum can_state state)
  *                 (mb - get_mb_tx_first(priv));
  *
  */
-static netdev_tx_t at91_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t at91_start_xmit(struct sk_buff *skb,
+				   struct net_device *dev, unsigned int queue)
 {
 	struct at91_priv *priv = netdev_priv(dev);
 	struct net_device_stats *stats = &dev->stats;

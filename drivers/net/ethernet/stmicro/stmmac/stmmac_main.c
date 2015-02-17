@@ -1926,7 +1926,8 @@ static int stmmac_release(struct net_device *dev)
  *  It programs the chain or the ring and supports oversized frames
  *  and SG feature.
  */
-static netdev_tx_t stmmac_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t stmmac_xmit(struct sk_buff *skb,
+			       struct net_device *dev, unsigned int queue)
 {
 	struct stmmac_priv *priv = netdev_priv(dev);
 	unsigned int txsize = priv->dma_tx_size;

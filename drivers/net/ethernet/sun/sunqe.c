@@ -568,7 +568,8 @@ out:
 }
 
 /* Get a packet queued to go onto the wire. */
-static int qe_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int qe_start_xmit(struct sk_buff *skb,
+			 struct net_device *dev, unsigned int queue)
 {
 	struct sunqe *qep = netdev_priv(dev);
 	struct sunqe_buffers *qbufs = qep->buffers;

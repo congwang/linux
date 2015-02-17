@@ -817,7 +817,7 @@ static void mcs_send_irq(struct urb *urb)
 
 /* Transmit callback function.  */
 static netdev_tx_t mcs_hard_xmit(struct sk_buff *skb,
-				       struct net_device *ndev)
+				       struct net_device *ndev, unsigned int queue)
 {
 	unsigned long flags;
 	struct mcs_cb *mcs;

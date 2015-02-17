@@ -796,7 +796,8 @@ static void tx_update_descriptor(struct atmel_private *priv, int is_bcast,
 	priv->tx_free_mem -= len;
 }
 
-static netdev_tx_t start_tx(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t start_tx(struct sk_buff *skb,
+			    struct net_device *dev, unsigned int queue)
 {
 	static const u8 SNAP_RFC1024[6] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
 	struct atmel_private *priv = netdev_priv(dev);

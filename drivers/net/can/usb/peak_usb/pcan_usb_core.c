@@ -302,7 +302,7 @@ static void peak_usb_write_bulk_callback(struct urb *urb)
  * called by netdev to send one skb on the CAN interface.
  */
 static netdev_tx_t peak_usb_ndo_start_xmit(struct sk_buff *skb,
-					   struct net_device *netdev)
+					   struct net_device *netdev, unsigned int queue)
 {
 	struct peak_usb_device *dev = netdev_priv(netdev);
 	struct peak_tx_urb_context *context = NULL;

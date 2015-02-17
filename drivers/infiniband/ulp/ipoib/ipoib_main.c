@@ -712,7 +712,8 @@ static void unicast_arp_send(struct sk_buff *skb, struct net_device *dev,
 	spin_unlock_irqrestore(&priv->lock, flags);
 }
 
-static int ipoib_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int ipoib_start_xmit(struct sk_buff *skb,
+			    struct net_device *dev, unsigned int queue)
 {
 	struct ipoib_dev_priv *priv = netdev_priv(dev);
 	struct ipoib_neigh *neigh;

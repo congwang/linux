@@ -610,7 +610,7 @@ static void usb_8dev_write_bulk_callback(struct urb *urb)
 
 /* Send data to device */
 static netdev_tx_t usb_8dev_start_xmit(struct sk_buff *skb,
-				      struct net_device *netdev)
+				      struct net_device *netdev, unsigned int queue)
 {
 	struct usb_8dev_priv *priv = netdev_priv(netdev);
 	struct net_device_stats *stats = &netdev->stats;

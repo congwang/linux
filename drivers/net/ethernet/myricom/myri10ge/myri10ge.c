@@ -376,7 +376,7 @@ MODULE_PARM_DESC(myri10ge_dca, "Enable DCA if possible");
 
 static void myri10ge_set_multicast_list(struct net_device *dev);
 static netdev_tx_t myri10ge_sw_tso(struct sk_buff *skb,
-					 struct net_device *dev);
+					 struct net_device *dev, unsigned int queue);
 
 static inline void put_be32(__be32 val, __be32 __iomem * p)
 {
@@ -2819,7 +2819,7 @@ static void myri10ge_unmap_tx_dma(struct myri10ge_priv *mgp,
  */
 
 static netdev_tx_t myri10ge_xmit(struct sk_buff *skb,
-				       struct net_device *dev)
+				       struct net_device *dev, unsigned int queue)
 {
 	struct myri10ge_priv *mgp = netdev_priv(dev);
 	struct myri10ge_slice_state *ss;
@@ -2832,11 +2832,10 @@ static netdev_tx_t myri10ge_xmit(struct sk_buff *skb,
 	__be32 high_swapped;
 	unsigned int len;
 	int idx, avail, frag_cnt, frag_idx, count, mss, max_segments;
-	u16 pseudo_hdr_offset, cksum_offset, queue;
+	u16 pseudo_hdr_offset, cksum_offset;
 	int cum_len, seglen, boundary, rdma_count;
 	u8 flags, odd_flag;
 
-	queue = skb_get_queue_mapping(skb);
 	ss = &mgp->ss[queue];
 	netdev_queue = netdev_get_tx_queue(mgp->dev, queue);
 	tx = &ss->tx;
@@ -2901,7 +2900,7 @@ again:
 			cksum_offset = tcp_hdrlen(skb);
 			/* Can only handle headers <= max_tso6 long */
 			if (unlikely(-cum_len > mgp->max_tso6))
-				return myri10ge_sw_tso(skb, dev);
+				return myri10ge_sw_tso(skb, dev, queue);
 		}
 		/* for TSO, pseudo_hdr_offset holds mss.
 		 * The firmware figures out where to put
@@ -3088,7 +3087,7 @@ drop:
 }
 
 static netdev_tx_t myri10ge_sw_tso(struct sk_buff *skb,
-					 struct net_device *dev)
+					 struct net_device *dev, unsigned int queue)
 {
 	struct sk_buff *segs, *curr;
 	struct myri10ge_priv *mgp = netdev_priv(dev);
@@ -3103,7 +3102,7 @@ static netdev_tx_t myri10ge_sw_tso(struct sk_buff *skb,
 		curr = segs;
 		segs = segs->next;
 		curr->next = NULL;
-		status = myri10ge_xmit(curr, dev);
+		status = myri10ge_xmit(curr, dev, queue);
 		if (status != 0) {
 			dev_kfree_skb_any(curr);
 			if (segs != NULL) {
@@ -3119,7 +3118,7 @@ static netdev_tx_t myri10ge_sw_tso(struct sk_buff *skb,
 	return NETDEV_TX_OK;
 
 drop:
-	ss = &mgp->ss[skb_get_queue_mapping(skb)];
+	ss = &mgp->ss[queue];
 	dev_kfree_skb_any(skb);
 	ss->stats.tx_dropped += 1;
 	return NETDEV_TX_OK;

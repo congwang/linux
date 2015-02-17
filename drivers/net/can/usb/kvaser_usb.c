@@ -1605,7 +1605,7 @@ static void kvaser_usb_write_bulk_callback(struct urb *urb)
 }
 
 static netdev_tx_t kvaser_usb_start_xmit(struct sk_buff *skb,
-					 struct net_device *netdev)
+					 struct net_device *netdev, unsigned int queue)
 {
 	struct kvaser_usb_net_priv *priv = netdev_priv(netdev);
 	struct kvaser_usb *dev = priv->dev;

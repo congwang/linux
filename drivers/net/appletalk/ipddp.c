@@ -50,7 +50,7 @@ static int ipddp_mode = IPDDP_DECAP;
 
 /* Index to functions, as function prototypes. */
 static netdev_tx_t ipddp_xmit(struct sk_buff *skb,
-				    struct net_device *dev);
+				    struct net_device *dev, unsigned int queue);
 static int ipddp_create(struct ipddp_route *new_rt);
 static int ipddp_delete(struct ipddp_route *rt);
 static struct ipddp_route* __ipddp_find_route(struct ipddp_route *rt);
@@ -115,7 +115,8 @@ static struct net_device * __init ipddp_init(void)
 /*
  * Transmit LLAP/ELAP frame using aarp_send_ddp.
  */
-static netdev_tx_t ipddp_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t ipddp_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	__be32 paddr = skb_rtable(skb)->rt_gateway;
         struct ddpehdr *ddp;

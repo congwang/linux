@@ -1298,7 +1298,7 @@ static void wl3501_tx_timeout(struct net_device *dev)
  *		and try to sent it later
  */
 static netdev_tx_t wl3501_hard_start_xmit(struct sk_buff *skb,
-						struct net_device *dev)
+						struct net_device *dev, unsigned int queue)
 {
 	int enabled, rc;
 	struct wl3501_card *this = netdev_priv(dev);

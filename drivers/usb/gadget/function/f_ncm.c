@@ -1108,7 +1108,7 @@ static void ncm_tx_tasklet(unsigned long data)
 		 * XXX and performed in some way outside of the ndo_start_xmit
 		 * XXX interface.
 		 */
-		ncm->netdev->netdev_ops->ndo_start_xmit(NULL, ncm->netdev);
+		ncm->netdev->netdev_ops->ndo_start_xmit(NULL, ncm->netdev, 0);
 
 		ncm->timer_force_tx = false;
 	}

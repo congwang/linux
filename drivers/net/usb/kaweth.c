@@ -796,7 +796,7 @@ static void kaweth_usb_transmit_complete(struct urb *urb)
  *     kaweth_start_xmit
  ****************************************************************/
 static netdev_tx_t kaweth_start_xmit(struct sk_buff *skb,
-					   struct net_device *net)
+					   struct net_device *net, unsigned int queue)
 {
 	struct kaweth_device *kaweth = netdev_priv(net);
 	__le16 *private_header;

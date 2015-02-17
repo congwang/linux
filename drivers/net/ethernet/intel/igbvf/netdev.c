@@ -2282,7 +2282,7 @@ static netdev_tx_t igbvf_xmit_frame_ring_adv(struct sk_buff *skb,
 }
 
 static netdev_tx_t igbvf_xmit_frame(struct sk_buff *skb,
-				    struct net_device *netdev)
+				    struct net_device *netdev, unsigned int queue)
 {
 	struct igbvf_adapter *adapter = netdev_priv(netdev);
 	struct igbvf_ring *tx_ring;

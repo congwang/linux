@@ -413,7 +413,8 @@ out:
 	return count;
 }
 
-static int hip04_mac_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+static int hip04_mac_start_xmit(struct sk_buff *skb,
+				struct net_device *ndev, unsigned int queue)
 {
 	struct hip04_priv *priv = netdev_priv(ndev);
 	struct net_device_stats *stats = &ndev->stats;

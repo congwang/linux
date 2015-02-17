@@ -60,7 +60,7 @@ static inline void softing_clr_reset_dpram(struct softing *card)
 
 /* trigger the tx queue-ing */
 static netdev_tx_t softing_netdev_start_xmit(struct sk_buff *skb,
-		struct net_device *dev)
+		struct net_device *dev, unsigned int queue)
 {
 	struct softing_priv *priv = netdev_priv(dev);
 	struct softing *card = priv->card;

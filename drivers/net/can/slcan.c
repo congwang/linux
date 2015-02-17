@@ -349,7 +349,8 @@ static void slcan_write_wakeup(struct tty_struct *tty)
 }
 
 /* Send a can_frame to a TTY queue. */
-static netdev_tx_t slc_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t slc_xmit(struct sk_buff *skb,
+			    struct net_device *dev, unsigned int queue)
 {
 	struct slcan *sl = netdev_priv(dev);
 

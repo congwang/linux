@@ -187,7 +187,8 @@ static int etrax_ethernet_init(void);
 
 static int e100_open(struct net_device *dev);
 static int e100_set_mac_address(struct net_device *dev, void *addr);
-static int e100_send_packet(struct sk_buff *skb, struct net_device *dev);
+static int e100_send_packet(struct sk_buff *skb,
+			    struct net_device *dev, unsigned int queue);
 static irqreturn_t e100rxtx_interrupt(int irq, void *dev_id);
 static irqreturn_t e100nw_interrupt(int irq, void *dev_id);
 static void e100_rx(struct net_device *dev);
@@ -1093,7 +1094,8 @@ e100_tx_timeout(struct net_device *dev)
  */
 
 static int
-e100_send_packet(struct sk_buff *skb, struct net_device *dev)
+e100_send_packet(struct sk_buff *skb,
+		 struct net_device *dev, unsigned int queue)
 {
 	struct net_local *np = netdev_priv(dev);
 	unsigned char *buf = skb->data;

@@ -602,7 +602,8 @@ static irqreturn_t hix5hd2_interrupt(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-static int hix5hd2_net_xmit(struct sk_buff *skb, struct net_device *dev)
+static int hix5hd2_net_xmit(struct sk_buff *skb,
+			    struct net_device *dev, unsigned int queue)
 {
 	struct hix5hd2_priv *priv = netdev_priv(dev);
 	struct hix5hd2_desc *desc;

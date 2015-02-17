@@ -2936,7 +2936,8 @@ static inline int qeth_l3_tso_elements(struct sk_buff *skb)
 	return elements;
 }
 
-static int qeth_l3_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int qeth_l3_hard_start_xmit(struct sk_buff *skb,
+				   struct net_device *dev, unsigned int queue)
 {
 	int rc;
 	u16 *tag;

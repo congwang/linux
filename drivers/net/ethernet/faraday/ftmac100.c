@@ -1009,7 +1009,8 @@ static int ftmac100_stop(struct net_device *netdev)
 	return 0;
 }
 
-static int ftmac100_hard_start_xmit(struct sk_buff *skb, struct net_device *netdev)
+static int ftmac100_hard_start_xmit(struct sk_buff *skb,
+				    struct net_device *netdev, unsigned int queue)
 {
 	struct ftmac100 *priv = netdev_priv(netdev);
 	dma_addr_t map;

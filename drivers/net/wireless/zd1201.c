@@ -785,7 +785,7 @@ static int zd1201_net_stop(struct net_device *dev)
 		zd		1 null byte, zd1201 packet type
  */
 static netdev_tx_t zd1201_hard_start_xmit(struct sk_buff *skb,
-						struct net_device *dev)
+						struct net_device *dev, unsigned int queue)
 {
 	struct zd1201 *zd = netdev_priv(dev);
 	unsigned char *txbuf = zd->txdata;

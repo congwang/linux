@@ -875,7 +875,8 @@ done:
  *               the generic network layer.
  */
 /* first merge version - leaving both functions separated */
-static int ctcm_tx(struct sk_buff *skb, struct net_device *dev)
+static int ctcm_tx(struct sk_buff *skb,
+		   struct net_device *dev, unsigned int queue)
 {
 	struct ctcm_priv *priv = dev->ml_priv;
 
@@ -918,7 +919,8 @@ static int ctcm_tx(struct sk_buff *skb, struct net_device *dev)
 }
 
 /* unmerged MPC variant of ctcm_tx */
-static int ctcmpc_tx(struct sk_buff *skb, struct net_device *dev)
+static int ctcmpc_tx(struct sk_buff *skb,
+		     struct net_device *dev, unsigned int queue)
 {
 	int len = 0;
 	struct ctcm_priv *priv = dev->ml_priv;

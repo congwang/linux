@@ -6562,7 +6562,7 @@ bnx2_tx_timeout(struct net_device *dev)
  * netif_wake_queue().
  */
 static netdev_tx_t
-bnx2_start_xmit(struct sk_buff *skb, struct net_device *dev)
+bnx2_start_xmit(struct sk_buff *skb, struct net_device *dev, unsigned int queue)
 {
 	struct bnx2 *bp = netdev_priv(dev);
 	dma_addr_t mapping;
@@ -6570,16 +6570,14 @@ bnx2_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	struct bnx2_sw_tx_bd *tx_buf;
 	u32 len, vlan_tag_flags, last_frag, mss;
 	u16 prod, ring_prod;
-	int i;
 	struct bnx2_napi *bnapi;
 	struct bnx2_tx_ring_info *txr;
 	struct netdev_queue *txq;
 
 	/*  Determine which tx ring we will be placed on */
-	i = skb_get_queue_mapping(skb);
-	bnapi = &bp->bnx2_napi[i];
+	bnapi = &bp->bnx2_napi[queue];
 	txr = &bnapi->tx_ring;
-	txq = netdev_get_tx_queue(dev, i);
+	txq = netdev_get_tx_queue(dev, queue);
 
 	if (unlikely(bnx2_tx_avail(bp, txr) <
 	    (skb_shinfo(skb)->nr_frags + 1))) {

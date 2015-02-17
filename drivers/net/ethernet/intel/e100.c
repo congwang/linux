@@ -1796,7 +1796,7 @@ static int e100_xmit_prepare(struct nic *nic, struct cb *cb,
 }
 
 static netdev_tx_t e100_xmit_frame(struct sk_buff *skb,
-				   struct net_device *netdev)
+				   struct net_device *netdev, unsigned int queue)
 {
 	struct nic *nic = netdev_priv(netdev);
 	int err;
@@ -2405,7 +2405,7 @@ static int e100_loopback_test(struct nic *nic, enum loopback loopback_mode)
 	}
 	skb_put(skb, ETH_DATA_LEN);
 	memset(skb->data, 0xFF, ETH_DATA_LEN);
-	e100_xmit_frame(skb, nic->netdev);
+	e100_xmit_frame(skb, nic->netdev, 0);
 
 	msleep(10);
 

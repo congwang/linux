@@ -410,7 +410,8 @@ static s32 gdm_lte_tx_nic_type(struct net_device *dev, struct sk_buff *skb)
 	return nic_type;
 }
 
-static int gdm_lte_tx(struct sk_buff *skb, struct net_device *dev)
+static int gdm_lte_tx(struct sk_buff *skb,
+		      struct net_device *dev, unsigned int queue)
 {
 	struct nic *nic = netdev_priv(dev);
 	u32 nic_type;

@@ -1157,7 +1157,8 @@ ks8695_timeout(struct net_device *ndev)
  *	engine to ensure transmission begins.
  */
 static int
-ks8695_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ks8695_start_xmit(struct sk_buff *skb,
+		  struct net_device *ndev, unsigned int queue)
 {
 	struct ks8695_priv *ksp = netdev_priv(ndev);
 	int buff_n;

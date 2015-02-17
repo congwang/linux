@@ -107,7 +107,7 @@ static int xircom_probe(struct pci_dev *pdev, const struct pci_device_id *id);
 static void xircom_remove(struct pci_dev *pdev);
 static irqreturn_t xircom_interrupt(int irq, void *dev_instance);
 static netdev_tx_t xircom_start_xmit(struct sk_buff *skb,
-					   struct net_device *dev);
+					   struct net_device *dev, unsigned int queue);
 static int xircom_open(struct net_device *dev);
 static int xircom_close(struct net_device *dev);
 static void xircom_up(struct xircom_private *card);
@@ -374,7 +374,7 @@ static irqreturn_t xircom_interrupt(int irq, void *dev_instance)
 }
 
 static netdev_tx_t xircom_start_xmit(struct sk_buff *skb,
-					   struct net_device *dev)
+					   struct net_device *dev, unsigned int queue)
 {
 	struct xircom_private *card;
 	unsigned long flags;

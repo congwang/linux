@@ -505,7 +505,8 @@ static irqreturn_t pxa_irda_fir_irq(int irq, void *dev_id)
 }
 
 /* hard_xmit interface of irda device */
-static int pxa_irda_hard_xmit(struct sk_buff *skb, struct net_device *dev)
+static int pxa_irda_hard_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	struct pxa_irda *si = netdev_priv(dev);
 	int speed = irda_get_next_speed(skb);

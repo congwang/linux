@@ -768,7 +768,8 @@ static void epp_bh(struct work_struct *work)
  * ===================== network driver interface =========================
  */
 
-static int baycom_send_packet(struct sk_buff *skb, struct net_device *dev)
+static int baycom_send_packet(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	struct baycom_state *bc = netdev_priv(dev);
 

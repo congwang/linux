@@ -1084,7 +1084,8 @@ drop_pkt:
 
 
 static netdev_tx_t
-vmxnet3_xmit_frame(struct sk_buff *skb, struct net_device *netdev)
+vmxnet3_xmit_frame(struct sk_buff *skb,
+		   struct net_device *netdev, unsigned int queue)
 {
 	struct vmxnet3_adapter *adapter = netdev_priv(netdev);
 

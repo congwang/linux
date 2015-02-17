@@ -209,7 +209,8 @@ tx_error:
 /* This function assumes it is being called from dev_queue_xmit()
  * and that skb is filled properly by that function.
  */
-static netdev_tx_t vti_tunnel_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t vti_tunnel_xmit(struct sk_buff *skb,
+				   struct net_device *dev, unsigned int queue)
 {
 	struct ip_tunnel *tunnel = netdev_priv(dev);
 	struct flowi fl;

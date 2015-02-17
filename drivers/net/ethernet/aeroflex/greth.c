@@ -69,9 +69,9 @@ MODULE_PARM_DESC(greth_edcl, "GRETH EDCL usage indicator. Set to 1 if EDCL is us
 
 static int greth_open(struct net_device *dev);
 static netdev_tx_t greth_start_xmit(struct sk_buff *skb,
-	   struct net_device *dev);
+	   struct net_device *dev, unsigned int queue);
 static netdev_tx_t greth_start_xmit_gbit(struct sk_buff *skb,
-	   struct net_device *dev);
+	   struct net_device *dev, unsigned int queue);
 static int greth_rx(struct net_device *dev, int limit);
 static int greth_rx_gbit(struct net_device *dev, int limit);
 static void greth_clean_tx(struct net_device *dev);
@@ -393,7 +393,8 @@ static int greth_close(struct net_device *dev)
 }
 
 static netdev_tx_t
-greth_start_xmit(struct sk_buff *skb, struct net_device *dev)
+greth_start_xmit(struct sk_buff *skb,
+		 struct net_device *dev, unsigned int queue)
 {
 	struct greth_private *greth = netdev_priv(dev);
 	struct greth_bd *bdp;
@@ -462,7 +463,8 @@ static inline u16 greth_num_free_bds(u16 tx_last, u16 tx_next)
 }
 
 static netdev_tx_t
-greth_start_xmit_gbit(struct sk_buff *skb, struct net_device *dev)
+greth_start_xmit_gbit(struct sk_buff *skb,
+		      struct net_device *dev, unsigned int queue)
 {
 	struct greth_private *greth = netdev_priv(dev);
 	struct greth_bd *bdp;

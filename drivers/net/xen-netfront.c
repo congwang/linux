@@ -511,7 +511,8 @@ static u16 xennet_select_queue(struct net_device *dev, struct sk_buff *skb,
 	return queue_idx;
 }
 
-static int xennet_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int xennet_start_xmit(struct sk_buff *skb,
+			     struct net_device *dev, unsigned int queue)
 {
 	struct netfront_info *np = netdev_priv(dev);
 	struct netfront_stats *tx_stats = this_cpu_ptr(np->tx_stats);

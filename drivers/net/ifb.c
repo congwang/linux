@@ -56,7 +56,8 @@ struct ifb_private {
 static int numifbs = 2;
 
 static void ri_tasklet(unsigned long dev);
-static netdev_tx_t ifb_xmit(struct sk_buff *skb, struct net_device *dev);
+static netdev_tx_t ifb_xmit(struct sk_buff *skb,
+			    struct net_device *dev, unsigned int queue);
 static int ifb_open(struct net_device *dev);
 static int ifb_close(struct net_device *dev);
 
@@ -190,7 +191,8 @@ static void ifb_setup(struct net_device *dev)
 	eth_hw_addr_random(dev);
 }
 
-static netdev_tx_t ifb_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t ifb_xmit(struct sk_buff *skb,
+			    struct net_device *dev, unsigned int queue)
 {
 	struct ifb_private *dp = netdev_priv(dev);
 	u32 from = G_TC_FROM(skb->tc_verd);

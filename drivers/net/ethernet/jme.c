@@ -2247,7 +2247,8 @@ jme_stop_queue_if_full(struct jme_adapter *jme)
  */
 
 static netdev_tx_t
-jme_start_xmit(struct sk_buff *skb, struct net_device *netdev)
+jme_start_xmit(struct sk_buff *skb,
+	       struct net_device *netdev, unsigned int queue)
 {
 	struct jme_adapter *jme = netdev_priv(netdev);
 	int idx;

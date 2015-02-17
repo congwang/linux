@@ -649,7 +649,8 @@ static void tsi108_complete_tx(struct net_device *dev)
 	}
 }
 
-static int tsi108_send_packet(struct sk_buff * skb, struct net_device *dev)
+static int tsi108_send_packet(struct sk_buff * skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	struct tsi108_prv_data *data = netdev_priv(dev);
 	int frags = skb_shinfo(skb)->nr_frags + 1;

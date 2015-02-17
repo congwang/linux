@@ -551,7 +551,7 @@ static void hamachi_timer(unsigned long data);
 static void hamachi_tx_timeout(struct net_device *dev);
 static void hamachi_init_ring(struct net_device *dev);
 static netdev_tx_t hamachi_start_xmit(struct sk_buff *skb,
-				      struct net_device *dev);
+				      struct net_device *dev, unsigned int queue);
 static irqreturn_t hamachi_interrupt(int irq, void *dev_instance);
 static int hamachi_rx(struct net_device *dev);
 static inline int hamachi_tx(struct net_device *dev);
@@ -1205,7 +1205,7 @@ static void hamachi_init_ring(struct net_device *dev)
 
 
 static netdev_tx_t hamachi_start_xmit(struct sk_buff *skb,
-				      struct net_device *dev)
+				      struct net_device *dev, unsigned int queue)
 {
 	struct hamachi_private *hmp = netdev_priv(dev);
 	unsigned entry;

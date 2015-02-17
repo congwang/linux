@@ -729,7 +729,7 @@ static void unwind_tx_frag_mapping(struct cp_private *cp, struct sk_buff *skb,
 }
 
 static netdev_tx_t cp_start_xmit (struct sk_buff *skb,
-					struct net_device *dev)
+					struct net_device *dev, unsigned int queue)
 {
 	struct cp_private *cp = netdev_priv(dev);
 	unsigned entry;

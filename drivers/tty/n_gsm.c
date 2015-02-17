@@ -2667,7 +2667,7 @@ static inline void muxnet_put(struct gsm_mux_net *mux_net)
 }
 
 static int gsm_mux_net_start_xmit(struct sk_buff *skb,
-				      struct net_device *net)
+				      struct net_device *net, unsigned int queue)
 {
 	struct gsm_mux_net *mux_net = (struct gsm_mux_net *)netdev_priv(net);
 	struct gsm_dlci *dlci = mux_net->dlci;

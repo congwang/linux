@@ -151,7 +151,8 @@ static void	tlan_eisa_probe(void);
 static void	tlan_eisa_cleanup(void);
 static int      tlan_init(struct net_device *);
 static int	tlan_open(struct net_device *dev);
-static netdev_tx_t tlan_start_tx(struct sk_buff *, struct net_device *);
+static netdev_tx_t tlan_start_tx(struct sk_buff *,
+				 struct net_device *, unsigned int);
 static irqreturn_t tlan_handle_interrupt(int, void *);
 static int	tlan_close(struct net_device *);
 static struct	net_device_stats *tlan_get_stats(struct net_device *);
@@ -1055,7 +1056,8 @@ static void tlan_tx_timeout_work(struct work_struct *work)
  *
  **************************************************************/
 
-static netdev_tx_t tlan_start_tx(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t tlan_start_tx(struct sk_buff *skb,
+				 struct net_device *dev, unsigned int queue)
 {
 	struct tlan_priv *priv = netdev_priv(dev);
 	dma_addr_t	tail_list_phys;

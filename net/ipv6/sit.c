@@ -1017,7 +1017,7 @@ out:
 }
 
 static netdev_tx_t sit_tunnel_xmit(struct sk_buff *skb,
-				   struct net_device *dev)
+				   struct net_device *dev, unsigned int queue)
 {
 	switch (skb->protocol) {
 	case htons(ETH_P_IP):

@@ -694,7 +694,7 @@ static void mlx4_bf_copy(void __iomem *dst, const void *src,
 	__iowrite64_copy(dst, src, bytecnt / 8);
 }
 
-netdev_tx_t mlx4_en_xmit(struct sk_buff *skb, struct net_device *dev)
+netdev_tx_t mlx4_en_xmit(struct sk_buff *skb, struct net_device *dev, unsigned int tx_ind)
 {
 	struct skb_shared_info *shinfo = skb_shinfo(skb);
 	struct mlx4_en_priv *priv = netdev_priv(dev);
@@ -703,7 +703,6 @@ netdev_tx_t mlx4_en_xmit(struct sk_buff *skb, struct net_device *dev)
 	struct mlx4_en_tx_desc *tx_desc;
 	struct mlx4_wqe_data_seg *data;
 	struct mlx4_en_tx_info *tx_info;
-	int tx_ind = 0;
 	int nr_txbb;
 	int desc_size;
 	int real_size;
@@ -722,7 +721,6 @@ netdev_tx_t mlx4_en_xmit(struct sk_buff *skb, struct net_device *dev)
 	if (!priv->port_up)
 		goto tx_drop;
 
-	tx_ind = skb_get_queue_mapping(skb);
 	ring = priv->tx_ring[tx_ind];
 
 	/* fetch ring->cons far ahead before needing it to avoid stall */

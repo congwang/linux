@@ -275,7 +275,7 @@ static void __maybe_unused xlr_wakeup_queue(unsigned long dev)
 }
 
 static netdev_tx_t xlr_net_start_xmit(struct sk_buff *skb,
-		struct net_device *ndev)
+		struct net_device *ndev, unsigned int queue)
 {
 	struct nlm_fmn_msg msg;
 	struct xlr_net_priv *priv = netdev_priv(ndev);

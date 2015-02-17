@@ -91,7 +91,7 @@ static int msg_from_mpoad(struct atm_vcc *vcc, struct sk_buff *skb);
 
 static void mpc_push(struct atm_vcc *vcc, struct sk_buff *skb);
 static netdev_tx_t mpc_send_packet(struct sk_buff *skb,
-				   struct net_device *dev);
+				   struct net_device *dev, unsigned int queue);
 static int mpoa_event_listener(struct notifier_block *mpoa_notifier,
 			       unsigned long event, void *dev);
 static void mpc_timer_refresh(void);
@@ -568,7 +568,7 @@ static int send_via_shortcut(struct sk_buff *skb, struct mpoa_client *mpc)
  * Probably needs some error checks and locking, not sure...
  */
 static netdev_tx_t mpc_send_packet(struct sk_buff *skb,
-					 struct net_device *dev)
+					 struct net_device *dev, unsigned int queue)
 {
 	struct mpoa_client *mpc;
 	struct ethhdr *eth;
@@ -599,7 +599,7 @@ static netdev_tx_t mpc_send_packet(struct sk_buff *skb,
 	}
 
 non_ip:
-	return __netdev_start_xmit(mpc->old_ops, skb, dev, false);
+	return _netdev_start_xmit(mpc->old_ops, skb, dev, false);
 }
 
 static int atm_mpoa_vcc_attach(struct atm_vcc *vcc, void __user *arg)

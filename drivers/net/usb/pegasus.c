@@ -684,7 +684,7 @@ static void pegasus_tx_timeout(struct net_device *net)
 }
 
 static netdev_tx_t pegasus_start_xmit(struct sk_buff *skb,
-					    struct net_device *net)
+					    struct net_device *net, unsigned int queue)
 {
 	pegasus_t *pegasus = netdev_priv(net);
 	int count = ((skb->len + 2) & 0x3f) ? skb->len + 2 : skb->len + 3;

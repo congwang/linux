@@ -81,7 +81,8 @@ static void vcan_rx(struct sk_buff *skb, struct net_device *dev)
 	netif_rx_ni(skb);
 }
 
-static netdev_tx_t vcan_tx(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t vcan_tx(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue)
 {
 	struct canfd_frame *cfd = (struct canfd_frame *)skb->data;
 	struct net_device_stats *stats = &dev->stats;

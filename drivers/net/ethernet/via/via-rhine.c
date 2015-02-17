@@ -508,7 +508,7 @@ static void rhine_reset_task(struct work_struct *work);
 static void rhine_slow_event_task(struct work_struct *work);
 static void rhine_tx_timeout(struct net_device *dev);
 static netdev_tx_t rhine_start_tx(struct sk_buff *skb,
-				  struct net_device *dev);
+				  struct net_device *dev, unsigned int queue);
 static irqreturn_t rhine_interrupt(int irq, void *dev_instance);
 static void rhine_tx(struct net_device *dev);
 static int rhine_rx(struct net_device *dev, int limit);
@@ -1728,7 +1728,7 @@ static void rhine_tx_timeout(struct net_device *dev)
 }
 
 static netdev_tx_t rhine_start_tx(struct sk_buff *skb,
-				  struct net_device *dev)
+				  struct net_device *dev, unsigned int queue)
 {
 	struct rhine_private *rp = netdev_priv(dev);
 	struct device *hwdev = dev->dev.parent;

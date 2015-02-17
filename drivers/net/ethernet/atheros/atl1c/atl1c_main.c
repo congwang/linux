@@ -2199,7 +2199,7 @@ static void atl1c_tx_queue(struct atl1c_adapter *adapter, struct sk_buff *skb,
 }
 
 static netdev_tx_t atl1c_xmit_frame(struct sk_buff *skb,
-					  struct net_device *netdev)
+					  struct net_device *netdev, unsigned int queue)
 {
 	struct atl1c_adapter *adapter = netdev_priv(netdev);
 	unsigned long flags;

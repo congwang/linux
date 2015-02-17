@@ -621,7 +621,8 @@ static void drain_ring(struct net_device *dev);
 static void free_ring(struct net_device *dev);
 static void reinit_ring(struct net_device *dev);
 static void init_registers(struct net_device *dev);
-static netdev_tx_t start_tx(struct sk_buff *skb, struct net_device *dev);
+static netdev_tx_t start_tx(struct sk_buff *skb,
+			    struct net_device *dev, unsigned int queue);
 static irqreturn_t intr_handler(int irq, void *dev_instance);
 static void netdev_error(struct net_device *dev, int intr_status);
 static int natsemi_poll(struct napi_struct *napi, int budget);
@@ -2077,7 +2078,8 @@ static void reinit_ring(struct net_device *dev)
 	reinit_rx(dev);
 }
 
-static netdev_tx_t start_tx(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t start_tx(struct sk_buff *skb,
+			    struct net_device *dev, unsigned int queue)
 {
 	struct netdev_private *np = netdev_priv(dev);
 	void __iomem * ioaddr = ns_ioaddr(dev);

@@ -588,7 +588,8 @@ static irqreturn_t sh_sir_irq(int irq, void *dev_id)
 
 
 ************************************************************************/
-static int sh_sir_hard_xmit(struct sk_buff *skb, struct net_device *ndev)
+static int sh_sir_hard_xmit(struct sk_buff *skb,
+			    struct net_device *ndev, unsigned int queue)
 {
 	struct sh_sir_self *self = netdev_priv(ndev);
 	int speed = irda_get_next_speed(skb);

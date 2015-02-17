@@ -301,7 +301,7 @@ static void ksdazzle_send_irq(struct urb *urb)
  * Called from net/core when new frame is available.
  */
 static netdev_tx_t ksdazzle_hard_xmit(struct sk_buff *skb,
-					    struct net_device *netdev)
+					    struct net_device *netdev, unsigned int queue)
 {
 	struct ksdazzle_cb *kingsun;
 	unsigned int wraplen;

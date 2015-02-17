@@ -710,7 +710,8 @@ typhoon_tso_fill(struct sk_buff *skb, struct transmit_ring *txRing,
 }
 
 static netdev_tx_t
-typhoon_start_tx(struct sk_buff *skb, struct net_device *dev)
+typhoon_start_tx(struct sk_buff *skb,
+		 struct net_device *dev, unsigned int queue)
 {
 	struct typhoon *tp = netdev_priv(dev);
 	struct transmit_ring *txRing;

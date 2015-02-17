@@ -187,7 +187,7 @@ static void brcmf_netdev_set_multicast_list(struct net_device *ndev)
 }
 
 static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
-					   struct net_device *ndev)
+					   struct net_device *ndev, unsigned int queue)
 {
 	int ret;
 	struct brcmf_if *ifp = netdev_priv(ndev);
@@ -734,7 +734,7 @@ static int brcmf_net_p2p_stop(struct net_device *ndev)
 }
 
 static netdev_tx_t brcmf_net_p2p_start_xmit(struct sk_buff *skb,
-					    struct net_device *ndev)
+					    struct net_device *ndev, unsigned int queue)
 {
 	if (skb)
 		dev_kfree_skb_any(skb);

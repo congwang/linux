@@ -2407,7 +2407,7 @@ ace_load_tx_bd(struct ace_private *ap, struct tx_desc *desc, u64 addr,
 
 
 static netdev_tx_t ace_start_xmit(struct sk_buff *skb,
-				  struct net_device *dev)
+				  struct net_device *dev, unsigned int queue)
 {
 	struct ace_private *ap = netdev_priv(dev);
 	struct ace_regs __iomem *regs = ap->regs;

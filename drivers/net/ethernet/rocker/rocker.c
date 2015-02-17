@@ -3517,7 +3517,8 @@ unmap_frag:
 	return -EMSGSIZE;
 }
 
-static netdev_tx_t rocker_port_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t rocker_port_xmit(struct sk_buff *skb,
+				    struct net_device *dev, unsigned int queue)
 {
 	struct rocker_port *rocker_port = netdev_priv(dev);
 	struct rocker *rocker = rocker_port->rocker;

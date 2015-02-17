@@ -131,7 +131,8 @@ static int rose_close(struct net_device *dev)
 	return 0;
 }
 
-static netdev_tx_t rose_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t rose_xmit(struct sk_buff *skb,
+			     struct net_device *dev, unsigned int queue)
 {
 	struct net_device_stats *stats = &dev->stats;
 

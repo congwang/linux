@@ -89,7 +89,8 @@ struct mace_frame {
 
 static int mace_open(struct net_device *dev);
 static int mace_close(struct net_device *dev);
-static int mace_xmit_start(struct sk_buff *skb, struct net_device *dev);
+static int mace_xmit_start(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue);
 static void mace_set_multicast(struct net_device *dev);
 static int mace_set_address(struct net_device *dev, void *addr);
 static void mace_reset(struct net_device *dev);
@@ -445,7 +446,8 @@ static int mace_close(struct net_device *dev)
  * Transmit a frame
  */
 
-static int mace_xmit_start(struct sk_buff *skb, struct net_device *dev)
+static int mace_xmit_start(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue)
 {
 	struct mace_data *mp = netdev_priv(dev);
 	unsigned long flags;

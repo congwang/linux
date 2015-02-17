@@ -322,7 +322,7 @@ static int clip_encap(struct atm_vcc *vcc, int mode)
 }
 
 static netdev_tx_t clip_start_xmit(struct sk_buff *skb,
-				   struct net_device *dev)
+				   struct net_device *dev, unsigned int queue)
 {
 	struct clip_priv *clip_priv = PRIV(dev);
 	struct dst_entry *dst = skb_dst(skb);

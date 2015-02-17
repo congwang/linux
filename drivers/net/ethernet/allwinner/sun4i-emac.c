@@ -437,7 +437,8 @@ static void emac_timeout(struct net_device *dev)
 /* Hardware start transmission.
  * Send a packet to media from the upper layer.
  */
-static int emac_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int emac_start_xmit(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue)
 {
 	struct emac_board_info *db = netdev_priv(dev);
 	unsigned long channel;

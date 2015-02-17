@@ -885,7 +885,8 @@ out:
  * returns 0 on success, !0 on failure
  */
 static int
-spider_net_xmit(struct sk_buff *skb, struct net_device *netdev)
+spider_net_xmit(struct sk_buff *skb,
+		struct net_device *netdev, unsigned int queue)
 {
 	int cnt;
 	struct spider_net_card *card = netdev_priv(netdev);

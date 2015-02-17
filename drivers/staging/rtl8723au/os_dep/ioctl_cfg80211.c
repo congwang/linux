@@ -2442,7 +2442,7 @@ static int rtw_cfg80211_monitor_if_close(struct net_device *ndev)
 }
 
 static int rtw_cfg80211_monitor_if_xmit_entry(struct sk_buff *skb,
-					      struct net_device *ndev)
+					      struct net_device *ndev, unsigned int queue)
 {
 	int ret = 0;
 	int rtap_len;

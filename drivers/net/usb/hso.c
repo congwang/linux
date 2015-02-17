@@ -792,7 +792,7 @@ static void write_bulk_callback(struct urb *urb)
 
 /* called by kernel when we need to transmit a packet */
 static netdev_tx_t hso_net_start_xmit(struct sk_buff *skb,
-					    struct net_device *net)
+					    struct net_device *net, unsigned int queue)
 {
 	struct hso_net *odev = netdev_priv(net);
 	int result;

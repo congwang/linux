@@ -2063,7 +2063,8 @@ tx_free:
  * Outer UDP destination is the VXLAN assigned port.
  *           source port is based on hash of flow
  */
-static netdev_tx_t vxlan_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t vxlan_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	struct vxlan_dev *vxlan = netdev_priv(dev);
 	struct ethhdr *eth;

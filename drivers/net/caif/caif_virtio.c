@@ -519,7 +519,8 @@ err:
 }
 
 /* Put the CAIF packet on the virtio ring and kick the receiver */
-static int cfv_netdev_tx(struct sk_buff *skb, struct net_device *netdev)
+static int cfv_netdev_tx(struct sk_buff *skb,
+			 struct net_device *netdev, unsigned int queue)
 {
 	struct cfv_info *cfv = netdev_priv(netdev);
 	struct buf_info *buf_info;

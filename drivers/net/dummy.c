@@ -76,7 +76,8 @@ static struct rtnl_link_stats64 *dummy_get_stats64(struct net_device *dev,
 	return stats;
 }
 
-static netdev_tx_t dummy_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t dummy_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	struct pcpu_dstats *dstats = this_cpu_ptr(dev->dstats);
 

@@ -224,7 +224,7 @@ static void sis900_tx_timeout(struct net_device *net_dev);
 static void sis900_init_tx_ring(struct net_device *net_dev);
 static void sis900_init_rx_ring(struct net_device *net_dev);
 static netdev_tx_t sis900_start_xmit(struct sk_buff *skb,
-				     struct net_device *net_dev);
+				     struct net_device *net_dev, unsigned int queue);
 static int sis900_rx(struct net_device *net_dev);
 static void sis900_finish_xmit (struct net_device *net_dev);
 static irqreturn_t sis900_interrupt(int irq, void *dev_instance);
@@ -1595,7 +1595,8 @@ static void sis900_tx_timeout(struct net_device *net_dev)
  */
 
 static netdev_tx_t
-sis900_start_xmit(struct sk_buff *skb, struct net_device *net_dev)
+sis900_start_xmit(struct sk_buff *skb,
+		  struct net_device *net_dev, unsigned int queue)
 {
 	struct sis900_private *sis_priv = netdev_priv(net_dev);
 	void __iomem *ioaddr = sis_priv->ioaddr;

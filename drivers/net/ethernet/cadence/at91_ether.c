@@ -155,7 +155,8 @@ static int at91ether_close(struct net_device *dev)
 }
 
 /* Transmit packet */
-static int at91ether_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int at91ether_start_xmit(struct sk_buff *skb,
+				struct net_device *dev, unsigned int queue)
 {
 	struct macb *lp = netdev_priv(dev);
 

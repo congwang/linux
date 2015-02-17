@@ -194,7 +194,8 @@ static int dsa_slave_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 	return -EOPNOTSUPP;
 }
 
-static netdev_tx_t dsa_slave_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t dsa_slave_xmit(struct sk_buff *skb,
+				  struct net_device *dev, unsigned int queue)
 {
 	struct dsa_slave_priv *p = netdev_priv(dev);
 

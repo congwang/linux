@@ -194,7 +194,8 @@ static int mscan_restart(struct net_device *dev)
 	return 0;
 }
 
-static netdev_tx_t mscan_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t mscan_start_xmit(struct sk_buff *skb,
+				    struct net_device *dev, unsigned int queue)
 {
 	struct can_frame *frame = (struct can_frame *)skb->data;
 	struct mscan_priv *priv = netdev_priv(dev);

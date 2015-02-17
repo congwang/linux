@@ -525,7 +525,8 @@ static inline void dnet_print_skb(struct sk_buff *skb)
 #define dnet_print_skb(skb)	do {} while (0)
 #endif
 
-static netdev_tx_t dnet_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t dnet_start_xmit(struct sk_buff *skb,
+				   struct net_device *dev, unsigned int queue)
 {
 
 	struct dnet *bp = netdev_priv(dev);

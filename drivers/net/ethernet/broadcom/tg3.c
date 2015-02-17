@@ -7881,7 +7881,7 @@ tg3_tso_bug_end:
 }
 
 /* hard_start_xmit for all devices */
-static netdev_tx_t tg3_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t tg3_start_xmit(struct sk_buff *skb, struct net_device *dev, unsigned int queue)
 {
 	struct tg3 *tp = netdev_priv(dev);
 	u32 len, entry, base_flags, mss, vlan = 0;
@@ -7896,8 +7896,8 @@ static netdev_tx_t tg3_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	__sum16 tcp_csum = 0, ip_csum = 0;
 	__be16 ip_tot_len = 0;
 
-	txq = netdev_get_tx_queue(dev, skb_get_queue_mapping(skb));
-	tnapi = &tp->napi[skb_get_queue_mapping(skb)];
+	txq = netdev_get_tx_queue(dev, queue);
+	tnapi = &tp->napi[queue];
 	if (tg3_flag(tp, ENABLE_TSS))
 		tnapi++;
 

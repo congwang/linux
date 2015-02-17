@@ -72,7 +72,8 @@ MODULE_PARM_DESC(debug, "Debug level (0=none,...,16=all)");
 
 static int c2_up(struct net_device *netdev);
 static int c2_down(struct net_device *netdev);
-static int c2_xmit_frame(struct sk_buff *skb, struct net_device *netdev);
+static int c2_xmit_frame(struct sk_buff *skb,
+			 struct net_device *netdev, unsigned int queue);
 static void c2_tx_interrupt(struct net_device *netdev);
 static void c2_rx_interrupt(struct net_device *netdev);
 static irqreturn_t c2_interrupt(int irq, void *dev_id);
@@ -753,7 +754,8 @@ static void c2_reset(struct c2_port *c2_port)
 	pr_debug("Current RX: %u\n", c2dev->cur_rx);
 }
 
-static int c2_xmit_frame(struct sk_buff *skb, struct net_device *netdev)
+static int c2_xmit_frame(struct sk_buff *skb,
+			 struct net_device *netdev, unsigned int queue)
 {
 	struct c2_port *c2_port = netdev_priv(netdev);
 	struct c2_dev *c2dev = c2_port->c2dev;

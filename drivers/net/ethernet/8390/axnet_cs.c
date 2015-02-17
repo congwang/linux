@@ -80,7 +80,7 @@ static int axnet_open(struct net_device *dev);
 static int axnet_close(struct net_device *dev);
 static int axnet_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
 static netdev_tx_t axnet_start_xmit(struct sk_buff *skb,
-					  struct net_device *dev);
+					  struct net_device *dev, unsigned int queue);
 static struct net_device_stats *get_stats(struct net_device *dev);
 static void set_multicast_list(struct net_device *dev);
 static void axnet_tx_timeout(struct net_device *dev);
@@ -954,7 +954,7 @@ static void axnet_tx_timeout(struct net_device *dev)
  */
  
 static netdev_tx_t axnet_start_xmit(struct sk_buff *skb,
-					  struct net_device *dev)
+					  struct net_device *dev, unsigned int queue)
 {
 	long e8390_base = dev->base_addr;
 	struct ei_device *ei_local = netdev_priv(dev);

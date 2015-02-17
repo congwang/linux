@@ -558,7 +558,7 @@ static inline void enic_queue_wq_skb(struct enic *enic,
 
 /* netif_tx_lock held, process context with BHs disabled, or BH */
 static netdev_tx_t enic_hard_start_xmit(struct sk_buff *skb,
-	struct net_device *netdev)
+	struct net_device *netdev, unsigned int queue)
 {
 	struct enic *enic = netdev_priv(netdev);
 	struct vnic_wq *wq;
@@ -570,7 +570,7 @@ static netdev_tx_t enic_hard_start_xmit(struct sk_buff *skb,
 		return NETDEV_TX_OK;
 	}
 
-	txq_map = skb_get_queue_mapping(skb) % enic->wq_count;
+	txq_map = queue % enic->wq_count;
 	wq = &enic->wq[txq_map];
 	txq = netdev_get_tx_queue(netdev, txq_map);
 

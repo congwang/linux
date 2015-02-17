@@ -1217,9 +1217,9 @@ dma_error:
 	return 0;
 }
 
-static int macb_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int macb_start_xmit(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue_index)
 {
-	u16 queue_index = skb_get_queue_mapping(skb);
 	struct macb *bp = netdev_priv(dev);
 	struct macb_queue *queue = &bp->queues[queue_index];
 	unsigned long flags;

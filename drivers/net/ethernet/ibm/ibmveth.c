@@ -941,7 +941,7 @@ static int ibmveth_send(struct ibmveth_adapter *adapter,
 }
 
 static netdev_tx_t ibmveth_start_xmit(struct sk_buff *skb,
-				      struct net_device *netdev)
+				      struct net_device *netdev, unsigned int queue)
 {
 	struct ibmveth_adapter *adapter = netdev_priv(netdev);
 	unsigned int desc_flags;

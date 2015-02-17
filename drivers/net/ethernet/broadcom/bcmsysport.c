@@ -926,7 +926,7 @@ static struct sk_buff *bcm_sysport_insert_tsb(struct sk_buff *skb,
 }
 
 static netdev_tx_t bcm_sysport_xmit(struct sk_buff *skb,
-				    struct net_device *dev)
+				    struct net_device *dev, unsigned int queue)
 {
 	struct bcm_sysport_priv *priv = netdev_priv(dev);
 	struct device *kdev = &priv->pdev->dev;
@@ -938,10 +938,8 @@ static netdev_tx_t bcm_sysport_xmit(struct sk_buff *skb,
 	unsigned long flags;
 	dma_addr_t mapping;
 	u32 len_status;
-	u16 queue;
 	int ret;
 
-	queue = skb_get_queue_mapping(skb);
 	txq = netdev_get_tx_queue(dev, queue);
 	ring = &priv->tx_rings[queue];
 

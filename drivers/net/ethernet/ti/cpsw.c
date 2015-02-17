@@ -1373,7 +1373,7 @@ static int cpsw_ndo_stop(struct net_device *ndev)
 }
 
 static netdev_tx_t cpsw_ndo_start_xmit(struct sk_buff *skb,
-				       struct net_device *ndev)
+				       struct net_device *ndev, unsigned int queue)
 {
 	struct cpsw_priv *priv = netdev_priv(ndev);
 	int ret;

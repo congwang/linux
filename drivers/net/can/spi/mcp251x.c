@@ -512,7 +512,7 @@ static void mcp251x_hw_sleep(struct spi_device *spi)
 }
 
 static netdev_tx_t mcp251x_hard_start_xmit(struct sk_buff *skb,
-					   struct net_device *net)
+					   struct net_device *net, unsigned int queue)
 {
 	struct mcp251x_priv *priv = netdev_priv(net);
 	struct spi_device *spi = priv->spi;

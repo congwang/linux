@@ -422,7 +422,8 @@ xpnet_send(struct sk_buff *skb, struct xpnet_pending_msg *queued_msg,
  * this packet is to be broadcast to all connected partitions.
  */
 static int
-xpnet_dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+xpnet_dev_hard_start_xmit(struct sk_buff *skb,
+			  struct net_device *dev, unsigned int queue)
 {
 	struct xpnet_pending_msg *queued_msg;
 	u64 start_addr, end_addr;

@@ -1170,7 +1170,8 @@ out:
 }
 
 /* Submit the packet */
-static int netcp_ndo_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+static int netcp_ndo_start_xmit(struct sk_buff *skb,
+				struct net_device *ndev, unsigned int queue)
 {
 	struct netcp_intf *netcp = netdev_priv(ndev);
 	int subqueue = skb_get_queue_mapping(skb);

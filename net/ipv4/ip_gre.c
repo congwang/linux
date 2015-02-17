@@ -247,7 +247,7 @@ static void __gre_xmit(struct sk_buff *skb, struct net_device *dev,
 }
 
 static netdev_tx_t ipgre_xmit(struct sk_buff *skb,
-			      struct net_device *dev)
+			      struct net_device *dev, unsigned int queue)
 {
 	struct ip_tunnel *tunnel = netdev_priv(dev);
 	const struct iphdr *tnl_params;
@@ -288,7 +288,7 @@ out:
 }
 
 static netdev_tx_t gre_tap_xmit(struct sk_buff *skb,
-				struct net_device *dev)
+				struct net_device *dev, unsigned int queue)
 {
 	struct ip_tunnel *tunnel = netdev_priv(dev);
 

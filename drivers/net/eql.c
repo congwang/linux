@@ -132,7 +132,8 @@
 static int eql_open(struct net_device *dev);
 static int eql_close(struct net_device *dev);
 static int eql_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd);
-static netdev_tx_t eql_slave_xmit(struct sk_buff *skb, struct net_device *dev);
+static netdev_tx_t eql_slave_xmit(struct sk_buff *skb,
+				  struct net_device *dev, unsigned int queue);
 
 #define eql_is_slave(dev)	((dev->flags & IFF_SLAVE) == IFF_SLAVE)
 #define eql_is_master(dev)	((dev->flags & IFF_MASTER) == IFF_MASTER)
@@ -330,7 +331,8 @@ static slave_t *__eql_schedule_slaves(slave_queue_t *queue)
 	return best_slave;
 }
 
-static netdev_tx_t eql_slave_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t eql_slave_xmit(struct sk_buff *skb,
+				  struct net_device *dev, unsigned int queue)
 {
 	equalizer_t *eql = netdev_priv(dev);
 	slave_t *slave;

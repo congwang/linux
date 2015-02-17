@@ -213,10 +213,6 @@ struct team {
 static inline int team_dev_queue_xmit(struct team *team, struct team_port *port,
 				      struct sk_buff *skb)
 {
-	BUILD_BUG_ON(sizeof(skb->queue_mapping) !=
-		     sizeof(qdisc_skb_cb(skb)->slave_dev_queue_mapping));
-	skb->queue_mapping = qdisc_skb_cb(skb)->slave_dev_queue_mapping;
-
 	skb->dev = port->dev;
 	if (unlikely(netpoll_tx_running(team->dev))) {
 		team_netpoll_send_skb(port, skb);

@@ -299,7 +299,7 @@ static inline void	dfx_rcv_flush(DFX_board_t *bp) {}
 #endif
 
 static netdev_tx_t dfx_xmt_queue_pkt(struct sk_buff *skb,
-				     struct net_device *dev);
+				     struct net_device *dev, unsigned int queue);
 static int		dfx_xmt_done(DFX_board_t *bp);
 static void		dfx_xmt_flush(DFX_board_t *bp);
 
@@ -3289,7 +3289,7 @@ static void dfx_rcv_queue_process(
  */
 
 static netdev_tx_t dfx_xmt_queue_pkt(struct sk_buff *skb,
-				     struct net_device *dev)
+				     struct net_device *dev, unsigned int queue)
 	{
 	DFX_board_t		*bp = netdev_priv(dev);
 	u8			prod;				/* local transmit producer index */

@@ -996,7 +996,8 @@ static int xemaclite_close(struct net_device *dev)
  *
  * Return:	0, always.
  */
-static int xemaclite_send(struct sk_buff *orig_skb, struct net_device *dev)
+static int xemaclite_send(struct sk_buff *orig_skb,
+			  struct net_device *dev, unsigned int queue)
 {
 	struct net_local *lp = netdev_priv(dev);
 	struct sk_buff *new_skb;

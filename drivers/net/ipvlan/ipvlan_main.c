@@ -175,7 +175,7 @@ static int ipvlan_stop(struct net_device *dev)
 }
 
 static netdev_tx_t ipvlan_start_xmit(struct sk_buff *skb,
-				     struct net_device *dev)
+				     struct net_device *dev, unsigned int queue)
 {
 	const struct ipvl_dev *ipvlan = netdev_priv(dev);
 	int skblen = skb->len;

@@ -896,7 +896,7 @@ static int ip6gre_xmit_other(struct sk_buff *skb, struct net_device *dev)
 }
 
 static netdev_tx_t ip6gre_tunnel_xmit(struct sk_buff *skb,
-	struct net_device *dev)
+	struct net_device *dev, unsigned int queue)
 {
 	struct ip6_tnl *t = netdev_priv(dev);
 	struct net_device_stats *stats = &t->dev->stats;

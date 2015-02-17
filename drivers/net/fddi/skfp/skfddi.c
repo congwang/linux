@@ -109,7 +109,7 @@ static void skfp_ctl_set_multicast_list_wo_lock(struct net_device *dev);
 static int skfp_ctl_set_mac_address(struct net_device *dev, void *addr);
 static int skfp_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
 static netdev_tx_t skfp_send_pkt(struct sk_buff *skb,
-				       struct net_device *dev);
+				       struct net_device *dev, unsigned int queue);
 static void send_queued_packets(struct s_smc *smc);
 static void CheckSourceAddress(unsigned char *frame, unsigned char *hw_addr);
 static void ResetAdapter(struct s_smc *smc);
@@ -1039,7 +1039,7 @@ static int skfp_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
  *   None
  */
 static netdev_tx_t skfp_send_pkt(struct sk_buff *skb,
-				       struct net_device *dev)
+				       struct net_device *dev, unsigned int queue)
 {
 	struct s_smc *smc = netdev_priv(dev);
 	skfddi_priv *bp = &smc->os;

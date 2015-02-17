@@ -482,7 +482,8 @@ static int ti_hecc_get_berr_counter(const struct net_device *ndev,
  * is stopped when all the mailboxes are busy or when there is a priority
  * value roll-over happens.
  */
-static netdev_tx_t ti_hecc_xmit(struct sk_buff *skb, struct net_device *ndev)
+static netdev_tx_t ti_hecc_xmit(struct sk_buff *skb,
+				struct net_device *ndev, unsigned int queue)
 {
 	struct ti_hecc_priv *priv = netdev_priv(ndev);
 	struct can_frame *cf = (struct can_frame *)skb->data;

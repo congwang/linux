@@ -1275,7 +1275,7 @@ static void enc28j60_hw_tx(struct enc28j60_net *priv)
 }
 
 static netdev_tx_t enc28j60_send_packet(struct sk_buff *skb,
-					struct net_device *dev)
+					struct net_device *dev, unsigned int queue)
 {
 	struct enc28j60_net *priv = netdev_priv(dev);
 

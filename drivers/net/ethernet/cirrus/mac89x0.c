@@ -124,7 +124,8 @@ struct net_local {
 extern void reset_chip(struct net_device *dev);
 #endif
 static int net_open(struct net_device *dev);
-static int net_send_packet(struct sk_buff *skb, struct net_device *dev);
+static int net_send_packet(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue);
 static irqreturn_t net_interrupt(int irq, void *dev_id);
 static void set_multicast_list(struct net_device *dev);
 static void net_rx(struct net_device *dev);
@@ -368,7 +369,8 @@ net_open(struct net_device *dev)
 }
 
 static int
-net_send_packet(struct sk_buff *skb, struct net_device *dev)
+net_send_packet(struct sk_buff *skb,
+		struct net_device *dev, unsigned int queue)
 {
 	struct net_local *lp = netdev_priv(dev);
 	unsigned long flags;

@@ -697,7 +697,8 @@ static void meth_add_to_tx_ring(struct meth_private *priv, struct sk_buff *skb)
 /*
  * Transmit a packet (called by the kernel)
  */
-static int meth_tx(struct sk_buff *skb, struct net_device *dev)
+static int meth_tx(struct sk_buff *skb,
+		   struct net_device *dev, unsigned int queue)
 {
 	struct meth_private *priv = netdev_priv(dev);
 	unsigned long flags;

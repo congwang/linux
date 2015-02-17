@@ -1277,7 +1277,8 @@ static void sxgbe_tso_prepare(struct sxgbe_priv_data *priv,
  *  It programs the chain or the ring and supports oversized frames
  *  and SG feature.
  */
-static netdev_tx_t sxgbe_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t sxgbe_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	unsigned int entry, frag_num;
 	int cksum_flag = 0;

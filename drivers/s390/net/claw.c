@@ -178,7 +178,8 @@ static void claw_remove_device(struct ccwgroup_device *cgdev);
 static void claw_purge_skb_queue(struct sk_buff_head *q);
 static int claw_new_device(struct ccwgroup_device *cgdev);
 static int claw_shutdown_device(struct ccwgroup_device *cgdev);
-static int claw_tx(struct sk_buff *skb, struct net_device *dev);
+static int claw_tx(struct sk_buff *skb,
+		   struct net_device *dev, unsigned int queue);
 static int claw_change_mtu( struct net_device *dev, int new_mtu);
 static int claw_open(struct net_device *dev);
 static void claw_irq_handler(struct ccw_device *cdev,
@@ -313,7 +314,7 @@ static const struct attribute_group *claw_drv_attr_groups[] = {
  *-------------------------------------------------------------------*/
 
 static int
-claw_tx(struct sk_buff *skb, struct net_device *dev)
+claw_tx(struct sk_buff *skb, struct net_device *dev, unsigned int queue)
 {
         int             rc;
 	struct claw_privbk *privptr = dev->ml_priv;

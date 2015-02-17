@@ -150,7 +150,7 @@ static void kingsun_send_irq(struct urb *urb)
  * Called from net/core when new frame is available.
  */
 static netdev_tx_t kingsun_hard_xmit(struct sk_buff *skb,
-					   struct net_device *netdev)
+					   struct net_device *netdev, unsigned int queue)
 {
 	struct kingsun_cb *kingsun;
 	int wraplen;

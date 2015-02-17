@@ -752,7 +752,8 @@ static int tun_net_close(struct net_device *dev)
 }
 
 /* Net device start xmit */
-static netdev_tx_t tun_net_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t tun_net_xmit(struct sk_buff *skb,
+				struct net_device *dev, unsigned int queue)
 {
 	struct tun_struct *tun = netdev_priv(dev);
 	int txq = skb_get_queue_mapping(skb);

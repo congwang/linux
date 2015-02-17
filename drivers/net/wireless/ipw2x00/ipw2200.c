@@ -11551,7 +11551,7 @@ static int ipw_prom_stop(struct net_device *dev)
 }
 
 static netdev_tx_t ipw_prom_hard_start_xmit(struct sk_buff *skb,
-					    struct net_device *dev)
+					    struct net_device *dev, unsigned int queue)
 {
 	IPW_DEBUG_INFO("prom dev->xmit\n");
 	dev_kfree_skb(skb);

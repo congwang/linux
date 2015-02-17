@@ -571,7 +571,8 @@ static irqreturn_t bcm_enet_isr_dma(int irq, void *dev_id)
 /*
  * tx request callback
  */
-static int bcm_enet_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int bcm_enet_start_xmit(struct sk_buff *skb,
+			       struct net_device *dev, unsigned int queue)
 {
 	struct bcm_enet_priv *priv;
 	struct bcm_enet_desc *desc;

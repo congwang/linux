@@ -688,7 +688,8 @@ static int c2_pseudo_down(struct net_device *netdev)
 	return 0;
 }
 
-static int c2_pseudo_xmit_frame(struct sk_buff *skb, struct net_device *netdev)
+static int c2_pseudo_xmit_frame(struct sk_buff *skb,
+				struct net_device *netdev, unsigned int queue)
 {
 	kfree_skb(skb);
 	return NETDEV_TX_OK;

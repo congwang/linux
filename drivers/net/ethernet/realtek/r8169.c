@@ -6862,13 +6862,13 @@ static bool rtl_test_hw_pad_bug(struct rtl8169_private *tp, struct sk_buff *skb)
 }
 
 static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
-				      struct net_device *dev);
+				      struct net_device *dev, unsigned int queue);
 /* r8169_csum_workaround()
  * The hw limites the value the transport offset. When the offset is out of the
  * range, calculate the checksum by sw.
  */
 static void r8169_csum_workaround(struct rtl8169_private *tp,
-				  struct sk_buff *skb)
+				  struct sk_buff *skb, unsigned int queue)
 {
 	if (skb_shinfo(skb)->gso_size) {
 		netdev_features_t features = tp->dev->features;
@@ -6883,7 +6883,7 @@ static void r8169_csum_workaround(struct rtl8169_private *tp,
 			nskb = segs;
 			segs = segs->next;
 			nskb->next = NULL;
-			rtl8169_start_xmit(nskb, tp->dev);
+			rtl8169_start_xmit(nskb, tp->dev, queue);
 		} while (segs);
 
 		dev_kfree_skb(skb);
@@ -6891,7 +6891,7 @@ static void r8169_csum_workaround(struct rtl8169_private *tp,
 		if (skb_checksum_help(skb) < 0)
 			goto drop;
 
-		rtl8169_start_xmit(skb, tp->dev);
+		rtl8169_start_xmit(skb, tp->dev, queue);
 	} else {
 		struct net_device_stats *stats;
 
@@ -7038,7 +7038,7 @@ static bool rtl8169_tso_csum_v2(struct rtl8169_private *tp,
 }
 
 static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
-				      struct net_device *dev)
+				      struct net_device *dev, unsigned int queue)
 {
 	struct rtl8169_private *tp = netdev_priv(dev);
 	unsigned int entry = tp->cur_tx % NUM_TX_DESC;
@@ -7063,7 +7063,7 @@ static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
 	opts[0] = DescOwn;
 
 	if (!tp->tso_csum(tp, skb, opts)) {
-		r8169_csum_workaround(tp, skb);
+		r8169_csum_workaround(tp, skb, 0);
 		return NETDEV_TX_OK;
 	}
 

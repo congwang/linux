@@ -655,7 +655,8 @@ static irqreturn_t sa1100_irda_irq(int irq, void *dev_id)
 	return si->irq(dev, si);
 }
 
-static int sa1100_irda_hard_xmit(struct sk_buff *skb, struct net_device *dev)
+static int sa1100_irda_hard_xmit(struct sk_buff *skb,
+				 struct net_device *dev, unsigned int queue)
 {
 	struct sa1100_irda *si = netdev_priv(dev);
 	int speed = irda_get_next_speed(skb);

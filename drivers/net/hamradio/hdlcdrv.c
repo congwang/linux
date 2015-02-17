@@ -400,7 +400,7 @@ void hdlcdrv_arbitrate(struct net_device *dev, struct hdlcdrv_state *s)
  */
 
 static netdev_tx_t hdlcdrv_send_packet(struct sk_buff *skb,
-				       struct net_device *dev)
+				       struct net_device *dev, unsigned int queue)
 {
 	struct hdlcdrv_state *sm = netdev_priv(dev);
 

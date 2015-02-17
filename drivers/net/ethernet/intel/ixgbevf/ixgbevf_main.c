@@ -3594,7 +3594,8 @@ static int ixgbevf_maybe_stop_tx(struct ixgbevf_ring *tx_ring, int size)
 	return __ixgbevf_maybe_stop_tx(tx_ring, size);
 }
 
-static int ixgbevf_xmit_frame(struct sk_buff *skb, struct net_device *netdev)
+static int ixgbevf_xmit_frame(struct sk_buff *skb,
+			      struct net_device *netdev, unsigned int queue)
 {
 	struct ixgbevf_adapter *adapter = netdev_priv(netdev);
 	struct ixgbevf_tx_buffer *first;

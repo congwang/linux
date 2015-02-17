@@ -1350,7 +1350,7 @@ static inline int i40e_fcoe_set_skb_header(struct sk_buff *skb)
  * Returns 0 if sent, else an error code
  **/
 static netdev_tx_t i40e_fcoe_xmit_frame(struct sk_buff *skb,
-					struct net_device *netdev)
+					struct net_device *netdev, unsigned int queue)
 {
 	struct i40e_netdev_priv *np = netdev_priv(skb->dev);
 	struct i40e_vsi *vsi = np->vsi;

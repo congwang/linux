@@ -1222,7 +1222,7 @@ static int bgmac_stop(struct net_device *net_dev)
 }
 
 static netdev_tx_t bgmac_start_xmit(struct sk_buff *skb,
-				    struct net_device *net_dev)
+				    struct net_device *net_dev, unsigned int queue)
 {
 	struct bgmac *bgmac = netdev_priv(net_dev);
 	struct bgmac_dma_ring *ring;

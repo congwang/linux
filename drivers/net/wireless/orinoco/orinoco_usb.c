@@ -1180,7 +1180,8 @@ static int ezusb_program(struct hermes *hw, const char *buf,
 	return err;
 }
 
-static netdev_tx_t ezusb_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t ezusb_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	struct orinoco_private *priv = ndev_priv(dev);
 	struct net_device_stats *stats = &priv->stats;

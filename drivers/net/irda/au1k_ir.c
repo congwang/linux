@@ -657,7 +657,8 @@ static int au1k_irda_stop(struct net_device *dev)
 /*
  * Au1000 transmit routine.
  */
-static int au1k_irda_hard_xmit(struct sk_buff *skb, struct net_device *dev)
+static int au1k_irda_hard_xmit(struct sk_buff *skb,
+			       struct net_device *dev, unsigned int queue)
 {
 	struct au1k_private *aup = netdev_priv(dev);
 	int speed = irda_get_next_speed(skb);

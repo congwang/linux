@@ -67,7 +67,8 @@ static struct rtnl_link_stats64 *internal_dev_get_stats(struct net_device *netde
 }
 
 /* Called with rcu_read_lock_bh. */
-static int internal_dev_xmit(struct sk_buff *skb, struct net_device *netdev)
+static int internal_dev_xmit(struct sk_buff *skb,
+			     struct net_device *netdev, unsigned int queue)
 {
 	rcu_read_lock();
 	ovs_vport_receive(internal_dev_priv(netdev)->vport, skb, NULL);

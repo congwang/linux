@@ -491,7 +491,7 @@ static int __init smsc_ircc_init(void)
 }
 
 static netdev_tx_t smsc_ircc_net_xmit(struct sk_buff *skb,
-					    struct net_device *dev)
+					    struct net_device *dev, unsigned int queue)
 {
 	struct smsc_ircc_cb *self = netdev_priv(dev);
 

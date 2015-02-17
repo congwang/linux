@@ -1041,7 +1041,7 @@ static int ks8842_close(struct net_device *netdev)
 }
 
 static netdev_tx_t ks8842_xmit_frame(struct sk_buff *skb,
-				     struct net_device *netdev)
+				     struct net_device *netdev, unsigned int queue)
 {
 	int ret;
 	struct ks8842_adapter *adapter = netdev_priv(netdev);

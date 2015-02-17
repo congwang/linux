@@ -284,7 +284,7 @@ static void smc_hardware_send_packet( struct net_device * dev );
  . now, or generates an interrupt when the card is ready for the
  . packet */
 static netdev_tx_t  smc_wait_to_send_packet( struct sk_buff * skb,
-					     struct net_device *dev );
+					     struct net_device *dev, unsigned int queue);
 
 /* this does a soft reset on the device */
 static void smc_reset( int ioaddr );
@@ -465,7 +465,7 @@ static void smc_setmulticast(int ioaddr, struct net_device *dev)
  . o	(YES):Send it now.
 */
 static netdev_tx_t smc_wait_to_send_packet(struct sk_buff *skb,
-					   struct net_device *dev)
+					   struct net_device *dev, unsigned int queue)
 {
 	struct smc_local *lp = netdev_priv(dev);
 	unsigned int ioaddr 	= dev->base_addr;

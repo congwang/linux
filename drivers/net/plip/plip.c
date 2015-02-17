@@ -146,7 +146,8 @@ static void plip_timer_bh(struct work_struct *work);
 static void plip_interrupt(void *dev_id);
 
 /* Functions for DEV methods */
-static int plip_tx_packet(struct sk_buff *skb, struct net_device *dev);
+static int plip_tx_packet(struct sk_buff *skb,
+			  struct net_device *dev, unsigned int queue);
 static int plip_hard_header(struct sk_buff *skb, struct net_device *dev,
                             unsigned short type, const void *daddr,
 			    const void *saddr, unsigned len);
@@ -951,7 +952,8 @@ plip_interrupt(void *dev_id)
 }
 
 static int
-plip_tx_packet(struct sk_buff *skb, struct net_device *dev)
+plip_tx_packet(struct sk_buff *skb,
+	       struct net_device *dev, unsigned int queue)
 {
 	struct net_local *nl = netdev_priv(dev);
 	struct plip_local *snd = &nl->snd_data;

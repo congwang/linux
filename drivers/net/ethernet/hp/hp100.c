@@ -240,9 +240,9 @@ static int hp100_probe1(struct net_device *dev, int ioaddr, u_char bus,
 static int hp100_open(struct net_device *dev);
 static int hp100_close(struct net_device *dev);
 static netdev_tx_t hp100_start_xmit(struct sk_buff *skb,
-				    struct net_device *dev);
+				    struct net_device *dev, unsigned int queue);
 static netdev_tx_t hp100_start_xmit_bm(struct sk_buff *skb,
-				       struct net_device *dev);
+				       struct net_device *dev, unsigned int queue);
 static void hp100_rx(struct net_device *dev);
 static struct net_device_stats *hp100_get_stats(struct net_device *dev);
 static void hp100_misc_interrupt(struct net_device *dev);
@@ -1488,7 +1488,7 @@ static int hp100_check_lan(struct net_device *dev)
 
 /* tx function for busmaster mode */
 static netdev_tx_t hp100_start_xmit_bm(struct sk_buff *skb,
-				       struct net_device *dev)
+				       struct net_device *dev, unsigned int queue)
 {
 	unsigned long flags;
 	int i, ok_flag;
@@ -1639,7 +1639,7 @@ static void hp100_clean_txring(struct net_device *dev)
 
 /* tx function for slave modes */
 static netdev_tx_t hp100_start_xmit(struct sk_buff *skb,
-				    struct net_device *dev)
+				    struct net_device *dev, unsigned int queue)
 {
 	unsigned long flags;
 	int i, ok_flag;

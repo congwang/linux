@@ -367,7 +367,8 @@ not_ip:
 	return ret_val;
 }
 
-static int netvsc_start_xmit(struct sk_buff *skb, struct net_device *net)
+static int netvsc_start_xmit(struct sk_buff *skb,
+			     struct net_device *net, unsigned int queue)
 {
 	struct net_device_context *net_device_ctx = netdev_priv(net);
 	struct hv_netvsc_packet *packet;

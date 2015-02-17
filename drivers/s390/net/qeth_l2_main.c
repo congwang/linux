@@ -709,7 +709,8 @@ static void qeth_l2_set_multicast_list(struct net_device *dev)
 	qeth_setadp_promisc_mode(card);
 }
 
-static int qeth_l2_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int qeth_l2_hard_start_xmit(struct sk_buff *skb,
+				   struct net_device *dev, unsigned int queue)
 {
 	int rc;
 	struct qeth_hdr *hdr = NULL;

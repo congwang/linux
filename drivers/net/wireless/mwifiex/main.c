@@ -655,7 +655,8 @@ mwifiex_clone_skb_for_tx_status(struct mwifiex_private *priv,
  * CFG802.11 network device handler for data transmission.
  */
 static int
-mwifiex_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+mwifiex_hard_start_xmit(struct sk_buff *skb,
+			struct net_device *dev, unsigned int queue)
 {
 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
 	struct sk_buff *new_skb;

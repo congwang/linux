@@ -433,7 +433,8 @@ int orinoco_process_xmit_skb(struct sk_buff *skb,
 }
 EXPORT_SYMBOL(orinoco_process_xmit_skb);
 
-static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t orinoco_xmit(struct sk_buff *skb,
+				struct net_device *dev, unsigned int queue)
 {
 	struct orinoco_private *priv = ndev_priv(dev);
 	struct net_device_stats *stats = &priv->stats;

@@ -130,7 +130,7 @@ static void e1000_update_phy_info_task(struct work_struct *work);
 static void e1000_watchdog(struct work_struct *work);
 static void e1000_82547_tx_fifo_stall_task(struct work_struct *work);
 static netdev_tx_t e1000_xmit_frame(struct sk_buff *skb,
-				    struct net_device *netdev);
+				    struct net_device *netdev, unsigned int queue);
 static struct net_device_stats * e1000_get_stats(struct net_device *netdev);
 static int e1000_change_mtu(struct net_device *netdev, int new_mtu);
 static int e1000_set_mac(struct net_device *netdev, void *p);
@@ -3103,7 +3103,7 @@ static int e1000_maybe_stop_tx(struct net_device *netdev,
 
 #define TXD_USE_COUNT(S, X) (((S) >> (X)) + 1 )
 static netdev_tx_t e1000_xmit_frame(struct sk_buff *skb,
-				    struct net_device *netdev)
+				    struct net_device *netdev, unsigned int queue)
 {
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	struct e1000_hw *hw = &adapter->hw;

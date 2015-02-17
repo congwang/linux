@@ -289,7 +289,7 @@ static int ec_bhf_setup_offsets(struct ec_bhf_priv *priv)
 }
 
 static netdev_tx_t ec_bhf_start_xmit(struct sk_buff *skb,
-				     struct net_device *net_dev)
+				     struct net_device *net_dev, unsigned int queue)
 {
 	struct ec_bhf_priv *priv = netdev_priv(net_dev);
 	struct tx_desc *desc;

@@ -2459,7 +2459,7 @@ map_error:
  * OALs (when necessary).
  */
 static netdev_tx_t ql3xxx_send(struct sk_buff *skb,
-			       struct net_device *ndev)
+			       struct net_device *ndev, unsigned int queue)
 {
 	struct ql3_adapter *qdev = netdev_priv(ndev);
 	struct ql3xxx_port_registers __iomem *port_regs =

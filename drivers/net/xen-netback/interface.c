@@ -136,12 +136,12 @@ void xenvif_wake_queue(struct xenvif_queue *queue)
 	netif_tx_wake_queue(netdev_get_tx_queue(dev, id));
 }
 
-static int xenvif_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int xenvif_start_xmit(struct sk_buff *skb,
+			     struct net_device *dev, unsigned int index)
 {
 	struct xenvif *vif = netdev_priv(dev);
 	struct xenvif_queue *queue = NULL;
 	unsigned int num_queues = vif->num_queues;
-	u16 index;
 	struct xenvif_rx_cb *cb;
 
 	BUG_ON(skb->dev != dev);
@@ -151,7 +151,6 @@ static int xenvif_start_xmit(struct sk_buff *skb, struct net_device *dev)
 		goto drop;
 
 	/* Obtain the queue to be used to transmit this packet */
-	index = skb_get_queue_mapping(skb);
 	if (index >= num_queues) {
 		pr_warn_ratelimited("Invalid queue %hu for packet on interface %s\n.",
 				    index, vif->dev->name);

@@ -1066,7 +1066,7 @@ err_dma:
 }
 
 static netdev_tx_t alx_start_xmit(struct sk_buff *skb,
-				  struct net_device *netdev)
+				  struct net_device *netdev, unsigned int queue)
 {
 	struct alx_priv *alx = netdev_priv(netdev);
 	struct alx_tx_queue *txq = &alx->txq;

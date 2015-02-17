@@ -12,7 +12,8 @@ struct pcpu_lstats {
 	struct u64_stats_sync syncp;
 };
 
-static netdev_tx_t nlmon_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t nlmon_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	int len = skb->len;
 	struct pcpu_lstats *stats = this_cpu_ptr(dev->lstats);

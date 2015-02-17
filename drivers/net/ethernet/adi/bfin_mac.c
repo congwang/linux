@@ -1140,7 +1140,7 @@ static void tx_reclaim_skb_timeout(unsigned long lp)
 }
 
 static int bfin_mac_hard_start_xmit(struct sk_buff *skb,
-				struct net_device *dev)
+				struct net_device *dev, unsigned int queue)
 {
 	struct bfin_mac_local *lp = netdev_priv(dev);
 	u16 *data;

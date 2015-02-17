@@ -2284,7 +2284,7 @@ static void unmap_partial_tx_skb(struct happy_meal *hp, u32 first_mapping,
 }
 
 static netdev_tx_t happy_meal_start_xmit(struct sk_buff *skb,
-					 struct net_device *dev)
+					 struct net_device *dev, unsigned int queue)
 {
 	struct happy_meal *hp = netdev_priv(dev);
  	int entry;

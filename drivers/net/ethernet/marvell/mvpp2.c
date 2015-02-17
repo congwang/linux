@@ -5167,7 +5167,8 @@ error:
 }
 
 /* Main tx processing */
-static int mvpp2_tx(struct sk_buff *skb, struct net_device *dev)
+static int mvpp2_tx(struct sk_buff *skb,
+		    struct net_device *dev, unsigned int txq_id)
 {
 	struct mvpp2_port *port = netdev_priv(dev);
 	struct mvpp2_tx_queue *txq, *aggr_txq;
@@ -5175,10 +5176,8 @@ static int mvpp2_tx(struct sk_buff *skb, struct net_device *dev)
 	struct mvpp2_tx_desc *tx_desc;
 	dma_addr_t buf_phys_addr;
 	int frags = 0;
-	u16 txq_id;
 	u32 tx_cmd;
 
-	txq_id = skb_get_queue_mapping(skb);
 	txq = port->txqs[txq_id];
 	txq_pcpu = this_cpu_ptr(txq->pcpu);
 	aggr_txq = &port->priv->aggr_txqs[smp_processor_id()];

@@ -1220,18 +1220,18 @@ static struct sk_buff *bcmgenet_put_tx_csum(struct net_device *dev,
 	return skb;
 }
 
-static netdev_tx_t bcmgenet_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t bcmgenet_xmit(struct sk_buff *skb,
+				 struct net_device *dev, unsigned int index)
 {
 	struct bcmgenet_priv *priv = netdev_priv(dev);
 	struct bcmgenet_tx_ring *ring = NULL;
 	struct netdev_queue *txq;
 	unsigned long flags = 0;
-	int nr_frags, index;
+	int nr_frags;
 	u16 dma_desc_flags;
 	int ret;
 	int i;
 
-	index = skb_get_queue_mapping(skb);
 	/* Mapping strategy:
 	 * queue_mapping = 0, unclassified, packet xmited through ring16
 	 * queue_mapping = 1, goes to ring 0. (highest priority queue

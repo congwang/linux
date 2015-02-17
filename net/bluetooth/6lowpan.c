@@ -597,7 +597,8 @@ static int send_mcast_pkt(struct sk_buff *skb, struct net_device *netdev)
 	return err;
 }
 
-static netdev_tx_t bt_xmit(struct sk_buff *skb, struct net_device *netdev)
+static netdev_tx_t bt_xmit(struct sk_buff *skb,
+			   struct net_device *netdev, unsigned int queue)
 {
 	int err = 0;
 	bdaddr_t addr;

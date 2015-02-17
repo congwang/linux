@@ -82,9 +82,9 @@ static int via_ircc_dma_receive(struct via_ircc_cb *self);
 static int via_ircc_dma_receive_complete(struct via_ircc_cb *self,
 					 int iobase);
 static netdev_tx_t via_ircc_hard_xmit_sir(struct sk_buff *skb,
-						struct net_device *dev);
+						struct net_device *dev, unsigned int queue);
 static netdev_tx_t via_ircc_hard_xmit_fir(struct sk_buff *skb,
-						struct net_device *dev);
+						struct net_device *dev, unsigned int queue);
 static void via_hw_init(struct via_ircc_cb *self);
 static void via_ircc_change_speed(struct via_ircc_cb *self, __u32 baud);
 static irqreturn_t via_ircc_interrupt(int irq, void *dev_id);
@@ -756,7 +756,7 @@ static void via_ircc_change_speed(struct via_ircc_cb *self, __u32 speed)
  *
  */
 static netdev_tx_t via_ircc_hard_xmit_sir(struct sk_buff *skb,
-						struct net_device *dev)
+						struct net_device *dev, unsigned int queue)
 {
 	struct via_ircc_cb *self;
 	unsigned long flags;
@@ -828,7 +828,7 @@ static netdev_tx_t via_ircc_hard_xmit_sir(struct sk_buff *skb,
 }
 
 static netdev_tx_t via_ircc_hard_xmit_fir(struct sk_buff *skb,
-						struct net_device *dev)
+						struct net_device *dev, unsigned int queue)
 {
 	struct via_ircc_cb *self;
 	u16 iobase;

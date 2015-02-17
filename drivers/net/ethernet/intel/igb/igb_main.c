@@ -135,7 +135,7 @@ static void igb_set_rx_mode(struct net_device *);
 static void igb_update_phy_info(unsigned long);
 static void igb_watchdog(unsigned long);
 static void igb_watchdog_task(struct work_struct *);
-static netdev_tx_t igb_xmit_frame(struct sk_buff *skb, struct net_device *);
+static netdev_tx_t igb_xmit_frame(struct sk_buff *skb, struct net_device *, unsigned int);
 static struct rtnl_link_stats64 *igb_get_stats64(struct net_device *dev,
 					  struct rtnl_link_stats64 *stats);
 static int igb_change_mtu(struct net_device *, int);
@@ -5060,19 +5060,9 @@ out_drop:
 	return NETDEV_TX_OK;
 }
 
-static inline struct igb_ring *igb_tx_queue_mapping(struct igb_adapter *adapter,
-						    struct sk_buff *skb)
-{
-	unsigned int r_idx = skb_get_queue_mapping(skb);
-
-	if (r_idx >= adapter->num_tx_queues)
-		r_idx = r_idx % adapter->num_tx_queues;
-
-	return adapter->tx_ring[r_idx];
-}
-
 static netdev_tx_t igb_xmit_frame(struct sk_buff *skb,
-				  struct net_device *netdev)
+				  struct net_device *netdev,
+				  unsigned int queue)
 {
 	struct igb_adapter *adapter = netdev_priv(netdev);
 
@@ -5092,7 +5082,7 @@ static netdev_tx_t igb_xmit_frame(struct sk_buff *skb,
 	if (skb_put_padto(skb, 17))
 		return NETDEV_TX_OK;
 
-	return igb_xmit_frame_ring(skb, igb_tx_queue_mapping(adapter, skb));
+	return igb_xmit_frame_ring(skb, adapter->tx_ring[queue]);
 }
 
 /**

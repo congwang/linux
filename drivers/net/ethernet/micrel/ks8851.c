@@ -928,7 +928,7 @@ static int ks8851_net_stop(struct net_device *dev)
  * means we can try and avoid generating too many transmit done interrupts.
  */
 static netdev_tx_t ks8851_start_xmit(struct sk_buff *skb,
-				     struct net_device *dev)
+				     struct net_device *dev, unsigned int queue)
 {
 	struct ks8851_net *ks = netdev_priv(dev);
 	unsigned needed = calc_txlen(skb->len);

@@ -162,7 +162,7 @@ static int bnep_net_proto_filter(struct sk_buff *skb, struct bnep_session *s)
 #endif
 
 static netdev_tx_t bnep_net_xmit(struct sk_buff *skb,
-				 struct net_device *dev)
+				 struct net_device *dev, unsigned int queue)
 {
 	struct bnep_session *s = netdev_priv(dev);
 	struct sock *sk = s->sock->sk;

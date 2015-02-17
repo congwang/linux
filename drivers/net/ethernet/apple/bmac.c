@@ -158,7 +158,8 @@ static irqreturn_t bmac_txdma_intr(int irq, void *dev_id);
 static irqreturn_t bmac_rxdma_intr(int irq, void *dev_id);
 static void bmac_set_timeout(struct net_device *dev);
 static void bmac_tx_timeout(unsigned long data);
-static int bmac_output(struct sk_buff *skb, struct net_device *dev);
+static int bmac_output(struct sk_buff *skb,
+		       struct net_device *dev, unsigned int queue);
 static void bmac_start(struct net_device *dev);
 
 #define	DBDMA_SET(x)	( ((x) | (x) << 16) )
@@ -1465,7 +1466,7 @@ bmac_start(struct net_device *dev)
 }
 
 static int
-bmac_output(struct sk_buff *skb, struct net_device *dev)
+bmac_output(struct sk_buff *skb, struct net_device *dev, unsigned int queue)
 {
 	struct bmac_data *bp = netdev_priv(dev);
 	skb_queue_tail(bp->queue, skb);

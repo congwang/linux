@@ -515,9 +515,8 @@ ltq_etop_stop(struct net_device *dev)
 }
 
 static int
-ltq_etop_tx(struct sk_buff *skb, struct net_device *dev)
+ltq_etop_tx(struct sk_buff *skb, struct net_device *dev, unsigned int queue)
 {
-	int queue = skb_get_queue_mapping(skb);
 	struct netdev_queue *txq = netdev_get_tx_queue(dev, queue);
 	struct ltq_etop_priv *priv = netdev_priv(dev);
 	struct ltq_etop_chan *ch = &priv->ch[(queue << 1) | 1];

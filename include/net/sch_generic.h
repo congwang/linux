@@ -250,9 +250,7 @@ struct tcf_proto {
 
 struct qdisc_skb_cb {
 	unsigned int		pkt_len;
-	u16			slave_dev_queue_mapping;
-	u16			_pad;
-#define QDISC_CB_PRIV_LEN 20
+#define QDISC_CB_PRIV_LEN 24
 	unsigned char		data[QDISC_CB_PRIV_LEN];
 };
 

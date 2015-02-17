@@ -1842,7 +1842,8 @@ busy:
 /*
  * Transmit a packet (called by the kernel via "hard_start_xmit" hook).
  */
-static int tile_net_tx(struct sk_buff *skb, struct net_device *dev)
+static int tile_net_tx(struct sk_buff *skb,
+		       struct net_device *dev, unsigned int queue)
 {
 	struct tile_net_priv *priv = netdev_priv(dev);
 	int my_cpu = smp_processor_id();

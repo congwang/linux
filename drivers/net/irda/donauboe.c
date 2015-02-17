@@ -957,7 +957,8 @@ toshoboe_probe (struct toshoboe_cb *self)
 
 /* Transmit something */
 static netdev_tx_t
-toshoboe_hard_xmit (struct sk_buff *skb, struct net_device *dev)
+toshoboe_hard_xmit (struct sk_buff *skb,
+                    struct net_device *dev, unsigned int queue)
 {
   struct toshoboe_cb *self;
   __s32 speed;

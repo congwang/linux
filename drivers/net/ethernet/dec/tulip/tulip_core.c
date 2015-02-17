@@ -260,7 +260,7 @@ static void tulip_tx_timeout(struct net_device *dev);
 static void tulip_init_ring(struct net_device *dev);
 static void tulip_free_ring(struct net_device *dev);
 static netdev_tx_t tulip_start_xmit(struct sk_buff *skb,
-					  struct net_device *dev);
+					  struct net_device *dev, unsigned int queue);
 static int tulip_open(struct net_device *dev);
 static int tulip_close(struct net_device *dev);
 static void tulip_up(struct net_device *dev);
@@ -664,7 +664,8 @@ static void tulip_init_ring(struct net_device *dev)
 }
 
 static netdev_tx_t
-tulip_start_xmit(struct sk_buff *skb, struct net_device *dev)
+tulip_start_xmit(struct sk_buff *skb,
+		 struct net_device *dev, unsigned int queue)
 {
 	struct tulip_private *tp = netdev_priv(dev);
 	int entry;

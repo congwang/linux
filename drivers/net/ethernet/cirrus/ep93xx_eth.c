@@ -349,7 +349,8 @@ poll_some_more:
 	return rx;
 }
 
-static int ep93xx_xmit(struct sk_buff *skb, struct net_device *dev)
+static int ep93xx_xmit(struct sk_buff *skb,
+		       struct net_device *dev, unsigned int queue)
 {
 	struct ep93xx_priv *ep = netdev_priv(dev);
 	struct ep93xx_tdesc *txd;

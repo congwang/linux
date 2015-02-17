@@ -69,7 +69,7 @@ struct pcpu_lstats {
  * called with bh's disabled).
  */
 static netdev_tx_t loopback_xmit(struct sk_buff *skb,
-				 struct net_device *dev)
+				 struct net_device *dev, unsigned int queue)
 {
 	struct pcpu_lstats *lb_stats;
 	int len;

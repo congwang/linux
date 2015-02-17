@@ -327,7 +327,8 @@ struct sonic_local {
 /* Index to functions, as function prototypes. */
 
 static int sonic_open(struct net_device *dev);
-static int sonic_send_packet(struct sk_buff *skb, struct net_device *dev);
+static int sonic_send_packet(struct sk_buff *skb,
+			     struct net_device *dev, unsigned int queue);
 static irqreturn_t sonic_interrupt(int irq, void *dev_id);
 static void sonic_rx(struct net_device *dev);
 static int sonic_close(struct net_device *dev);

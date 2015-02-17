@@ -255,7 +255,8 @@ int gdm_wimax_send_tx(struct sk_buff *skb, struct net_device *dev)
 	return ret;
 }
 
-static int gdm_wimax_tx(struct sk_buff *skb, struct net_device *dev)
+static int gdm_wimax_tx(struct sk_buff *skb,
+			struct net_device *dev, unsigned int queue)
 {
 	int ret = 0;
 

@@ -603,7 +603,7 @@ next:
 }
 
 static netdev_tx_t de_start_xmit (struct sk_buff *skb,
-					struct net_device *dev)
+					struct net_device *dev, unsigned int queue)
 {
 	struct de_private *de = netdev_priv(dev);
 	unsigned int entry, tx_free;

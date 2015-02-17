@@ -189,7 +189,8 @@ static void el3_common_remove(struct net_device *dev);
 static ushort id_read_eeprom(int index);
 static ushort read_eeprom(int ioaddr, int index);
 static int el3_open(struct net_device *dev);
-static netdev_tx_t el3_start_xmit(struct sk_buff *skb, struct net_device *dev);
+static netdev_tx_t el3_start_xmit(struct sk_buff *skb,
+				  struct net_device *dev, unsigned int queue);
 static irqreturn_t el3_interrupt(int irq, void *dev_id);
 static void update_stats(struct net_device *dev);
 static struct net_device_stats *el3_get_stats(struct net_device *dev);
@@ -708,7 +709,8 @@ el3_tx_timeout (struct net_device *dev)
 
 
 static netdev_tx_t
-el3_start_xmit(struct sk_buff *skb, struct net_device *dev)
+el3_start_xmit(struct sk_buff *skb,
+	       struct net_device *dev, unsigned int queue)
 {
 	struct el3_private *lp = netdev_priv(dev);
 	int ioaddr = dev->base_addr;

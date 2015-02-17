@@ -2728,7 +2728,7 @@ static inline int skge_avail(const struct skge_ring *ring)
 }
 
 static netdev_tx_t skge_xmit_frame(struct sk_buff *skb,
-				   struct net_device *dev)
+				   struct net_device *dev, unsigned int queue)
 {
 	struct skge_port *skge = netdev_priv(dev);
 	struct skge_hw *hw = skge->hw;

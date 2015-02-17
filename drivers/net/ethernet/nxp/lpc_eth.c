@@ -1077,7 +1077,8 @@ static int lpc_eth_close(struct net_device *ndev)
 	return 0;
 }
 
-static int lpc_eth_hard_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+static int lpc_eth_hard_start_xmit(struct sk_buff *skb,
+				   struct net_device *ndev, unsigned int queue)
 {
 	struct netdata_local *pldat = netdev_priv(ndev);
 	u32 len, txidx;

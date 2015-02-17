@@ -276,7 +276,7 @@ static int sja1000_get_berr_counter(const struct net_device *dev,
  * [  can-id ] [flags] [len] [can data (up to 8 bytes]
  */
 static netdev_tx_t sja1000_start_xmit(struct sk_buff *skb,
-					    struct net_device *dev)
+					    struct net_device *dev, unsigned int queue)
 {
 	struct sja1000_priv *priv = netdev_priv(dev);
 	struct can_frame *cf = (struct can_frame *)skb->data;

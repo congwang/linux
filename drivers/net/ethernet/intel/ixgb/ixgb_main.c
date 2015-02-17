@@ -85,7 +85,7 @@ static void ixgb_clean_rx_ring(struct ixgb_adapter *adapter);
 static void ixgb_set_multi(struct net_device *netdev);
 static void ixgb_watchdog(unsigned long data);
 static netdev_tx_t ixgb_xmit_frame(struct sk_buff *skb,
-				   struct net_device *netdev);
+				   struct net_device *netdev, unsigned int queue);
 static struct net_device_stats *ixgb_get_stats(struct net_device *netdev);
 static int ixgb_change_mtu(struct net_device *netdev, int new_mtu);
 static int ixgb_set_mac(struct net_device *netdev, void *p);
@@ -1509,7 +1509,8 @@ static int ixgb_maybe_stop_tx(struct net_device *netdev,
 	+ 1 /* one more needed for sentinel TSO workaround */
 
 static netdev_tx_t
-ixgb_xmit_frame(struct sk_buff *skb, struct net_device *netdev)
+ixgb_xmit_frame(struct sk_buff *skb,
+		struct net_device *netdev, unsigned int queue)
 {
 	struct ixgb_adapter *adapter = netdev_priv(netdev);
 	unsigned int first;

@@ -996,7 +996,7 @@ static __inline__ int gem_intme(int entry)
 }
 
 static netdev_tx_t gem_start_xmit(struct sk_buff *skb,
-				  struct net_device *dev)
+				  struct net_device *dev, unsigned int queue)
 {
 	struct gem *gp = netdev_priv(dev);
 	int entry;

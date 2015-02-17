@@ -889,7 +889,8 @@ static int pch_close(struct net_device *ndev)
 	return 0;
 }
 
-static netdev_tx_t pch_xmit(struct sk_buff *skb, struct net_device *ndev)
+static netdev_tx_t pch_xmit(struct sk_buff *skb,
+			    struct net_device *ndev, unsigned int queue)
 {
 	struct pch_can_priv *priv = netdev_priv(ndev);
 	struct can_frame *cf = (struct can_frame *)skb->data;

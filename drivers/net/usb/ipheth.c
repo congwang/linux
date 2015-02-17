@@ -400,7 +400,8 @@ static int ipheth_close(struct net_device *net)
 	return 0;
 }
 
-static int ipheth_tx(struct sk_buff *skb, struct net_device *net)
+static int ipheth_tx(struct sk_buff *skb,
+		     struct net_device *net, unsigned int queue)
 {
 	struct ipheth_device *dev = netdev_priv(net);
 	struct usb_device *udev = dev->udev;

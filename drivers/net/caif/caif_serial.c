@@ -278,7 +278,8 @@ error:
 	return tty_wr;
 }
 
-static int caif_xmit(struct sk_buff *skb, struct net_device *dev)
+static int caif_xmit(struct sk_buff *skb,
+		     struct net_device *dev, unsigned int queue)
 {
 	struct ser_device *ser;
 

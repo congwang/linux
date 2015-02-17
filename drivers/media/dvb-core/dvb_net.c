@@ -883,7 +883,8 @@ static int dvb_net_sec_callback(const u8 *buffer1, size_t buffer1_len,
 	return 0;
 }
 
-static int dvb_net_tx(struct sk_buff *skb, struct net_device *dev)
+static int dvb_net_tx(struct sk_buff *skb,
+		      struct net_device *dev, unsigned int queue)
 {
 	dev_kfree_skb(skb);
 	return NETDEV_TX_OK;

@@ -713,7 +713,7 @@ static int esd_usb2_open(struct net_device *netdev)
 }
 
 static netdev_tx_t esd_usb2_start_xmit(struct sk_buff *skb,
-				      struct net_device *netdev)
+				      struct net_device *netdev, unsigned int queue)
 {
 	struct esd_usb2_net_priv *priv = netdev_priv(netdev);
 	struct esd_usb2 *dev = priv->usb2;

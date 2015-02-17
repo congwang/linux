@@ -366,7 +366,7 @@ int i2400m_net_tx(struct i2400m *i2400m, struct net_device *net_dev,
  */
 static
 netdev_tx_t i2400m_hard_start_xmit(struct sk_buff *skb,
-					 struct net_device *net_dev)
+					 struct net_device *net_dev, unsigned int queue)
 {
 	struct i2400m *i2400m = net_dev_to_i2400m(net_dev);
 	struct device *dev = i2400m_dev(i2400m);

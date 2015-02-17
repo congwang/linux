@@ -390,7 +390,8 @@ static int cc770_get_berr_counter(const struct net_device *dev,
 	return 0;
 }
 
-static netdev_tx_t cc770_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t cc770_start_xmit(struct sk_buff *skb,
+				    struct net_device *dev, unsigned int queue)
 {
 	struct cc770_priv *priv = netdev_priv(dev);
 	struct net_device_stats *stats = &dev->stats;

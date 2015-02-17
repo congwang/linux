@@ -694,7 +694,7 @@ static const struct inet6_protocol pim6_protocol = {
 /* Service routines creating virtual interfaces: PIMREG */
 
 static netdev_tx_t reg_vif_xmit(struct sk_buff *skb,
-				      struct net_device *dev)
+				      struct net_device *dev, unsigned int queue)
 {
 	struct net *net = dev_net(dev);
 	struct mr6_table *mrt;

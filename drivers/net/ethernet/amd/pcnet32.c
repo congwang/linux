@@ -310,7 +310,7 @@ static int pcnet32_probe1(unsigned long, int, struct pci_dev *);
 static int pcnet32_open(struct net_device *);
 static int pcnet32_init_ring(struct net_device *);
 static netdev_tx_t pcnet32_start_xmit(struct sk_buff *,
-				      struct net_device *);
+				      struct net_device *, unsigned int);
 static void pcnet32_tx_timeout(struct net_device *dev);
 static irqreturn_t pcnet32_interrupt(int, void *);
 static int pcnet32_close(struct net_device *);
@@ -2405,7 +2405,7 @@ static void pcnet32_tx_timeout(struct net_device *dev)
 }
 
 static netdev_tx_t pcnet32_start_xmit(struct sk_buff *skb,
-				      struct net_device *dev)
+				      struct net_device *dev, unsigned int queue)
 {
 	struct pcnet32_private *lp = netdev_priv(dev);
 	unsigned long ioaddr = dev->base_addr;

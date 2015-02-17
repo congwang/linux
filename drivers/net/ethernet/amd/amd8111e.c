@@ -1283,7 +1283,7 @@ static int amd8111e_tx_queue_avail(struct amd8111e_priv *lp)
  * byte count, ownership to hardware etc.
  */
 static netdev_tx_t amd8111e_start_xmit(struct sk_buff *skb,
-				       struct net_device *dev)
+				       struct net_device *dev, unsigned int queue)
 {
 	struct amd8111e_priv *lp = netdev_priv(dev);
 	int tx_index;

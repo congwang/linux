@@ -561,7 +561,7 @@ static int change_speed(struct stir_cb *stir, unsigned speed)
  * Called from net/core when new frame is available.
  */
 static netdev_tx_t stir_hard_xmit(struct sk_buff *skb,
-					struct net_device *netdev)
+					struct net_device *netdev, unsigned int queue)
 {
 	struct stir_cb *stir = netdev_priv(netdev);
 

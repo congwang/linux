@@ -896,7 +896,7 @@ static struct {
 */
 static int     de4x5_open(struct net_device *dev);
 static netdev_tx_t de4x5_queue_pkt(struct sk_buff *skb,
-					 struct net_device *dev);
+					 struct net_device *dev, unsigned int queue);
 static irqreturn_t de4x5_interrupt(int irq, void *dev_id);
 static int     de4x5_close(struct net_device *dev);
 static struct  net_device_stats *de4x5_get_stats(struct net_device *dev);
@@ -1457,7 +1457,8 @@ de4x5_sw_reset(struct net_device *dev)
 ** Writes a socket buffer address to the next available transmit descriptor.
 */
 static netdev_tx_t
-de4x5_queue_pkt(struct sk_buff *skb, struct net_device *dev)
+de4x5_queue_pkt(struct sk_buff *skb,
+                struct net_device *dev, unsigned int queue)
 {
     struct de4x5_private *lp = netdev_priv(dev);
     u_long iobase = dev->base_addr;

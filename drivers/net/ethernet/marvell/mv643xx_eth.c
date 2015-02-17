@@ -977,14 +977,14 @@ static int txq_submit_skb(struct tx_queue *txq, struct sk_buff *skb,
 	return 0;
 }
 
-static netdev_tx_t mv643xx_eth_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t mv643xx_eth_xmit(struct sk_buff *skb,
+				    struct net_device *dev, unsigned int queue)
 {
 	struct mv643xx_eth_private *mp = netdev_priv(dev);
-	int length, queue, ret;
+	int length, ret;
 	struct tx_queue *txq;
 	struct netdev_queue *nq;
 
-	queue = skb_get_queue_mapping(skb);
 	txq = mp->txq + queue;
 	nq = netdev_get_tx_queue(dev, queue);
 

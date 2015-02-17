@@ -793,7 +793,7 @@ typedef u16 (*select_queue_fallback_t)(struct net_device *dev,
  *     state.
  *
  * netdev_tx_t (*ndo_start_xmit)(struct sk_buff *skb,
- *                               struct net_device *dev);
+ *                               struct net_device *dev, unsigned int queue);
  *	Called when a packet needs to be transmitted.
  *	Must return NETDEV_TX_OK , NETDEV_TX_BUSY.
  *        (can also return NETDEV_TX_LOCKED iff NETIF_F_LLTX)
@@ -1039,7 +1039,8 @@ struct net_device_ops {
 	int			(*ndo_open)(struct net_device *dev);
 	int			(*ndo_stop)(struct net_device *dev);
 	netdev_tx_t		(*ndo_start_xmit) (struct sk_buff *skb,
-						   struct net_device *dev);
+						   struct net_device *dev,
+						   unsigned int queue);
 	u16			(*ndo_select_queue)(struct net_device *dev,
 						    struct sk_buff *skb,
 						    void *accel_priv,
@@ -3592,19 +3593,27 @@ int __init dev_proc_init(void);
 
 static inline netdev_tx_t __netdev_start_xmit(const struct net_device_ops *ops,
 					      struct sk_buff *skb, struct net_device *dev,
-					      bool more)
+					      unsigned int queue, bool more)
 {
 	skb->xmit_more = more ? 1 : 0;
-	return ops->ndo_start_xmit(skb, dev);
+	return ops->ndo_start_xmit(skb, dev, queue);
+}
+
+static inline netdev_tx_t _netdev_start_xmit(const struct net_device_ops *ops,
+					     struct sk_buff *skb, struct net_device *dev,
+					     bool more)
+{
+	return __netdev_start_xmit(ops, skb, dev, skb_get_queue_mapping(skb), more);
 }
 
 static inline netdev_tx_t netdev_start_xmit(struct sk_buff *skb, struct net_device *dev,
 					    struct netdev_queue *txq, bool more)
 {
 	const struct net_device_ops *ops = dev->netdev_ops;
+	unsigned int queue = (txq - dev->_tx) / sizeof(txq);
 	int rc;
 
-	rc = __netdev_start_xmit(ops, skb, dev, more);
+	rc = __netdev_start_xmit(ops, skb, dev, queue, more);
 	if (rc == NETDEV_TX_OK)
 		txq_trans_update(txq);
 

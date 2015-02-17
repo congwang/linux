@@ -287,7 +287,7 @@ struct local_info {
  * Some more prototypes
  */
 static netdev_tx_t do_start_xmit(struct sk_buff *skb,
-				       struct net_device *dev);
+				       struct net_device *dev, unsigned int queue);
 static void xirc_tx_timeout(struct net_device *dev);
 static void xirc2ps_tx_timeout_task(struct work_struct *work);
 static void set_addresses(struct net_device *dev);
@@ -1213,7 +1213,7 @@ xirc_tx_timeout(struct net_device *dev)
 }
 
 static netdev_tx_t
-do_start_xmit(struct sk_buff *skb, struct net_device *dev)
+do_start_xmit(struct sk_buff *skb, struct net_device *dev, unsigned int queue)
 {
     struct local_info *lp = netdev_priv(dev);
     unsigned int ioaddr = dev->base_addr;

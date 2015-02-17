@@ -1608,7 +1608,8 @@ out:
 }
 
 static int
-lcs_start_xmit(struct sk_buff *skb, struct net_device *dev)
+lcs_start_xmit(struct sk_buff *skb,
+	       struct net_device *dev, unsigned int queue)
 {
 	struct lcs_card *card;
 	int rc;

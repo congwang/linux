@@ -733,7 +733,8 @@ static int ems_usb_open(struct net_device *netdev)
 	return 0;
 }
 
-static netdev_tx_t ems_usb_start_xmit(struct sk_buff *skb, struct net_device *netdev)
+static netdev_tx_t ems_usb_start_xmit(struct sk_buff *skb,
+				      struct net_device *netdev, unsigned int queue)
 {
 	struct ems_usb *dev = netdev_priv(netdev);
 	struct ems_tx_urb_context *context = NULL;

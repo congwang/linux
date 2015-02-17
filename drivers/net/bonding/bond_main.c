@@ -247,10 +247,6 @@ void bond_dev_queue_xmit(struct bonding *bond, struct sk_buff *skb,
 {
 	skb->dev = slave_dev;
 
-	BUILD_BUG_ON(sizeof(skb->queue_mapping) !=
-		     sizeof(qdisc_skb_cb(skb)->slave_dev_queue_mapping));
-	skb->queue_mapping = qdisc_skb_cb(skb)->slave_dev_queue_mapping;
-
 	if (unlikely(netpoll_tx_running(bond->dev)))
 		bond_netpoll_send_skb(bond_get_slave_by_dev(bond, slave_dev), skb);
 	else
@@ -3839,17 +3835,17 @@ static int bond_xmit_broadcast(struct sk_buff *skb, struct net_device *bond_dev)
 
 /* Lookup the slave that corresponds to a qid */
 static inline int bond_slave_override(struct bonding *bond,
-				      struct sk_buff *skb)
+				      struct sk_buff *skb, unsigned int queue)
 {
 	struct slave *slave = NULL;
 	struct list_head *iter;
 
-	if (!skb_get_queue_mapping(skb))
+	if (!queue)
 		return 1;
 
 	/* Find out if any slaves have the same mapping as this skb. */
 	bond_for_each_slave_rcu(bond, slave, iter) {
-		if (slave->queue_id == skb_get_queue_mapping(skb)) {
+		if (slave->queue_id == queue) {
 			if (bond_slave_can_tx(slave)) {
 				bond_dev_queue_xmit(bond, skb, slave->dev);
 				return 0;
@@ -3873,9 +3869,6 @@ static u16 bond_select_queue(struct net_device *dev, struct sk_buff *skb,
 	 */
 	u16 txq = skb_has_queue_mapping(skb) ? skb_get_queue_mapping(skb) : 0;
 
-	/* Save the original txq to restore before passing to the driver */
-	qdisc_skb_cb(skb)->slave_dev_queue_mapping = skb->queue_mapping;
-
 	if (unlikely(txq >= dev->real_num_tx_queues)) {
 		do {
 			txq -= dev->real_num_tx_queues;
@@ -3884,12 +3877,12 @@ static u16 bond_select_queue(struct net_device *dev, struct sk_buff *skb,
 	return txq;
 }
 
-static netdev_tx_t __bond_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t __bond_start_xmit(struct sk_buff *skb, struct net_device *dev, unsigned int queue)
 {
 	struct bonding *bond = netdev_priv(dev);
 
 	if (bond_should_override_tx_queue(bond) &&
-	    !bond_slave_override(bond, skb))
+	    !bond_slave_override(bond, skb, queue))
 		return NETDEV_TX_OK;
 
 	switch (BOND_MODE(bond)) {
@@ -3915,7 +3908,8 @@ static netdev_tx_t __bond_start_xmit(struct sk_buff *skb, struct net_device *dev
 	}
 }
 
-static netdev_tx_t bond_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t bond_start_xmit(struct sk_buff *skb,
+				   struct net_device *dev, unsigned int queue)
 {
 	struct bonding *bond = netdev_priv(dev);
 	netdev_tx_t ret = NETDEV_TX_OK;
@@ -3928,7 +3922,7 @@ static netdev_tx_t bond_start_xmit(struct sk_buff *skb, struct net_device *dev)
 
 	rcu_read_lock();
 	if (bond_has_slaves(bond))
-		ret = __bond_start_xmit(skb, dev);
+		ret = __bond_start_xmit(skb, dev, queue);
 	else
 		bond_tx_drop(dev, skb);
 	rcu_read_unlock();

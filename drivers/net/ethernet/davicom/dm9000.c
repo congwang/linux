@@ -1023,7 +1023,8 @@ static void dm9000_send_packet(struct net_device *dev,
  *  Send a packet to media from the upper layer.
  */
 static int
-dm9000_start_xmit(struct sk_buff *skb, struct net_device *dev)
+dm9000_start_xmit(struct sk_buff *skb,
+		  struct net_device *dev, unsigned int queue)
 {
 	unsigned long flags;
 	struct board_info *db = netdev_priv(dev);

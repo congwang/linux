@@ -462,7 +462,8 @@ static int flexcan_get_berr_counter(const struct net_device *dev,
 	return err;
 }
 
-static int flexcan_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int flexcan_start_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	const struct flexcan_priv *priv = netdev_priv(dev);
 	struct flexcan_regs __iomem *regs = priv->base;

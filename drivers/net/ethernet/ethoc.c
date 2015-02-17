@@ -846,7 +846,8 @@ static void ethoc_tx_timeout(struct net_device *dev)
 		ethoc_interrupt(dev->irq, dev);
 }
 
-static netdev_tx_t ethoc_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t ethoc_start_xmit(struct sk_buff *skb,
+				    struct net_device *dev, unsigned int queue)
 {
 	struct ethoc *priv = netdev_priv(dev);
 	struct ethoc_bd bd;

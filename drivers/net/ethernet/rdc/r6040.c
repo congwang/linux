@@ -806,7 +806,7 @@ out:
 }
 
 static netdev_tx_t r6040_start_xmit(struct sk_buff *skb,
-				    struct net_device *dev)
+				    struct net_device *dev, unsigned int queue)
 {
 	struct r6040_private *lp = netdev_priv(dev);
 	struct r6040_descriptor *descptr;

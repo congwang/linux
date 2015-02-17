@@ -363,13 +363,12 @@ fec_enet_clear_csum(struct sk_buff *skb, struct net_device *ndev)
 static int
 fec_enet_txq_submit_frag_skb(struct fec_enet_priv_tx_q *txq,
 			     struct sk_buff *skb,
-			     struct net_device *ndev)
+			     struct net_device *ndev, unsigned int queue)
 {
 	struct fec_enet_private *fep = netdev_priv(ndev);
 	struct bufdesc *bdp = txq->cur_tx;
 	struct bufdesc_ex *ebdp;
 	int nr_frags = skb_shinfo(skb)->nr_frags;
-	unsigned short queue = skb_get_queue_mapping(skb);
 	int frag, frag_len;
 	unsigned short status;
 	unsigned int estatus = 0;
@@ -450,7 +449,8 @@ dma_mapping_error:
 }
 
 static int fec_enet_txq_submit_skb(struct fec_enet_priv_tx_q *txq,
-				   struct sk_buff *skb, struct net_device *ndev)
+				   struct sk_buff *skb, struct net_device *ndev,
+				   unsigned int queue)
 {
 	struct fec_enet_private *fep = netdev_priv(ndev);
 	int nr_frags = skb_shinfo(skb)->nr_frags;
@@ -459,7 +459,6 @@ static int fec_enet_txq_submit_skb(struct fec_enet_priv_tx_q *txq,
 	dma_addr_t addr;
 	unsigned short status;
 	unsigned short buflen;
-	unsigned short queue;
 	unsigned int estatus = 0;
 	unsigned int index;
 	int entries_free;
@@ -488,7 +487,6 @@ static int fec_enet_txq_submit_skb(struct fec_enet_priv_tx_q *txq,
 	bufaddr = skb->data;
 	buflen = skb_headlen(skb);
 
-	queue = skb_get_queue_mapping(skb);
 	index = fec_enet_get_bd_index(txq->tx_bd_base, bdp, fep);
 	if (((unsigned long) bufaddr) & fep->tx_align ||
 		fep->quirks & FEC_QUIRK_SWAP_FRAME) {
@@ -509,7 +507,7 @@ static int fec_enet_txq_submit_skb(struct fec_enet_priv_tx_q *txq,
 	}
 
 	if (nr_frags) {
-		ret = fec_enet_txq_submit_frag_skb(txq, skb, ndev);
+		ret = fec_enet_txq_submit_frag_skb(txq, skb, ndev, queue);
 		if (ret)
 			return ret;
 	} else {
@@ -569,13 +567,12 @@ static int fec_enet_txq_submit_skb(struct fec_enet_priv_tx_q *txq,
 
 static int
 fec_enet_txq_put_data_tso(struct fec_enet_priv_tx_q *txq, struct sk_buff *skb,
-			  struct net_device *ndev,
+			  struct net_device *ndev, unsigned int queue,
 			  struct bufdesc *bdp, int index, char *data,
 			  int size, bool last_tcp, bool is_last)
 {
 	struct fec_enet_private *fep = netdev_priv(ndev);
 	struct bufdesc_ex *ebdp = container_of(bdp, struct bufdesc_ex, desc);
-	unsigned short queue = skb_get_queue_mapping(skb);
 	unsigned short status;
 	unsigned int estatus = 0;
 	dma_addr_t addr;
@@ -631,12 +628,11 @@ fec_enet_txq_put_data_tso(struct fec_enet_priv_tx_q *txq, struct sk_buff *skb,
 static int
 fec_enet_txq_put_hdr_tso(struct fec_enet_priv_tx_q *txq,
 			 struct sk_buff *skb, struct net_device *ndev,
-			 struct bufdesc *bdp, int index)
+			 unsigned int queue, struct bufdesc *bdp, int index)
 {
 	struct fec_enet_private *fep = netdev_priv(ndev);
 	int hdr_len = skb_transport_offset(skb) + tcp_hdrlen(skb);
 	struct bufdesc_ex *ebdp = container_of(bdp, struct bufdesc_ex, desc);
-	unsigned short queue = skb_get_queue_mapping(skb);
 	void *bufaddr;
 	unsigned long dmabuf;
 	unsigned short status;
@@ -685,13 +681,12 @@ fec_enet_txq_put_hdr_tso(struct fec_enet_priv_tx_q *txq,
 
 static int fec_enet_txq_submit_tso(struct fec_enet_priv_tx_q *txq,
 				   struct sk_buff *skb,
-				   struct net_device *ndev)
+				   struct net_device *ndev, unsigned int queue)
 {
 	struct fec_enet_private *fep = netdev_priv(ndev);
 	int hdr_len = skb_transport_offset(skb) + tcp_hdrlen(skb);
 	int total_len, data_left;
 	struct bufdesc *bdp = txq->cur_tx;
-	unsigned short queue = skb_get_queue_mapping(skb);
 	struct tso_t tso;
 	unsigned int index = 0;
 	int ret;
@@ -723,7 +718,7 @@ static int fec_enet_txq_submit_tso(struct fec_enet_priv_tx_q *txq,
 		/* prepare packet headers: MAC + IP + TCP */
 		hdr = txq->tso_hdrs + index * TSO_HEADER_SIZE;
 		tso_build_hdr(skb, hdr, &tso, data_left, total_len == 0);
-		ret = fec_enet_txq_put_hdr_tso(txq, skb, ndev, bdp, index);
+		ret = fec_enet_txq_put_hdr_tso(txq, skb, ndev, queue, bdp, index);
 		if (ret)
 			goto err_release;
 
@@ -734,7 +729,7 @@ static int fec_enet_txq_submit_tso(struct fec_enet_priv_tx_q *txq,
 			bdp = fec_enet_get_nextdesc(bdp, fep, queue);
 			index = fec_enet_get_bd_index(txq->tx_bd_base,
 						      bdp, fep);
-			ret = fec_enet_txq_put_data_tso(txq, skb, ndev,
+			ret = fec_enet_txq_put_data_tso(txq, skb, ndev, queue,
 							bdp, index,
 							tso.data, size,
 							size == data_left,
@@ -771,23 +766,22 @@ err_release:
 }
 
 static netdev_tx_t
-fec_enet_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+fec_enet_start_xmit(struct sk_buff *skb,
+		    struct net_device *ndev, unsigned int queue)
 {
 	struct fec_enet_private *fep = netdev_priv(ndev);
 	int entries_free;
-	unsigned short queue;
 	struct fec_enet_priv_tx_q *txq;
 	struct netdev_queue *nq;
 	int ret;
 
-	queue = skb_get_queue_mapping(skb);
 	txq = fep->tx_queue[queue];
 	nq = netdev_get_tx_queue(ndev, queue);
 
 	if (skb_is_gso(skb))
-		ret = fec_enet_txq_submit_tso(txq, skb, ndev);
+		ret = fec_enet_txq_submit_tso(txq, skb, ndev, queue);
 	else
-		ret = fec_enet_txq_submit_skb(txq, skb, ndev);
+		ret = fec_enet_txq_submit_skb(txq, skb, ndev, queue);
 	if (ret)
 		return ret;
 

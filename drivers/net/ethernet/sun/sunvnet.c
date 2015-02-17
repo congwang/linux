@@ -1142,7 +1142,8 @@ vnet_select_queue(struct net_device *dev, struct sk_buff *skb,
 	return port->q_index;
 }
 
-static int vnet_start_xmit(struct sk_buff *skb, struct net_device *dev);
+static int vnet_start_xmit(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue);
 
 static int vnet_handle_offloads(struct vnet_port *port, struct sk_buff *skb)
 {
@@ -1245,7 +1246,8 @@ out_dropped:
 	return NETDEV_TX_OK;
 }
 
-static int vnet_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int vnet_start_xmit(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue)
 {
 	struct vnet *vp = netdev_priv(dev);
 	struct vnet_port *port = NULL;

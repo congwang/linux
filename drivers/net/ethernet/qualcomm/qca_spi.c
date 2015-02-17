@@ -658,7 +658,8 @@ qcaspi_netdev_close(struct net_device *dev)
 }
 
 static netdev_tx_t
-qcaspi_netdev_xmit(struct sk_buff *skb, struct net_device *dev)
+qcaspi_netdev_xmit(struct sk_buff *skb,
+		   struct net_device *dev, unsigned int queue)
 {
 	u32 frame_len;
 	u8 *ptmp;

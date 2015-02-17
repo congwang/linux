@@ -134,7 +134,7 @@ static inline netdev_tx_t vlan_netpoll_send_skb(struct vlan_dev_priv *vlan, stru
 }
 
 static netdev_tx_t vlan_dev_hard_start_xmit(struct sk_buff *skb,
-					    struct net_device *dev)
+					    struct net_device *dev, unsigned int queue)
 {
 	struct vlan_dev_priv *vlan = vlan_dev_priv(dev);
 	struct vlan_ethhdr *veth = (struct vlan_ethhdr *)(skb->data);

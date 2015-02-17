@@ -432,7 +432,7 @@ static void c_can_setup_receive_object(struct net_device *dev, int iface,
 }
 
 static netdev_tx_t c_can_start_xmit(struct sk_buff *skb,
-				    struct net_device *dev)
+				    struct net_device *dev, unsigned int queue)
 {
 	struct can_frame *frame = (struct can_frame *)skb->data;
 	struct c_can_priv *priv = netdev_priv(dev);

@@ -6627,7 +6627,7 @@ static u64 niu_compute_tx_flags(struct sk_buff *skb, struct ethhdr *ehdr,
 }
 
 static netdev_tx_t niu_start_xmit(struct sk_buff *skb,
-				  struct net_device *dev)
+				  struct net_device *dev, unsigned int queue)
 {
 	struct niu *np = netdev_priv(dev);
 	unsigned long align, headroom;

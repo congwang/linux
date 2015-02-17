@@ -4011,7 +4011,8 @@ static int s2io_close(struct net_device *dev)
  *  0 on success & 1 on failure.
  */
 
-static netdev_tx_t s2io_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t s2io_xmit(struct sk_buff *skb,
+			     struct net_device *dev, unsigned int queue)
 {
 	struct s2io_nic *sp = netdev_priv(dev);
 	u16 frg_cnt, frg_len, i, queue, queue_len, put_off, get_off;

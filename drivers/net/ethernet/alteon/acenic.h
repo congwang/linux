@@ -773,7 +773,7 @@ static irqreturn_t ace_interrupt(int irq, void *dev_id);
 static int ace_load_firmware(struct net_device *dev);
 static int ace_open(struct net_device *dev);
 static netdev_tx_t ace_start_xmit(struct sk_buff *skb,
-				  struct net_device *dev);
+				  struct net_device *dev, unsigned int queue);
 static int ace_close(struct net_device *dev);
 static void ace_tasklet(unsigned long dev);
 static void ace_dump_trace(struct ace_private *ap);

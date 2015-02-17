@@ -1370,7 +1370,8 @@ out:
  *         Note: If we return !0, then the packet is free'd by
  *               the generic network layer.
  */
-static int netiucv_tx(struct sk_buff *skb, struct net_device *dev)
+static int netiucv_tx(struct sk_buff *skb,
+		      struct net_device *dev, unsigned int queue)
 {
 	struct netiucv_priv *privptr = netdev_priv(dev);
 	int rc;

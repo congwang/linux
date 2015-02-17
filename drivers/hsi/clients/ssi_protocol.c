@@ -965,7 +965,8 @@ static int ssip_pn_set_mtu(struct net_device *dev, int new_mtu)
 	return 0;
 }
 
-static int ssip_pn_xmit(struct sk_buff *skb, struct net_device *dev)
+static int ssip_pn_xmit(struct sk_buff *skb,
+			struct net_device *dev, unsigned int queue)
 {
 	struct hsi_client *cl = to_hsi_client(dev->dev.parent);
 	struct ssi_protocol *ssi = hsi_client_drvdata(cl);

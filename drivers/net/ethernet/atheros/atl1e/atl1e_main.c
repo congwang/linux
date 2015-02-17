@@ -1863,7 +1863,7 @@ static void atl1e_tx_queue(struct atl1e_adapter *adapter, u16 count,
 }
 
 static netdev_tx_t atl1e_xmit_frame(struct sk_buff *skb,
-					  struct net_device *netdev)
+					  struct net_device *netdev, unsigned int queue)
 {
 	struct atl1e_adapter *adapter = netdev_priv(netdev);
 	unsigned long flags;

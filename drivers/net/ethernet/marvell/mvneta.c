@@ -1715,10 +1715,10 @@ error:
 }
 
 /* Main tx processing */
-static int mvneta_tx(struct sk_buff *skb, struct net_device *dev)
+static int mvneta_tx(struct sk_buff *skb,
+		     struct net_device *dev, unsigned int txq_id)
 {
 	struct mvneta_port *pp = netdev_priv(dev);
-	u16 txq_id = skb_get_queue_mapping(skb);
 	struct mvneta_tx_queue *txq = &pp->txqs[txq_id];
 	struct mvneta_tx_desc *tx_desc;
 	int len = skb->len;

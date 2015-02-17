@@ -239,7 +239,8 @@ static int read_scc_data(struct scc_priv *priv);
 static int scc_open(struct net_device *dev);
 static int scc_close(struct net_device *dev);
 static int scc_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd);
-static int scc_send_packet(struct sk_buff *skb, struct net_device *dev);
+static int scc_send_packet(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue);
 static int scc_set_mac_address(struct net_device *dev, void *sa);
 
 static inline void tx_on(struct scc_priv *priv);
@@ -914,7 +915,8 @@ static int scc_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 }
 
 
-static int scc_send_packet(struct sk_buff *skb, struct net_device *dev)
+static int scc_send_packet(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue)
 {
 	struct scc_priv *priv = dev->ml_priv;
 	unsigned long flags;

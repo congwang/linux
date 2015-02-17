@@ -2928,7 +2928,8 @@ bnad_txq_wi_prepare(struct bnad *bnad, struct bna_tcb *tcb,
  *		     Called under lock held by net_device
  */
 static netdev_tx_t
-bnad_start_xmit(struct sk_buff *skb, struct net_device *netdev)
+bnad_start_xmit(struct sk_buff *skb,
+		struct net_device *netdev, unsigned int queue)
 {
 	struct bnad *bnad = netdev_priv(netdev);
 	u32 txq_id = 0;

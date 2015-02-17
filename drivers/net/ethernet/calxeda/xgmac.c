@@ -1081,7 +1081,8 @@ static int xgmac_stop(struct net_device *dev)
  *  @dev : device pointer
  *  Description : Tx entry point of the driver.
  */
-static netdev_tx_t xgmac_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t xgmac_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	struct xgmac_priv *priv = netdev_priv(dev);
 	unsigned int entry;

@@ -5517,7 +5517,7 @@ static int e1000_maybe_stop_tx(struct e1000_ring *tx_ring, int size)
 }
 
 static netdev_tx_t e1000_xmit_frame(struct sk_buff *skb,
-				    struct net_device *netdev)
+				    struct net_device *netdev, unsigned int queue)
 {
 	struct e1000_adapter *adapter = netdev_priv(netdev);
 	struct e1000_ring *tx_ring = adapter->tx_ring;

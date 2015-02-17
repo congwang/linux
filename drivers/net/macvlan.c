@@ -507,7 +507,7 @@ static inline netdev_tx_t macvlan_netpoll_send_skb(struct macvlan_dev *vlan, str
 }
 
 static netdev_tx_t macvlan_start_xmit(struct sk_buff *skb,
-				      struct net_device *dev)
+				      struct net_device *dev, unsigned int queue)
 {
 	unsigned int len = skb->len;
 	int ret;

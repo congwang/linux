@@ -1011,7 +1011,8 @@ static void cfhsi_aggregation_tout(unsigned long arg)
 	cfhsi_start_tx(cfhsi);
 }
 
-static int cfhsi_xmit(struct sk_buff *skb, struct net_device *dev)
+static int cfhsi_xmit(struct sk_buff *skb,
+		      struct net_device *dev, unsigned int queue)
 {
 	struct cfhsi *cfhsi = NULL;
 	int start_xfer = 0;

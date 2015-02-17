@@ -1058,11 +1058,11 @@ static void be_xmit_flush(struct be_adapter *adapter, struct be_tx_obj *txo)
 	txo->pend_wrb_cnt = 0;
 }
 
-static netdev_tx_t be_xmit(struct sk_buff *skb, struct net_device *netdev)
+static netdev_tx_t be_xmit(struct sk_buff *skb, struct net_device *netdev,
+			   unsigned int q_idx)
 {
 	bool skip_hw_vlan = false, flush = !skb->xmit_more;
 	struct be_adapter *adapter = netdev_priv(netdev);
-	u16 q_idx = skb_get_queue_mapping(skb);
 	struct be_tx_obj *txo = &adapter->tx_obj[q_idx];
 	struct be_queue_info *txq = &txo->q;
 	u16 wrb_cnt;

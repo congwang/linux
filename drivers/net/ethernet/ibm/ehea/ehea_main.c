@@ -2048,7 +2048,8 @@ static void ehea_xmit3(struct sk_buff *skb, struct net_device *dev,
 	dev_consume_skb_any(skb);
 }
 
-static int ehea_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int ehea_start_xmit(struct sk_buff *skb,
+			   struct net_device *dev, unsigned int queue)
 {
 	struct ehea_port *port = netdev_priv(dev);
 	struct ehea_swqe *swqe;
@@ -2057,8 +2058,8 @@ static int ehea_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	struct ehea_port_res *pr;
 	struct netdev_queue *txq;
 
-	pr = &port->port_res[skb_get_queue_mapping(skb)];
-	txq = netdev_get_tx_queue(dev, skb_get_queue_mapping(skb));
+	pr = &port->port_res[queue];
+	txq = netdev_get_tx_queue(dev, queue);
 
 	swqe = ehea_get_swqe(pr->qp, &swqe_index);
 	memset(swqe, 0, SWQE_HEADER_SIZE);

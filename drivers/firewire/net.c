@@ -1224,7 +1224,8 @@ static int fwnet_stop(struct net_device *net)
 	return 0;
 }
 
-static netdev_tx_t fwnet_tx(struct sk_buff *skb, struct net_device *net)
+static netdev_tx_t fwnet_tx(struct sk_buff *skb,
+			    struct net_device *net, unsigned int queue)
 {
 	struct fwnet_header hdr_buf;
 	struct fwnet_device *dev = netdev_priv(net);

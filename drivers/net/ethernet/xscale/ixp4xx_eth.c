@@ -837,7 +837,8 @@ static void eth_txdone_irq(void *unused)
 	}
 }
 
-static int eth_xmit(struct sk_buff *skb, struct net_device *dev)
+static int eth_xmit(struct sk_buff *skb,
+		    struct net_device *dev, unsigned int queue)
 {
 	struct port *port = netdev_priv(dev);
 	unsigned int txreadyq = port->plat->txreadyq;

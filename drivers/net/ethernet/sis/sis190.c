@@ -1171,7 +1171,7 @@ static int sis190_close(struct net_device *dev)
 }
 
 static netdev_tx_t sis190_start_xmit(struct sk_buff *skb,
-				     struct net_device *dev)
+				     struct net_device *dev, unsigned int queue)
 {
 	struct sis190_private *tp = netdev_priv(dev);
 	void __iomem *ioaddr = tp->mmio_addr;

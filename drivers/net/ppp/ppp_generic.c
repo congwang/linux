@@ -972,7 +972,8 @@ out:
  * Network interface unit routines.
  */
 static netdev_tx_t
-ppp_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ppp_start_xmit(struct sk_buff *skb,
+	       struct net_device *dev, unsigned int queue)
 {
 	struct ppp *ppp = netdev_priv(dev);
 	int npi, proto;

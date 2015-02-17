@@ -1922,7 +1922,7 @@ static int airo_open(struct net_device *dev) {
 }
 
 static netdev_tx_t mpi_start_xmit(struct sk_buff *skb,
-					struct net_device *dev)
+					struct net_device *dev, unsigned int queue)
 {
 	int npacks, pending;
 	unsigned long flags;
@@ -2123,7 +2123,7 @@ static void airo_end_xmit(struct net_device *dev) {
 }
 
 static netdev_tx_t airo_start_xmit(struct sk_buff *skb,
-					 struct net_device *dev)
+					 struct net_device *dev, unsigned int queue)
 {
 	s16 len;
 	int i, j;
@@ -2190,7 +2190,7 @@ static void airo_end_xmit11(struct net_device *dev) {
 }
 
 static netdev_tx_t airo_start_xmit11(struct sk_buff *skb,
-					   struct net_device *dev)
+					   struct net_device *dev, unsigned int queue)
 {
 	s16 len;
 	int i, j;

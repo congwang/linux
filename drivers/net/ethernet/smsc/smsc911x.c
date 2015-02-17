@@ -1679,7 +1679,8 @@ static int smsc911x_stop(struct net_device *dev)
 }
 
 /* Entry point for transmitting a packet */
-static int smsc911x_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static int smsc911x_hard_start_xmit(struct sk_buff *skb,
+				    struct net_device *dev, unsigned int queue)
 {
 	struct smsc911x_data *pdata = netdev_priv(dev);
 	unsigned int freespace;

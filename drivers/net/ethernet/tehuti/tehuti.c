@@ -1613,7 +1613,7 @@ static inline int bdx_tx_space(struct bdx_priv *priv)
  * o NETDEV_TX_LOCKED Locking failed, please retry quickly.
  */
 static netdev_tx_t bdx_tx_transmit(struct sk_buff *skb,
-				   struct net_device *ndev)
+				   struct net_device *ndev, unsigned int queue)
 {
 	struct bdx_priv *priv = netdev_priv(ndev);
 	struct txd_fifo *f = &priv->txd_fifo0;

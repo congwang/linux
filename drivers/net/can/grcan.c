@@ -1349,7 +1349,7 @@ static int grcan_txbug_workaround(struct net_device *dev, struct sk_buff *skb,
  * priv->eskbp reaches regs->txrd
  */
 static netdev_tx_t grcan_start_xmit(struct sk_buff *skb,
-				    struct net_device *dev)
+				    struct net_device *dev, unsigned int queue)
 {
 	struct grcan_priv *priv = netdev_priv(dev);
 	struct grcan_registers __iomem *regs = priv->regs;

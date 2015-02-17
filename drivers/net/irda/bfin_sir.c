@@ -534,7 +534,8 @@ static void bfin_sir_send_work(struct work_struct *work)
 	dev->trans_start = jiffies;
 }
 
-static int bfin_sir_hard_xmit(struct sk_buff *skb, struct net_device *dev)
+static int bfin_sir_hard_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	struct bfin_sir_self *self = netdev_priv(dev);
 	int speed = irda_get_next_speed(skb);

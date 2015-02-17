@@ -788,14 +788,15 @@ static struct list_head *__team_get_qom_list(struct team *team, u16 queue_id)
 /*
  * note: already called with rcu_read_lock
  */
-static bool team_queue_override_transmit(struct team *team, struct sk_buff *skb)
+static bool team_queue_override_transmit(struct team *team, struct sk_buff *skb,
+					 unsigned int queue)
 {
 	struct list_head *qom_list;
 	struct team_port *port;
 
-	if (!team->queue_override_enabled || !skb_get_queue_mapping(skb))
+	if (!team->queue_override_enabled || !queue)
 		return false;
-	qom_list = __team_get_qom_list(team, skb_get_queue_mapping(skb));
+	qom_list = __team_get_qom_list(team, queue);
 	list_for_each_entry_rcu(port, qom_list, qom_list) {
 		if (!team_dev_queue_xmit(team, port, skb))
 			return true;
@@ -1642,13 +1643,14 @@ static int team_close(struct net_device *dev)
 /*
  * note: already called with rcu_read_lock
  */
-static netdev_tx_t team_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t team_xmit(struct sk_buff *skb,
+			     struct net_device *dev, unsigned int queue)
 {
 	struct team *team = netdev_priv(dev);
 	bool tx_success;
 	unsigned int len = skb->len;
 
-	tx_success = team_queue_override_transmit(team, skb);
+	tx_success = team_queue_override_transmit(team, skb, queue);
 	if (!tx_success)
 		tx_success = team->ops.transmit(team, skb);
 	if (tx_success) {
@@ -1676,11 +1678,6 @@ static u16 team_select_queue(struct net_device *dev, struct sk_buff *skb,
 	 * way down to the team driver.
 	 */
 	u16 txq = skb_has_queue_mapping(skb) ? skb_get_queue_mapping(skb) : 0;
-
-	/*
-	 * Save the original txq to restore before passing to the driver
-	 */
-	qdisc_skb_cb(skb)->slave_dev_queue_mapping = skb->queue_mapping;
 
 	if (unlikely(txq >= dev->real_num_tx_queues)) {
 		do {

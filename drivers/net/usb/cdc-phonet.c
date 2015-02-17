@@ -58,7 +58,8 @@ static void rx_complete(struct urb *req);
 /*
  * Network device callbacks
  */
-static netdev_tx_t usbpn_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t usbpn_xmit(struct sk_buff *skb,
+			      struct net_device *dev, unsigned int queue)
 {
 	struct usbpn_dev *pnd = netdev_priv(dev);
 	struct urb *req = NULL;

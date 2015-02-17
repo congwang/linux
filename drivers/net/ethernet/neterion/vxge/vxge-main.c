@@ -822,7 +822,7 @@ static u16 vxge_select_queue(struct net_device *dev, struct sk_buff *skb,
  * certain protocol assist features on Tx side, namely  CSO, S/G, LSO.
 */
 static netdev_tx_t
-vxge_xmit(struct sk_buff *skb, struct net_device *dev)
+vxge_xmit(struct sk_buff *skb, struct net_device *dev, unsigned int queue)
 {
 	struct vxge_fifo *fifo = NULL;
 	void *dtr_priv;
@@ -836,7 +836,7 @@ vxge_xmit(struct sk_buff *skb, struct net_device *dev)
 	struct vxge_tx_priv *txdl_priv = NULL;
 	struct __vxge_hw_fifo *fifo_hw;
 	int offload_type;
-	int vpath_no = skb_get_queue_mapping(skb);
+	int vpath_no = queue;
 
 	vxge_debug_entryexit(VXGE_TRACE, "%s: %s:%d",
 			dev->name, __func__, __LINE__);

@@ -78,7 +78,7 @@ static int ray_dev_init(struct net_device *dev);
 
 static int ray_open(struct net_device *dev);
 static netdev_tx_t ray_dev_start_xmit(struct sk_buff *skb,
-					    struct net_device *dev);
+					    struct net_device *dev, unsigned int queue);
 static void set_multicast_list(struct net_device *dev);
 static void ray_update_multi_list(struct net_device *dev, int all);
 static int translate_frame(ray_dev_t *local, struct tx_msg __iomem *ptx,
@@ -831,7 +831,7 @@ static int ray_dev_config(struct net_device *dev, struct ifmap *map)
 
 /*===========================================================================*/
 static netdev_tx_t ray_dev_start_xmit(struct sk_buff *skb,
-					    struct net_device *dev)
+					    struct net_device *dev, unsigned int queue)
 {
 	ray_dev_t *local = netdev_priv(dev);
 	struct pcmcia_device *link = local->finder;

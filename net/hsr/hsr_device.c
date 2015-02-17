@@ -232,7 +232,8 @@ static netdev_features_t hsr_fix_features(struct net_device *dev,
 }
 
 
-static int hsr_dev_xmit(struct sk_buff *skb, struct net_device *dev)
+static int hsr_dev_xmit(struct sk_buff *skb,
+			struct net_device *dev, unsigned int queue)
 {
 	struct hsr_priv *hsr = netdev_priv(dev);
 	struct hsr_port *master;

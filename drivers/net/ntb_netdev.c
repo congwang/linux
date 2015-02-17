@@ -155,7 +155,7 @@ static void ntb_netdev_tx_handler(struct ntb_transport_qp *qp, void *qp_data,
 }
 
 static netdev_tx_t ntb_netdev_start_xmit(struct sk_buff *skb,
-					 struct net_device *ndev)
+					 struct net_device *ndev, unsigned int queue)
 {
 	struct ntb_netdev *dev = netdev_priv(ndev);
 	int rc;

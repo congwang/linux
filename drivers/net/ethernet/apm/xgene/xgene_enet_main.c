@@ -256,7 +256,7 @@ static int xgene_enet_setup_tx_desc(struct xgene_enet_desc_ring *tx_ring,
 }
 
 static netdev_tx_t xgene_enet_start_xmit(struct sk_buff *skb,
-					 struct net_device *ndev)
+					 struct net_device *ndev, unsigned int queue)
 {
 	struct xgene_enet_pdata *pdata = netdev_priv(ndev);
 	struct xgene_enet_desc_ring *tx_ring = pdata->tx_ring;

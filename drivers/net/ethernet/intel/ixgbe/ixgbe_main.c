@@ -7357,7 +7357,8 @@ out_drop:
 }
 
 static netdev_tx_t __ixgbe_xmit_frame(struct sk_buff *skb,
-				      struct net_device *netdev)
+				      struct net_device *netdev,
+				      unsigned int queue)
 {
 	struct ixgbe_adapter *adapter = netdev_priv(netdev);
 	struct ixgbe_ring *tx_ring;
@@ -7369,15 +7370,16 @@ static netdev_tx_t __ixgbe_xmit_frame(struct sk_buff *skb,
 	if (skb_put_padto(skb, 17))
 		return NETDEV_TX_OK;
 
-	tx_ring = adapter->tx_ring[skb_get_queue_mapping(skb)];
+	tx_ring = adapter->tx_ring[queue];
 
 	return ixgbe_xmit_frame_ring(skb, adapter, tx_ring);
 }
 
 static netdev_tx_t ixgbe_xmit_frame(struct sk_buff *skb,
-				    struct net_device *netdev)
+				    struct net_device *netdev,
+				    unsigned int queue)
 {
-	return __ixgbe_xmit_frame(skb, netdev);
+	return __ixgbe_xmit_frame(skb, netdev, queue);
 }
 
 /**

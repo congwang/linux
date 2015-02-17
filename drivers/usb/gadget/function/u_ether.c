@@ -480,7 +480,7 @@ static inline int is_promisc(u16 cdc_filter)
 }
 
 static netdev_tx_t eth_start_xmit(struct sk_buff *skb,
-					struct net_device *net)
+					struct net_device *net, unsigned int queue)
 {
 	struct eth_dev		*dev = netdev_priv(net);
 	int			length = 0;

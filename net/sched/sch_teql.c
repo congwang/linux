@@ -275,13 +275,13 @@ static inline int teql_resolve(struct sk_buff *skb,
 	return res;
 }
 
-static netdev_tx_t teql_master_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t teql_master_xmit(struct sk_buff *skb,
+				    struct net_device *dev, unsigned int subq)
 {
 	struct teql_master *master = netdev_priv(dev);
 	struct Qdisc *start, *q;
 	int busy;
 	int nores;
-	int subq = skb_get_queue_mapping(skb);
 	struct sk_buff *skb_res = NULL;
 
 	start = master->slaves;

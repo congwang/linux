@@ -970,7 +970,7 @@ static void b44_tx_timeout(struct net_device *dev)
 	netif_wake_queue(dev);
 }
 
-static netdev_tx_t b44_start_xmit(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t b44_start_xmit(struct sk_buff *skb, struct net_device *dev, unsigned int queue)
 {
 	struct b44 *bp = netdev_priv(dev);
 	int rc = NETDEV_TX_OK;

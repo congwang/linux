@@ -841,7 +841,7 @@ static int vlsi_set_baud(vlsi_irda_dev_t *idev, unsigned iobase)
 }
 
 static netdev_tx_t vlsi_hard_start_xmit(struct sk_buff *skb,
-					      struct net_device *ndev)
+					      struct net_device *ndev, unsigned int queue)
 {
 	vlsi_irda_dev_t *idev = netdev_priv(ndev);
 	struct vlsi_ring	*r = idev->tx_ring;

@@ -2178,7 +2178,8 @@ static irqreturn_t slic_interrupt(int irq, void *dev_id)
 
 #define NORMAL_ETHFRAME     0
 
-static netdev_tx_t slic_xmit_start(struct sk_buff *skb, struct net_device *dev)
+static netdev_tx_t slic_xmit_start(struct sk_buff *skb,
+				   struct net_device *dev, unsigned int queue)
 {
 	struct sliccard *card;
 	struct adapter *adapter = netdev_priv(dev);

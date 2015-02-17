@@ -58,7 +58,7 @@ static unsigned char bridge_ula_lec[] = { 0x01, 0x80, 0xc2, 0x00, 0x00 };
 
 static int lec_open(struct net_device *dev);
 static netdev_tx_t lec_start_xmit(struct sk_buff *skb,
-				  struct net_device *dev);
+				  struct net_device *dev, unsigned int queue);
 static int lec_close(struct net_device *dev);
 static struct lec_arp_table *lec_arp_find(struct lec_priv *priv,
 					  const unsigned char *mac_addr);
@@ -199,7 +199,7 @@ static void lec_tx_timeout(struct net_device *dev)
 }
 
 static netdev_tx_t lec_start_xmit(struct sk_buff *skb,
-				  struct net_device *dev)
+				  struct net_device *dev, unsigned int queue)
 {
 	struct sk_buff *skb2;
 	struct lec_priv *priv = netdev_priv(dev);

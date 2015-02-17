@@ -343,7 +343,7 @@ static inline int br_is_root_bridge(const struct net_bridge *br)
 /* br_device.c */
 void br_dev_setup(struct net_device *dev);
 void br_dev_delete(struct net_device *dev, struct list_head *list);
-netdev_tx_t br_dev_xmit(struct sk_buff *skb, struct net_device *dev);
+netdev_tx_t br_dev_xmit(struct sk_buff *skb, struct net_device *dev, unsigned int queue);
 #ifdef CONFIG_NET_POLL_CONTROLLER
 static inline void br_netpoll_send_skb(const struct net_bridge_port *p,
 				       struct sk_buff *skb)
