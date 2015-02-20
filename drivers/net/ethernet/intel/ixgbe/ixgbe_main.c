@@ -7189,7 +7189,7 @@ static u16 ixgbe_select_queue(struct net_device *dev, struct sk_buff *skb,
 #endif
 
 	if (fwd_adapter)
-		return skb->queue_mapping + fwd_adapter->tx_base_queue;
+		return skb_get_queue_mapping(skb) + fwd_adapter->tx_base_queue;
 
 #ifdef IXGBE_FCOE
 
@@ -7370,7 +7370,7 @@ static netdev_tx_t __ixgbe_xmit_frame(struct sk_buff *skb,
 	if (skb_put_padto(skb, 17))
 		return NETDEV_TX_OK;
 
-	tx_ring = ring ? ring : adapter->tx_ring[skb->queue_mapping];
+	tx_ring = ring ? ring : adapter->tx_ring[skb_get_queue_mapping(skb)];
 
 	return ixgbe_xmit_frame_ring(skb, adapter, tx_ring);
 }

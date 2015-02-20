@@ -3842,12 +3842,12 @@ static inline int bond_slave_override(struct bonding *bond,
 	struct slave *slave = NULL;
 	struct list_head *iter;
 
-	if (!skb->queue_mapping)
+	if (!skb_get_queue_mapping(skb))
 		return 1;
 
 	/* Find out if any slaves have the same mapping as this skb. */
 	bond_for_each_slave_rcu(bond, slave, iter) {
-		if (slave->queue_id == skb->queue_mapping) {
+		if (slave->queue_id == skb_get_queue_mapping(skb)) {
 			if (bond_slave_can_tx(slave)) {
 				bond_dev_queue_xmit(bond, skb, slave->dev);
 				return 0;

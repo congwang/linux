@@ -793,9 +793,9 @@ static bool team_queue_override_transmit(struct team *team, struct sk_buff *skb)
 	struct list_head *qom_list;
 	struct team_port *port;
 
-	if (!team->queue_override_enabled || !skb->queue_mapping)
+	if (!team->queue_override_enabled || !skb_get_queue_mapping(skb))
 		return false;
-	qom_list = __team_get_qom_list(team, skb->queue_mapping);
+	qom_list = __team_get_qom_list(team, skb_get_queue_mapping(skb));
 	list_for_each_entry_rcu(port, qom_list, qom_list) {
 		if (!team_dev_queue_xmit(team, port, skb))
 			return true;

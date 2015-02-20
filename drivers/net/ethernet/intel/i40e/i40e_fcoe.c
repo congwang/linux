@@ -1085,7 +1085,7 @@ static void i40e_fcoe_program_ddp(struct i40e_ring *tx_ring,
 			I40E_FCOE_FILTER_CTX_DESC_FC_CLASS2 :
 			I40E_FCOE_FILTER_CTX_DESC_FC_CLASS3);
 
-	flags_rsvd_lanq |= ((u64)skb->queue_mapping <<
+	flags_rsvd_lanq |= ((u64)skb_get_queue_mapping(skb) <<
 				I40E_FCOE_FILTER_CTX_QW1_LANQINDX_SHIFT);
 	filter_desc->flags_rsvd_lanq = cpu_to_le64(flags_rsvd_lanq);
 
@@ -1358,7 +1358,7 @@ static netdev_tx_t i40e_fcoe_xmit_frame(struct sk_buff *skb,
 {
 	struct i40e_netdev_priv *np = netdev_priv(skb->dev);
 	struct i40e_vsi *vsi = np->vsi;
-	struct i40e_ring *tx_ring = vsi->tx_rings[skb->queue_mapping];
+	struct i40e_ring *tx_ring = vsi->tx_rings[skb_get_queue_mapping(skb)];
 	struct i40e_tx_buffer *first;
 	u32 tx_flags = 0;
 	u8 hdr_len = 0;

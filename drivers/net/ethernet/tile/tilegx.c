@@ -1945,8 +1945,8 @@ static int tile_net_tx_tso(struct sk_buff *skb, struct net_device *dev)
 	local_irq_save(irqflags);
 
 	/* Try to acquire a completion entry and an egress slot. */
-	slot = tile_net_equeue_try_reserve(dev, skb->queue_mapping, comps,
-					   equeue, num_edescs);
+	slot = tile_net_equeue_try_reserve(dev, skb_get_queue_mapping(skb),
+					   comps, equeue, num_edescs);
 	if (slot < 0) {
 		local_irq_restore(irqflags);
 		return NETDEV_TX_BUSY;
@@ -2043,8 +2043,8 @@ static int tile_net_tx(struct sk_buff *skb, struct net_device *dev)
 	local_irq_save(irqflags);
 
 	/* Try to acquire a completion entry and an egress slot. */
-	slot = tile_net_equeue_try_reserve(dev, skb->queue_mapping, comps,
-					   equeue, num_edescs);
+	slot = tile_net_equeue_try_reserve(dev, skb_get_queue_mapping(skb),
+					   comps, equeue, num_edescs);
 	if (slot < 0) {
 		local_irq_restore(irqflags);
 		return NETDEV_TX_BUSY;

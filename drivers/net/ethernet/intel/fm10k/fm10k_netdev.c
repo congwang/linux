@@ -605,7 +605,7 @@ int fm10k_close(struct net_device *netdev)
 static netdev_tx_t fm10k_xmit_frame(struct sk_buff *skb, struct net_device *dev)
 {
 	struct fm10k_intfc *interface = netdev_priv(dev);
-	unsigned int r_idx = skb->queue_mapping;
+	unsigned int r_idx = skb_get_queue_mapping(skb);
 	int err;
 
 	if ((skb->protocol ==  htons(ETH_P_8021Q)) &&

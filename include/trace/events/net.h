@@ -38,7 +38,7 @@ TRACE_EVENT(net_dev_start_xmit,
 
 	TP_fast_assign(
 		__assign_str(name, dev->name);
-		__entry->queue_mapping = skb->queue_mapping;
+		__entry->queue_mapping = skb_get_queue_mapping(skb);
 		__entry->skbaddr = skb;
 		__entry->vlan_tagged = skb_vlan_tag_present(skb);
 		__entry->vlan_proto = ntohs(skb->vlan_proto);

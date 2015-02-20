@@ -2637,7 +2637,7 @@ static netdev_tx_t qlge_send(struct sk_buff *skb, struct net_device *ndev)
 	struct ql_adapter *qdev = netdev_priv(ndev);
 	int tso;
 	struct tx_ring *tx_ring;
-	u32 tx_ring_idx = (u32) skb->queue_mapping;
+	u32 tx_ring_idx = (u32) skb_get_queue_mapping(skb);
 
 	tx_ring = &qdev->tx_ring[tx_ring_idx];
 
