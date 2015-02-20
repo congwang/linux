@@ -1564,7 +1564,7 @@ static void do_gro(struct sge_eth_rxq *rxq, const struct pkt_gl *gl,
 	skb->data_len = skb->len;
 	skb->truesize += skb->data_len;
 	skb->ip_summed = CHECKSUM_UNNECESSARY;
-	skb_record_rx_queue(skb, rxq->rspq.idx);
+	skb_set_queue_mapping(skb, rxq->rspq.idx);
 
 	if (pkt->vlan_ex) {
 		__vlan_hwaccel_put_tag(skb, cpu_to_be16(ETH_P_8021Q),
@@ -1622,7 +1622,7 @@ int t4vf_ethrx_handler(struct sge_rspq *rspq, const __be64 *rsp,
 	}
 	__skb_pull(skb, s->pktshift);
 	skb->protocol = eth_type_trans(skb, rspq->netdev);
-	skb_record_rx_queue(skb, rspq->idx);
+	skb_set_queue_mapping(skb, rspq->idx);
 	rxq->stats.pkts++;
 
 	if (csum_ok && !pkt->err_vec &&

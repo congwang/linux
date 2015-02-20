@@ -1279,8 +1279,8 @@ static u16 cxgb_select_queue(struct net_device *dev, struct sk_buff *skb,
 #endif /* CONFIG_CHELSIO_T4_DCB */
 
 	if (select_queue) {
-		txq = (skb_rx_queue_recorded(skb)
-			? skb_get_rx_queue(skb)
+		txq = (skb_has_queue_mapping(skb)
+			? skb_get_queue_mapping(skb)
 			: smp_processor_id());
 
 		while (unlikely(txq >= dev->real_num_tx_queues))

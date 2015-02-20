@@ -1722,7 +1722,7 @@ static void do_gro(struct sge_eth_rxq *rxq, const struct pkt_gl *gl,
 	skb->data_len = skb->len;
 	skb->truesize += skb->data_len;
 	skb->ip_summed = CHECKSUM_UNNECESSARY;
-	skb_record_rx_queue(skb, rxq->rspq.idx);
+	skb_set_queue_mapping(skb, rxq->rspq.idx);
 	skb_mark_napi_id(skb, &rxq->rspq.napi);
 	if (rxq->rspq.netdev->features & NETIF_F_RXHASH)
 		skb_set_hash(skb, (__force u32)pkt->rsshdr.hash_val,
@@ -1782,7 +1782,7 @@ int t4_ethrx_handler(struct sge_rspq *q, const __be64 *rsp,
 
 	__skb_pull(skb, s->pktshift);      /* remove ethernet header padding */
 	skb->protocol = eth_type_trans(skb, q->netdev);
-	skb_record_rx_queue(skb, q->idx);
+	skb_set_queue_mapping(skb, q->idx);
 	if (skb->dev->features & NETIF_F_RXHASH)
 		skb_set_hash(skb, (__force u32)pkt->rsshdr.hash_val,
 			     PKT_HASH_TYPE_L3);

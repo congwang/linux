@@ -540,7 +540,7 @@ static int ql_run_loopback_test(struct ql_adapter *qdev)
 		if (!skb)
 			return -ENOMEM;
 
-		skb_set_queue_mapping(skb, 0);
+		skb_clear_queue_mapping(skb);
 		skb_put(skb, size);
 		ql_create_lb_frame(skb, size);
 		rc = ql_lb_send(skb, qdev->ndev);

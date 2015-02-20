@@ -781,7 +781,7 @@ void i40evf_alloc_rx_buffers_1buf(struct i40e_ring *rx_ring, u16 cleaned_count)
 				goto no_buffers;
 			}
 			/* initialize queue mapping */
-			skb_record_rx_queue(skb, rx_ring->queue_index);
+			skb_set_queue_mapping(skb, rx_ring->queue_index);
 			bi->skb = skb;
 		}
 

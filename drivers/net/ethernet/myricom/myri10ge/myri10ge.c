@@ -1492,7 +1492,7 @@ myri10ge_rx_done(struct myri10ge_slice_state *ss, int len, __wsum csum)
 		skb->csum = csum;
 	}
 	myri10ge_vlan_rx(mgp->dev, va, skb);
-	skb_record_rx_queue(skb, ss - &mgp->ss[0]);
+	skb_set_queue_mapping(skb, ss - &mgp->ss[0]);
 	skb_mark_napi_id(skb, &ss->napi);
 
 	if (polling) {

@@ -1529,7 +1529,7 @@ static void ql_process_mac_rx_gro_page(struct ql_adapter *qdev,
 	rx_ring->rx_packets++;
 	rx_ring->rx_bytes += length;
 	skb->ip_summed = CHECKSUM_UNNECESSARY;
-	skb_record_rx_queue(skb, rx_ring->cq_id);
+	skb_set_queue_mapping(skb, rx_ring->cq_id);
 	if (vlan_id != 0xffff)
 		__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q), vlan_id);
 	napi_gro_frags(napi);
@@ -1615,7 +1615,7 @@ static void ql_process_mac_rx_page(struct ql_adapter *qdev,
 		}
 	}
 
-	skb_record_rx_queue(skb, rx_ring->cq_id);
+	skb_set_queue_mapping(skb, rx_ring->cq_id);
 	if (vlan_id != 0xffff)
 		__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q), vlan_id);
 	if (skb->ip_summed == CHECKSUM_UNNECESSARY)
@@ -1718,7 +1718,7 @@ static void ql_process_mac_rx_skb(struct ql_adapter *qdev,
 		}
 	}
 
-	skb_record_rx_queue(skb, rx_ring->cq_id);
+	skb_set_queue_mapping(skb, rx_ring->cq_id);
 	if (vlan_id != 0xffff)
 		__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q), vlan_id);
 	if (skb->ip_summed == CHECKSUM_UNNECESSARY)
@@ -2033,7 +2033,7 @@ static void ql_process_mac_split_rx_intr(struct ql_adapter *qdev,
 
 	rx_ring->rx_packets++;
 	rx_ring->rx_bytes += skb->len;
-	skb_record_rx_queue(skb, rx_ring->cq_id);
+	skb_set_queue_mapping(skb, rx_ring->cq_id);
 	if (vlan_id != 0xffff)
 		__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q), vlan_id);
 	if (skb->ip_summed == CHECKSUM_UNNECESSARY)

@@ -568,7 +568,7 @@ static inline void ehea_fill_skb(struct net_device *dev,
 	} else
 		skb->ip_summed = CHECKSUM_UNNECESSARY;
 
-	skb_record_rx_queue(skb, pr - &pr->port->port_res[0]);
+	skb_set_queue_mapping(skb, pr - &pr->port->port_res[0]);
 }
 
 static inline struct sk_buff *get_skb_by_index(struct sk_buff **skb_array,

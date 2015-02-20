@@ -403,8 +403,8 @@ static u16 tun_select_queue(struct net_device *dev, struct sk_buff *skb,
 		} else
 			/* use multiply and shift instead of expensive divide */
 			txq = ((u64)txq * numqueues) >> 32;
-	} else if (likely(skb_rx_queue_recorded(skb))) {
-		txq = skb_get_rx_queue(skb);
+	} else if (likely(skb_has_queue_mapping(skb))) {
+		txq = skb_get_queue_mapping(skb);
 		while (unlikely(txq >= numqueues))
 			txq -= numqueues;
 	}

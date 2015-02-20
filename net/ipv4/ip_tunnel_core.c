@@ -111,7 +111,7 @@ int iptunnel_pull_header(struct sk_buff *skb, int hdr_len, __be16 inner_proto)
 	skb_clear_hash_if_not_l4(skb);
 	skb_dst_drop(skb);
 	skb->vlan_tci = 0;
-	skb_set_queue_mapping(skb, 0);
+	skb_clear_queue_mapping(skb);
 	skb->pkt_type = PACKET_HOST;
 	return 0;
 }

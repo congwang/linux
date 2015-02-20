@@ -240,8 +240,8 @@ static struct macvtap_queue *macvtap_get_queue(struct net_device *dev,
 		goto out;
 	}
 
-	if (likely(skb_rx_queue_recorded(skb))) {
-		rxq = skb_get_rx_queue(skb);
+	if (likely(skb_has_queue_mapping(skb))) {
+		rxq = skb_get_queue_mapping(skb);
 
 		while (unlikely(rxq >= numvtaps))
 			rxq -= numvtaps;

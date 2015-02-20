@@ -664,8 +664,8 @@ int netvsc_recv_callback(struct hv_device *device_obj,
 		__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q),
 				       packet->vlan_tci);
 
-	skb_record_rx_queue(skb, packet->channel->
-			    offermsg.offer.sub_channel_index);
+	skb_set_queue_mapping(skb,
+			      packet->channel->offermsg.offer.sub_channel_index);
 
 	net->stats.rx_packets++;
 	net->stats.rx_bytes += packet->total_data_buflen;

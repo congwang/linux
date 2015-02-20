@@ -1385,7 +1385,7 @@ static struct sk_buff *wl12xx_alloc_dummy_packet(struct wl1271 *wl)
 	skb->priority = WL1271_TID_MGMT;
 
 	/* Initialize all fields that might be used */
-	skb_set_queue_mapping(skb, 0);
+	skb_clear_queue_mapping(skb);
 	memset(IEEE80211_SKB_CB(skb), 0, sizeof(struct ieee80211_tx_info));
 
 	return skb;
