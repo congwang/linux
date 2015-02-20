@@ -1828,7 +1828,7 @@ static struct sk_buff *populate_skb(char *buf, int size)
 	skb->pkt_type = SKB_TYPE;
 	skb->mark = SKB_MARK;
 	skb->hash = SKB_HASH;
-	skb->queue_mapping = SKB_QUEUE_MAP;
+	skb_set_queue_mapping(skb, SKB_QUEUE_MAP);
 	skb->vlan_tci = SKB_VLAN_TCI;
 	skb->dev = &dev;
 	skb->dev->ifindex = SKB_DEV_IFINDEX;

@@ -215,7 +215,7 @@ static inline int team_dev_queue_xmit(struct team *team, struct team_port *port,
 {
 	BUILD_BUG_ON(sizeof(skb->queue_mapping) !=
 		     sizeof(qdisc_skb_cb(skb)->slave_dev_queue_mapping));
-	skb_set_queue_mapping(skb, qdisc_skb_cb(skb)->slave_dev_queue_mapping);
+	skb->queue_mapping = qdisc_skb_cb(skb)->slave_dev_queue_mapping;
 
 	skb->dev = port->dev;
 	if (unlikely(netpoll_tx_running(team->dev))) {

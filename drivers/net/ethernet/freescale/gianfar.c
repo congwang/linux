@@ -2223,7 +2223,7 @@ static int gfar_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	unsigned long flags;
 	unsigned int nr_frags, nr_txbds, bytes_sent, fcb_len = 0;
 
-	rq = skb->queue_mapping;
+	rq = skb_get_queue_mapping(skb);
 	tx_queue = priv->tx_queue[rq];
 	txq = netdev_get_tx_queue(dev, rq);
 	base = tx_queue->tx_bd_base;

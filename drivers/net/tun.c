@@ -755,7 +755,7 @@ static int tun_net_close(struct net_device *dev)
 static netdev_tx_t tun_net_xmit(struct sk_buff *skb, struct net_device *dev)
 {
 	struct tun_struct *tun = netdev_priv(dev);
-	int txq = skb->queue_mapping;
+	int txq = skb_get_queue_mapping(skb);
 	struct tun_file *tfile;
 	u32 numqueues = 0;
 

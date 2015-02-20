@@ -1451,7 +1451,7 @@ static int xgbe_xmit(struct sk_buff *skb, struct net_device *netdev)
 
 	DBGPR("-->xgbe_xmit: skb->len = %d\n", skb->len);
 
-	channel = pdata->channel + skb->queue_mapping;
+	channel = pdata->channel + skb_get_queue_mapping(skb);
 	txq = netdev_get_tx_queue(netdev, channel->queue_index);
 	ring = channel->tx_ring;
 	packet = &ring->packet_data;

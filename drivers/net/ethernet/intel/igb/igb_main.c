@@ -5063,7 +5063,7 @@ out_drop:
 static inline struct igb_ring *igb_tx_queue_mapping(struct igb_adapter *adapter,
 						    struct sk_buff *skb)
 {
-	unsigned int r_idx = skb->queue_mapping;
+	unsigned int r_idx = skb_get_queue_mapping(skb);
 
 	if (r_idx >= adapter->num_tx_queues)
 		r_idx = r_idx % adapter->num_tx_queues;

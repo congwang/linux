@@ -1538,7 +1538,7 @@ static void restart_ofldq(unsigned long data)
  */
 static inline unsigned int skb_txq(const struct sk_buff *skb)
 {
-	return skb->queue_mapping >> 1;
+	return skb_get_queue_mapping(skb) >> 1;
 }
 
 /**
@@ -1550,7 +1550,7 @@ static inline unsigned int skb_txq(const struct sk_buff *skb)
  */
 static inline unsigned int is_ctrl_pkt(const struct sk_buff *skb)
 {
-	return skb->queue_mapping & 1;
+	return skb_get_queue_mapping(skb) & 1;
 }
 
 static inline int ofld_send(struct adapter *adap, struct sk_buff *skb)

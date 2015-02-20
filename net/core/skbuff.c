@@ -799,7 +799,7 @@ static void __copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
 	/* Note : this field could be in headers_start/headers_end section
 	 * It is not yet because we do not want to have a 16 bit hole
 	 */
-	new->queue_mapping = old->queue_mapping;
+	skb_copy_queue_mapping(new, old);
 
 	memcpy(&new->headers_start, &old->headers_start,
 	       offsetof(struct sk_buff, headers_end) -

@@ -1088,9 +1088,9 @@ vmxnet3_xmit_frame(struct sk_buff *skb, struct net_device *netdev)
 {
 	struct vmxnet3_adapter *adapter = netdev_priv(netdev);
 
-	BUG_ON(skb->queue_mapping > adapter->num_tx_queues);
+	BUG_ON(skb_get_queue_mapping(skb) > adapter->num_tx_queues);
 	return vmxnet3_tq_xmit(skb,
-			       &adapter->tx_queue[skb->queue_mapping],
+			       &adapter->tx_queue[skb_get_queue_mapping(skb)],
 			       adapter, netdev);
 }
 

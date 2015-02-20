@@ -3613,7 +3613,7 @@ static int ixgbevf_xmit_frame(struct sk_buff *skb, struct net_device *netdev)
 		return NETDEV_TX_OK;
 	}
 
-	tx_ring = adapter->tx_ring[skb->queue_mapping];
+	tx_ring = adapter->tx_ring[skb_get_queue_mapping(skb)];
 
 	/*
 	 * need: 1 descriptor per page * PAGE_SIZE/IXGBE_MAX_DATA_PER_TXD,
