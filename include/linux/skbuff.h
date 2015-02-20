@@ -3246,32 +3246,27 @@ static inline bool skb_irq_freeable(const struct sk_buff *skb)
 
 static inline void skb_set_queue_mapping(struct sk_buff *skb, u16 queue_mapping)
 {
-	skb->queue_mapping = queue_mapping;
+	skb->queue_mapping = queue_mapping + 1;
+}
+
+static inline void skb_clear_queue_mapping(struct sk_buff *skb)
+{
+	skb->queue_mapping = 0;
 }
 
 static inline u16 skb_get_queue_mapping(const struct sk_buff *skb)
 {
-	return skb->queue_mapping;
+	return skb->queue_mapping - 1;
+}
+
+static inline bool skb_has_queue_mapping(const struct sk_buff *skb)
+{
+	return skb->queue_mapping != 0;
 }
 
 static inline void skb_copy_queue_mapping(struct sk_buff *to, const struct sk_buff *from)
 {
 	to->queue_mapping = from->queue_mapping;
-}
-
-static inline void skb_record_rx_queue(struct sk_buff *skb, u16 rx_queue)
-{
-	skb->queue_mapping = rx_queue + 1;
-}
-
-static inline u16 skb_get_rx_queue(const struct sk_buff *skb)
-{
-	return skb->queue_mapping - 1;
-}
-
-static inline bool skb_rx_queue_recorded(const struct sk_buff *skb)
-{
-	return skb->queue_mapping != 0;
 }
 
 u16 __skb_tx_hash(const struct net_device *dev, struct sk_buff *skb,

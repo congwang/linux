@@ -464,7 +464,7 @@ static unsigned int fm10k_process_skb_fields(struct fm10k_ring *rx_ring,
 
 	FM10K_CB(skb)->fi.w.vlan = rx_desc->w.vlan;
 
-	skb_record_rx_queue(skb, rx_ring->queue_index);
+	skb_set_queue_mapping(skb, rx_ring->queue_index);
 
 	FM10K_CB(skb)->fi.d.glort = rx_desc->d.glort;
 

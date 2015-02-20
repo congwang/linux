@@ -1087,7 +1087,7 @@ static void enic_rq_indicate_buf(struct vnic_rq *rq,
 
 		skb_put(skb, bytes_written);
 		skb->protocol = eth_type_trans(skb, netdev);
-		skb_record_rx_queue(skb, q_number);
+		skb_set_queue_mapping(skb, q_number);
 		if (netdev->features & NETIF_F_RXHASH) {
 			skb_set_hash(skb, rss_hash,
 				     (rss_type &

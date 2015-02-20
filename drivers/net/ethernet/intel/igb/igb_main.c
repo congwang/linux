@@ -6938,7 +6938,7 @@ static void igb_process_skb_fields(struct igb_ring *rx_ring,
 		__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q), vid);
 	}
 
-	skb_record_rx_queue(skb, rx_ring->queue_index);
+	skb_set_queue_mapping(skb, rx_ring->queue_index);
 
 	skb->protocol = eth_type_trans(skb, rx_ring->netdev);
 }

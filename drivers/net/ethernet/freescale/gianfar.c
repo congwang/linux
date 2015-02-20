@@ -2804,7 +2804,7 @@ static void gfar_process_frame(struct net_device *dev, struct sk_buff *skb,
 	 * Remove the padded bytes, if there are any
 	 */
 	if (amount_pull) {
-		skb_record_rx_queue(skb, fcb->rq);
+		skb_set_queue_mapping(skb, fcb->rq);
 		skb_pull(skb, amount_pull);
 	}
 
@@ -2897,7 +2897,7 @@ int gfar_clean_rx_ring(struct gfar_priv_rx_q *rx_queue, int rx_work_limit)
 				/* Remove the FCS from the packet length */
 				skb_put(skb, pkt_len);
 				rx_queue->stats.rx_bytes += pkt_len;
-				skb_record_rx_queue(skb, rx_queue->qindex);
+				skb_set_queue_mapping(skb, rx_queue->qindex);
 				gfar_process_frame(dev, skb, amount_pull,
 						   &rx_queue->grp->napi_rx);
 

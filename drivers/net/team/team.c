@@ -1675,7 +1675,7 @@ static u16 team_select_queue(struct net_device *dev, struct sk_buff *skb,
 	 * skb_tx_hash and will put the skbs in the queue we expect on their
 	 * way down to the team driver.
 	 */
-	u16 txq = skb_rx_queue_recorded(skb) ? skb_get_rx_queue(skb) : 0;
+	u16 txq = skb_has_queue_mapping(skb) ? skb_get_queue_mapping(skb) : 0;
 
 	/*
 	 * Save the original txq to restore before passing to the driver

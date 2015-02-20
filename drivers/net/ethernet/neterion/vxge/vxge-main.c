@@ -296,7 +296,7 @@ vxge_rx_complete(struct vxge_ring *ring, struct sk_buff *skb, u16 vlan,
 
 	vxge_debug_entryexit(VXGE_TRACE, "%s: %s:%d",
 			ring->ndev->name, __func__, __LINE__);
-	skb_record_rx_queue(skb, ring->driver_id);
+	skb_set_queue_mapping(skb, ring->driver_id);
 	skb->protocol = eth_type_trans(skb, ring->ndev);
 
 	u64_stats_update_begin(&ring->stats.syncp);

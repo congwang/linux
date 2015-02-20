@@ -732,7 +732,7 @@ static void bnx2x_gro_receive(struct bnx2x *bp, struct bnx2x_fastpath *fp,
 		}
 	}
 #endif
-	skb_record_rx_queue(skb, fp->rx_queue);
+	skb_set_queue_mapping(skb, fp->rx_queue);
 	napi_gro_receive(&fp->napi, skb);
 }
 
@@ -1062,7 +1062,7 @@ reuse_rx:
 			bnx2x_csum_validate(skb, cqe, fp,
 					    bnx2x_fp_qstats(bp, fp));
 
-		skb_record_rx_queue(skb, fp->rx_queue);
+		skb_set_queue_mapping(skb, fp->rx_queue);
 
 		/* Check if this packet was timestamped */
 		if (unlikely(cqe->fast_path_cqe.type_error_flags &

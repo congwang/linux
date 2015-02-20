@@ -1611,7 +1611,7 @@ static void ixgbe_process_skb_fields(struct ixgbe_ring *rx_ring,
 		__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q), vid);
 	}
 
-	skb_record_rx_queue(skb, rx_ring->queue_index);
+	skb_set_queue_mapping(skb, rx_ring->queue_index);
 
 	skb->protocol = eth_type_trans(skb, dev);
 }
@@ -7210,7 +7210,7 @@ static u16 ixgbe_select_queue(struct net_device *dev, struct sk_buff *skb,
 
 	f = &adapter->ring_feature[RING_F_FCOE];
 
-	txq = skb_rx_queue_recorded(skb) ? skb_get_rx_queue(skb) :
+	txq = skb_has_queue_mapping(skb) ? skb_get_queue_mapping(skb) :
 					   smp_processor_id();
 
 	while (txq >= f->indices)

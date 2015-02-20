@@ -333,7 +333,7 @@ static inline void __skb_tunnel_rx(struct sk_buff *skb, struct net_device *dev,
 	 * over the L4 4-tuple.
 	 */
 	skb_clear_hash_if_not_l4(skb);
-	skb_set_queue_mapping(skb, 0);
+	skb_clear_queue_mapping(skb);
 	skb_scrub_packet(skb, !net_eq(net, dev_net(dev)));
 }
 

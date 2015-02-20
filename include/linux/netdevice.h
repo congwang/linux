@@ -1810,7 +1810,8 @@ struct netdev_queue *netdev_get_tx_queue(const struct net_device *dev,
 static inline struct netdev_queue *skb_get_tx_queue(const struct net_device *dev,
 						    const struct sk_buff *skb)
 {
-	return netdev_get_tx_queue(dev, skb_get_queue_mapping(skb));
+	return netdev_get_tx_queue(dev, skb_has_queue_mapping(skb) ?
+					skb_get_queue_mapping(skb) : 0);
 }
 
 static inline void netdev_for_each_tx_queue(struct net_device *dev,

@@ -907,7 +907,7 @@ int mlx4_en_process_rx_cq(struct net_device *dev, struct mlx4_en_cq *cq, int bud
 					     be32_to_cpu(cqe->immed_rss_invalid),
 					     PKT_HASH_TYPE_L3);
 
-			skb_record_rx_queue(gro_skb, cq->ring);
+			skb_set_queue_mapping(gro_skb, cq->ring);
 			skb_mark_napi_id(gro_skb, &cq->napi);
 
 			if (ring->hwtstamp_rx_filter == HWTSTAMP_FILTER_ALL) {
@@ -943,7 +943,7 @@ int mlx4_en_process_rx_cq(struct net_device *dev, struct mlx4_en_cq *cq, int bud
 
 		skb->ip_summed = ip_summed;
 		skb->protocol = eth_type_trans(skb, dev);
-		skb_record_rx_queue(skb, cq->ring);
+		skb_set_queue_mapping(skb, cq->ring);
 
 		if (l2_tunnel && ip_summed == CHECKSUM_UNNECESSARY)
 			skb->csum_level = 1;

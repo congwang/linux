@@ -460,7 +460,7 @@ efx_rx_packet_gro(struct efx_channel *channel, struct efx_rx_buffer *rx_buf,
 	skb->data_len = skb->len;
 	skb->truesize += n_frags * efx->rx_buffer_truesize;
 
-	skb_record_rx_queue(skb, channel->rx_queue.core_index);
+	skb_set_queue_mapping(skb, channel->rx_queue.core_index);
 
 	skb_mark_napi_id(skb, &channel->napi_str);
 	gro_result = napi_gro_frags(napi);
@@ -625,7 +625,7 @@ static void efx_rx_deliver(struct efx_channel *channel, u8 *eh,
 		efx_free_rx_buffer(rx_buf);
 		return;
 	}
-	skb_record_rx_queue(skb, channel->rx_queue.core_index);
+	skb_set_queue_mapping(skb, channel->rx_queue.core_index);
 
 	/* Set the SKB flags */
 	skb_checksum_none_assert(skb);
@@ -906,7 +906,7 @@ int efx_filter_rfs(struct net_device *net_dev, const struct sk_buff *skb,
 
 	/* Remember this so we can check whether to expire the filter later */
 	efx->rps_flow_id[rc] = flow_id;
-	channel = efx_get_channel(efx, skb_get_rx_queue(skb));
+	channel = efx_get_channel(efx, skb_get_queue_mapping(skb));
 	++channel->rfs_filters_added;
 
 	if (ether_type == htons(ETH_P_IP))

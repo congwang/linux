@@ -1738,7 +1738,7 @@ static void be_rx_compl_process(struct be_rx_obj *rxo, struct napi_struct *napi,
 		skb_checksum_none_assert(skb);
 
 	skb->protocol = eth_type_trans(skb, netdev);
-	skb_record_rx_queue(skb, rxo - &adapter->rx_obj[0]);
+	skb_set_queue_mapping(skb, rxo - &adapter->rx_obj[0]);
 	if (netdev->features & NETIF_F_RXHASH)
 		skb_set_hash(skb, rxcp->rss_hash, PKT_HASH_TYPE_L3);
 
@@ -1796,7 +1796,7 @@ static void be_rx_compl_process_gro(struct be_rx_obj *rxo,
 	skb->len = rxcp->pkt_size;
 	skb->data_len = rxcp->pkt_size;
 	skb->ip_summed = CHECKSUM_UNNECESSARY;
-	skb_record_rx_queue(skb, rxo - &adapter->rx_obj[0]);
+	skb_set_queue_mapping(skb, rxo - &adapter->rx_obj[0]);
 	if (adapter->netdev->features & NETIF_F_RXHASH)
 		skb_set_hash(skb, rxcp->rss_hash, PKT_HASH_TYPE_L3);
 

@@ -3503,7 +3503,7 @@ static int niu_process_rx_pkt(struct napi_struct *napi, struct niu *np,
 	rp->rx_bytes += skb->len;
 
 	skb->protocol = eth_type_trans(skb, np->dev);
-	skb_record_rx_queue(skb, rp->rx_channel);
+	skb_set_queue_mapping(skb, rp->rx_channel);
 	napi_gro_receive(napi, skb);
 
 	return num_rcr;

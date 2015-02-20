@@ -2026,7 +2026,7 @@ static void rx_eth(struct adapter *adap, struct sge_rspq *rq,
 		skb->ip_summed = CHECKSUM_UNNECESSARY;
 	} else
 		skb_checksum_none_assert(skb);
-	skb_record_rx_queue(skb, qs - &adap->sge.qs[pi->first_qset]);
+	skb_set_queue_mapping(skb, qs - &adap->sge.qs[pi->first_qset]);
 
 	if (p->vlan_valid) {
 		qs->port_stats[SGE_PSTAT_VLANEX]++;
@@ -2128,7 +2128,7 @@ static void lro_add_page(struct adapter *adap, struct sge_qset *qs,
 	if (!complete)
 		return;
 
-	skb_record_rx_queue(skb, qs - &adap->sge.qs[pi->first_qset]);
+	skb_set_queue_mapping(skb, qs - &adap->sge.qs[pi->first_qset]);
 
 	if (cpl->vlan_valid) {
 		qs->port_stats[SGE_PSTAT_VLANEX]++;
