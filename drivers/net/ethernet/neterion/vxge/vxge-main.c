@@ -791,6 +791,28 @@ static int vxge_learn_mac(struct vxgedev *vdev, u8 *mac_header)
 	return vpath_idx;
 }
 
+static u16 vxge_select_queue(struct net_device *dev, struct sk_buff *skb,
+			     void *accel_priv, select_queue_fallback_t fallback)
+{
+	struct vxgedev *vdev = netdev_priv(dev);
+	int vpath_no = 0;
+
+	if (vdev->config.addr_learn_en)
+		return 0;
+
+	if (vdev->config.tx_steering_type == TX_MULTIQ_STEERING)
+		vpath_no = skb_get_queue_mapping(skb);
+	else if (vdev->config.tx_steering_type == TX_PORT_STEERING)
+		vpath_no = vxge_get_vpath_no(vdev, skb);
+
+	vxge_debug_tx(VXGE_TRACE, "%s: vpath_no= %d", dev->name, vpath_no);
+
+	if (vpath_no >= vdev->no_of_vpath)
+		vpath_no = 0;
+
+	return vpath_no;
+}
+
 /**
  * vxge_xmit
  * @skb : the socket buffer containing the Tx data.
@@ -814,7 +836,7 @@ vxge_xmit(struct sk_buff *skb, struct net_device *dev)
 	struct vxge_tx_priv *txdl_priv = NULL;
 	struct __vxge_hw_fifo *fifo_hw;
 	int offload_type;
-	int vpath_no = 0;
+	int vpath_no = skb_get_queue_mapping(skb);
 
 	vxge_debug_entryexit(VXGE_TRACE, "%s: %s:%d",
 			dev->name, __func__, __LINE__);
@@ -845,17 +867,9 @@ vxge_xmit(struct sk_buff *skb, struct net_device *dev)
 			dev_kfree_skb_any(skb);
 			return NETDEV_TX_OK;
 		}
+		if (vpath_no >= vdev->no_of_vpath)
+			vpath_no = 0;
 	}
-
-	if (vdev->config.tx_steering_type == TX_MULTIQ_STEERING)
-		vpath_no = skb_get_queue_mapping(skb);
-	else if (vdev->config.tx_steering_type == TX_PORT_STEERING)
-		vpath_no = vxge_get_vpath_no(vdev, skb);
-
-	vxge_debug_tx(VXGE_TRACE, "%s: vpath_no= %d", dev->name, vpath_no);
-
-	if (vpath_no >= vdev->no_of_vpath)
-		vpath_no = 0;
 
 	fifo = &vdev->vpaths[vpath_no].fifo;
 	fifo_hw = fifo->handle;
@@ -3374,6 +3388,7 @@ static const struct net_device_ops vxge_netdev_ops = {
 	.ndo_open               = vxge_open,
 	.ndo_stop               = vxge_close,
 	.ndo_get_stats64        = vxge_get_stats64,
+	.ndo_select_queue	= vxge_select_queue,
 	.ndo_start_xmit         = vxge_xmit,
 	.ndo_validate_addr      = eth_validate_addr,
 	.ndo_set_rx_mode	= vxge_set_multicast,
