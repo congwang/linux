@@ -1355,10 +1355,10 @@ static int l2tp_tunnel_sock_create(struct net *net,
 				u32 tunnel_id,
 				u32 peer_tunnel_id,
 				struct l2tp_tunnel_cfg *cfg,
-				struct socket **sockp)
+				struct sock **skp)
 {
 	int err = -EINVAL;
-	struct socket *sock = NULL;
+	struct sock *sk = NULL;
 	struct udp_port_cfg udp_conf;
 
 	switch (cfg->encap) {
@@ -1388,7 +1388,7 @@ static int l2tp_tunnel_sock_create(struct net *net,
 		udp_conf.local_udp_port = htons(cfg->local_udp_port);
 		udp_conf.peer_udp_port = htons(cfg->peer_udp_port);
 
-		err = udp_sock_create(net, &udp_conf, &sock);
+		err = udp_sock_create(net, &udp_conf, &sk);
 		if (err < 0)
 			goto out;
 
@@ -1399,19 +1399,16 @@ static int l2tp_tunnel_sock_create(struct net *net,
 		if (cfg->local_ip6 && cfg->peer_ip6) {
 			struct sockaddr_l2tpip6 ip6_addr = {0};
 
-			err = sock_create_kern(AF_INET6, SOCK_DGRAM,
-					  IPPROTO_L2TP, &sock);
-			if (err < 0)
+			sk = sk_alloc(net, AF_INET6, GFP_KERNEL, &l2tp_ip6_prot);
+			if (!sk)
 				goto out;
-
-			sk_change_net(sock->sk, net);
 
 			ip6_addr.l2tp_family = AF_INET6;
 			memcpy(&ip6_addr.l2tp_addr, cfg->local_ip6,
 			       sizeof(ip6_addr.l2tp_addr));
 			ip6_addr.l2tp_conn_id = tunnel_id;
-			err = kernel_bind(sock, (struct sockaddr *) &ip6_addr,
-					  sizeof(ip6_addr));
+			err = l2tp_ip6_bind(sk, (struct sockaddr *) &ip6_addr,
+					    sizeof(ip6_addr));
 			if (err < 0)
 				goto out;
 
@@ -1419,9 +1416,9 @@ static int l2tp_tunnel_sock_create(struct net *net,
 			memcpy(&ip6_addr.l2tp_addr, cfg->peer_ip6,
 			       sizeof(ip6_addr.l2tp_addr));
 			ip6_addr.l2tp_conn_id = peer_tunnel_id;
-			err = kernel_connect(sock,
-					     (struct sockaddr *) &ip6_addr,
-					     sizeof(ip6_addr), 0);
+			err = l2tp_ip6_connect(sk,
+					       (struct sockaddr *) &ip6_addr,
+					       sizeof(ip6_addr));
 			if (err < 0)
 				goto out;
 		} else
@@ -1429,26 +1426,23 @@ static int l2tp_tunnel_sock_create(struct net *net,
 		{
 			struct sockaddr_l2tpip ip_addr = {0};
 
-			err = sock_create_kern(AF_INET, SOCK_DGRAM,
-					  IPPROTO_L2TP, &sock);
-			if (err < 0)
+			sk = sk_alloc(net, AF_INET, GFP_KERNEL, &l2tp_ip_prot);
+			if (!sk)
 				goto out;
-
-			sk_change_net(sock->sk, net);
 
 			ip_addr.l2tp_family = AF_INET;
 			ip_addr.l2tp_addr = cfg->local_ip;
 			ip_addr.l2tp_conn_id = tunnel_id;
-			err = kernel_bind(sock, (struct sockaddr *) &ip_addr,
-					  sizeof(ip_addr));
+			err = l2tp_ip_bind(sk, (struct sockaddr *) &ip_addr,
+					   sizeof(ip_addr));
 			if (err < 0)
 				goto out;
 
 			ip_addr.l2tp_family = AF_INET;
 			ip_addr.l2tp_addr = cfg->peer_ip;
 			ip_addr.l2tp_conn_id = peer_tunnel_id;
-			err = kernel_connect(sock, (struct sockaddr *) &ip_addr,
-					     sizeof(ip_addr), 0);
+			err = l2tp_ip_connect(sk, (struct sockaddr *) &ip_addr,
+					      sizeof(ip_addr));
 			if (err < 0)
 				goto out;
 		}
@@ -1459,11 +1453,11 @@ static int l2tp_tunnel_sock_create(struct net *net,
 	}
 
 out:
-	*sockp = sock;
-	if ((err < 0) && sock) {
-		kernel_sock_shutdown(sock, SHUT_RDWR);
-		sk_release_kernel(sock->sk);
-		*sockp = NULL;
+	*skp = sk;
+	if ((err < 0) && sk) {
+		inet_shutdown_sk(sk, SHUT_RDWR, NULL);
+		sk_release_kernel(sk);
+		*skp = NULL;
 	}
 
 	return err;
@@ -1486,7 +1480,7 @@ int l2tp_tunnel_create(struct net *net, int fd, int version, u32 tunnel_id, u32 
 	 */
 	if (fd < 0) {
 		err = l2tp_tunnel_sock_create(net, tunnel_id, peer_tunnel_id,
-				cfg, &sock);
+				cfg, &sk);
 		if (err < 0)
 			goto err;
 	} else {
@@ -1504,9 +1498,9 @@ int l2tp_tunnel_create(struct net *net, int fd, int version, u32 tunnel_id, u32 
 			err = -EINVAL;
 			goto err;
 		}
+		sk = sock->sk;
 	}
 
-	sk = sock->sk;
 
 	if (cfg != NULL)
 		encap = cfg->encap;
@@ -1589,7 +1583,7 @@ int l2tp_tunnel_create(struct net *net, int fd, int version, u32 tunnel_id, u32 
 		udp_cfg.encap_rcv = l2tp_udp_encap_recv;
 		udp_cfg.encap_destroy = l2tp_udp_encap_destroy;
 
-		setup_udp_tunnel_sock(net, sock, &udp_cfg);
+		setup_udp_tunnel_sock(net, sk, &udp_cfg);
 	} else {
 		sk->sk_user_data = tunnel;
 	}

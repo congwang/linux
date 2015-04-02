@@ -7,25 +7,24 @@
 #include <net/udp.h>
 #include <net/udp_tunnel.h>
 #include <net/net_namespace.h>
+#include <net/inet_common.h>
 
 int udp_sock_create4(struct net *net, struct udp_port_cfg *cfg,
-		     struct socket **sockp)
+		     struct sock **skp)
 {
 	int err;
-	struct socket *sock = NULL;
+	struct sock *sk = NULL;
 	struct sockaddr_in udp_addr;
 
-	err = sock_create_kern(AF_INET, SOCK_DGRAM, 0, &sock);
-	if (err < 0)
+	sk = sk_alloc(net, PF_INET, GFP_KERNEL, &udp_prot);
+	if (!sk)
 		goto error;
-
-	sk_change_net(sock->sk, net);
+	sock_init_data(NULL, sk);
 
 	udp_addr.sin_family = AF_INET;
 	udp_addr.sin_addr = cfg->local_ip;
 	udp_addr.sin_port = cfg->local_udp_port;
-	err = kernel_bind(sock, (struct sockaddr *)&udp_addr,
-			  sizeof(udp_addr));
+	err = inet_bind_sk(sk, (struct sockaddr *)&udp_addr, sizeof(udp_addr));
 	if (err < 0)
 		goto error;
 
@@ -33,32 +32,28 @@ int udp_sock_create4(struct net *net, struct udp_port_cfg *cfg,
 		udp_addr.sin_family = AF_INET;
 		udp_addr.sin_addr = cfg->peer_ip;
 		udp_addr.sin_port = cfg->peer_udp_port;
-		err = kernel_connect(sock, (struct sockaddr *)&udp_addr,
-				     sizeof(udp_addr), 0);
+		err = inet_dgram_connect_sk(sk, (struct sockaddr *)&udp_addr,
+					    sizeof(udp_addr), 0);
 		if (err < 0)
 			goto error;
 	}
 
-	sock->sk->sk_no_check_tx = !cfg->use_udp_checksums;
+	sk->sk_no_check_tx = !cfg->use_udp_checksums;
 
-	*sockp = sock;
+	*skp = sk;
 	return 0;
 
 error:
-	if (sock) {
-		kernel_sock_shutdown(sock, SHUT_RDWR);
-		sk_release_kernel(sock->sk);
-	}
-	*sockp = NULL;
+	if (sk)
+		udp_tunnel_sock_release(sk);
+	*skp = NULL;
 	return err;
 }
 EXPORT_SYMBOL(udp_sock_create4);
 
-void setup_udp_tunnel_sock(struct net *net, struct socket *sock,
+void setup_udp_tunnel_sock(struct net *net, struct sock *sk,
 			   struct udp_tunnel_sock_cfg *cfg)
 {
-	struct sock *sk = sock->sk;
-
 	/* Disable multicast loopback */
 	inet_sk(sk)->mc_loop = 0;
 
@@ -71,7 +66,7 @@ void setup_udp_tunnel_sock(struct net *net, struct socket *sock,
 	udp_sk(sk)->encap_rcv = cfg->encap_rcv;
 	udp_sk(sk)->encap_destroy = cfg->encap_destroy;
 
-	udp_tunnel_encap_enable(sock);
+	udp_tunnel_encap_enable(sk);
 }
 EXPORT_SYMBOL_GPL(setup_udp_tunnel_sock);
 
@@ -97,11 +92,10 @@ int udp_tunnel_xmit_skb(struct rtable *rt, struct sock *sk, struct sk_buff *skb,
 }
 EXPORT_SYMBOL_GPL(udp_tunnel_xmit_skb);
 
-void udp_tunnel_sock_release(struct socket *sock)
+void udp_tunnel_sock_release(struct sock *sk)
 {
-	rcu_assign_sk_user_data(sock->sk, NULL);
-	kernel_sock_shutdown(sock, SHUT_RDWR);
-	sk_release_kernel(sock->sk);
+	inet_shutdown_sk(sk, SHUT_RDWR, NULL);
+	sk_release_kernel(sk);
 }
 EXPORT_SYMBOL_GPL(udp_tunnel_sock_release);
 

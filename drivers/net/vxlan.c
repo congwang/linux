@@ -268,8 +268,8 @@ static struct vxlan_sock *vxlan_find_sock(struct net *net, sa_family_t family,
 	flags &= VXLAN_F_RCV_FLAGS;
 
 	hlist_for_each_entry_rcu(vs, vs_head(net, port), hlist) {
-		if (inet_sk(vs->sock->sk)->inet_sport == port &&
-		    inet_sk(vs->sock->sk)->sk.sk_family == family &&
+		if (inet_sk(vs->sk)->inet_sport == port &&
+		    inet_sk(vs->sk)->sk.sk_family == family &&
 		    vs->flags == flags)
 			return vs;
 	}
@@ -656,7 +656,7 @@ static int vxlan_gro_complete(struct sk_buff *skb, int nhoff,
 static void vxlan_notify_add_rx_port(struct vxlan_sock *vs)
 {
 	struct net_device *dev;
-	struct sock *sk = vs->sock->sk;
+	struct sock *sk = vs->sk;
 	struct net *net = sock_net(sk);
 	sa_family_t sa_family = sk->sk_family;
 	__be16 port = inet_sk(sk)->inet_sport;
@@ -681,7 +681,7 @@ static void vxlan_notify_add_rx_port(struct vxlan_sock *vs)
 static void vxlan_notify_del_rx_port(struct vxlan_sock *vs)
 {
 	struct net_device *dev;
-	struct sock *sk = vs->sock->sk;
+	struct sock *sk = vs->sk;
 	struct net *net = sock_net(sk);
 	sa_family_t sa_family = sk->sk_family;
 	__be16 port = inet_sk(sk)->inet_sport;
@@ -1064,7 +1064,7 @@ static bool vxlan_group_used(struct vxlan_net *vn, struct vxlan_dev *dev)
 
 void vxlan_sock_release(struct vxlan_sock *vs)
 {
-	struct sock *sk = vs->sock->sk;
+	struct sock *sk = vs->sk;
 	struct net *net = sock_net(sk);
 	struct vxlan_net *vn = net_generic(net, vxlan_net_id);
 
@@ -1086,7 +1086,7 @@ EXPORT_SYMBOL_GPL(vxlan_sock_release);
 static int vxlan_igmp_join(struct vxlan_dev *vxlan)
 {
 	struct vxlan_sock *vs = vxlan->vn_sock;
-	struct sock *sk = vs->sock->sk;
+	struct sock *sk = vs->sk;
 	union vxlan_addr *ip = &vxlan->default_dst.remote_ip;
 	int ifindex = vxlan->default_dst.remote_ifindex;
 	int ret = -EINVAL;
@@ -1114,7 +1114,7 @@ static int vxlan_igmp_join(struct vxlan_dev *vxlan)
 static int vxlan_igmp_leave(struct vxlan_dev *vxlan)
 {
 	struct vxlan_sock *vs = vxlan->vn_sock;
-	struct sock *sk = vs->sock->sk;
+	struct sock *sk = vs->sk;
 	union vxlan_addr *ip = &vxlan->default_dst.remote_ip;
 	int ifindex = vxlan->default_dst.remote_ifindex;
 	int ret = -EINVAL;
@@ -1879,7 +1879,7 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 			   struct vxlan_rdst *rdst, bool did_rsc)
 {
 	struct vxlan_dev *vxlan = netdev_priv(dev);
-	struct sock *sk = vxlan->vn_sock->sock->sk;
+	struct sock *sk = vxlan->vn_sock->sk;
 	struct rtable *rt = NULL;
 	const struct iphdr *old_iph;
 	struct flowi4 fl4;
@@ -2331,8 +2331,8 @@ void vxlan_get_rx_port(struct net_device *dev)
 	spin_lock(&vn->sock_lock);
 	for (i = 0; i < PORT_HASH_SIZE; ++i) {
 		hlist_for_each_entry_rcu(vs, &vn->sock_list[i], hlist) {
-			port = inet_sk(vs->sock->sk)->inet_sport;
-			sa_family = vs->sock->sk->sk_family;
+			port = inet_sk(vs->sk)->inet_sport;
+			sa_family = vs->sk->sk_family;
 			dev->netdev_ops->ndo_add_vxlan_port(dev, sa_family,
 							    port);
 		}
@@ -2466,14 +2466,14 @@ static const struct ethtool_ops vxlan_ethtool_ops = {
 static void vxlan_del_work(struct work_struct *work)
 {
 	struct vxlan_sock *vs = container_of(work, struct vxlan_sock, del_work);
-	udp_tunnel_sock_release(vs->sock);
+	udp_tunnel_sock_release(vs->sk);
 	kfree_rcu(vs, rcu);
 }
 
-static struct socket *vxlan_create_sock(struct net *net, bool ipv6,
+static struct sock *vxlan_create_sock(struct net *net, bool ipv6,
 					__be16 port, u32 flags)
 {
-	struct socket *sock;
+	struct sock *sk;
 	struct udp_port_cfg udp_conf;
 	int err;
 
@@ -2490,11 +2490,11 @@ static struct socket *vxlan_create_sock(struct net *net, bool ipv6,
 	udp_conf.local_udp_port = port;
 
 	/* Open UDP socket */
-	err = udp_sock_create(net, &udp_conf, &sock);
+	err = udp_sock_create(net, &udp_conf, &sk);
 	if (err < 0)
 		return ERR_PTR(err);
 
-	return sock;
+	return sk;
 }
 
 /* Create new listen socket if needed */
@@ -2504,7 +2504,7 @@ static struct vxlan_sock *vxlan_socket_create(struct net *net, __be16 port,
 {
 	struct vxlan_net *vn = net_generic(net, vxlan_net_id);
 	struct vxlan_sock *vs;
-	struct socket *sock;
+	struct sock *sk;
 	unsigned int h;
 	bool ipv6 = !!(flags & VXLAN_F_IPV6);
 	struct udp_tunnel_sock_cfg tunnel_cfg;
@@ -2518,15 +2518,15 @@ static struct vxlan_sock *vxlan_socket_create(struct net *net, __be16 port,
 
 	INIT_WORK(&vs->del_work, vxlan_del_work);
 
-	sock = vxlan_create_sock(net, ipv6, port, flags);
-	if (IS_ERR(sock)) {
+	sk = vxlan_create_sock(net, ipv6, port, flags);
+	if (IS_ERR(sk)) {
 		pr_info("Cannot bind port %d, err=%ld\n", ntohs(port),
-			PTR_ERR(sock));
+			PTR_ERR(sk));
 		kfree(vs);
-		return ERR_CAST(sock);
+		return ERR_CAST(sk);
 	}
 
-	vs->sock = sock;
+	vs->sk = sk;
 	atomic_set(&vs->refcnt, 1);
 	vs->rcv = rcv;
 	vs->data = data;
@@ -2548,7 +2548,7 @@ static struct vxlan_sock *vxlan_socket_create(struct net *net, __be16 port,
 	tunnel_cfg.encap_rcv = vxlan_udp_encap_recv;
 	tunnel_cfg.encap_destroy = NULL;
 
-	setup_udp_tunnel_sock(net, sock, &tunnel_cfg);
+	setup_udp_tunnel_sock(net, sk, &tunnel_cfg);
 
 	return vs;
 }

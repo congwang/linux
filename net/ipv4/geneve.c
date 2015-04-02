@@ -72,8 +72,8 @@ static struct geneve_sock *geneve_find_sock(struct net *net,
 	struct geneve_sock *gs;
 
 	list_for_each_entry(gs, &gn->sock_list, list) {
-		if (inet_sk(gs->sock->sk)->inet_sport == port &&
-		    inet_sk(gs->sock->sk)->sk.sk_family == family)
+		if (inet_sk(gs->sk)->inet_sport == port &&
+		    inet_sk(gs->sk)->sk.sk_family == family)
 			return gs;
 	}
 
@@ -136,7 +136,7 @@ int geneve_xmit_skb(struct geneve_sock *gs, struct rtable *rt,
 
 	skb_set_inner_protocol(skb, htons(ETH_P_TEB));
 
-	return udp_tunnel_xmit_skb(rt, gs->sock->sk, skb, src, dst,
+	return udp_tunnel_xmit_skb(rt, gs->sk, skb, src, dst,
 				   tos, ttl, df, src_port, dst_port, xnet,
 				   !csum);
 }
@@ -239,7 +239,7 @@ static int geneve_gro_complete(struct sk_buff *skb, int nhoff,
 
 static void geneve_notify_add_rx_port(struct geneve_sock *gs)
 {
-	struct sock *sk = gs->sock->sk;
+	struct sock *sk = gs->sk;
 	sa_family_t sa_family = sk->sk_family;
 	int err;
 
@@ -253,7 +253,7 @@ static void geneve_notify_add_rx_port(struct geneve_sock *gs)
 
 static void geneve_notify_del_rx_port(struct geneve_sock *gs)
 {
-	struct sock *sk = gs->sock->sk;
+	struct sock *sk = gs->sk;
 	sa_family_t sa_family = sk->sk_family;
 
 	if (sa_family == AF_INET)
@@ -302,10 +302,10 @@ error:
 	return 1;
 }
 
-static struct socket *geneve_create_sock(struct net *net, bool ipv6,
+static struct sock *geneve_create_sock(struct net *net, bool ipv6,
 					 __be16 port)
 {
-	struct socket *sock;
+	struct sock *sk;
 	struct udp_port_cfg udp_conf;
 	int err;
 
@@ -321,11 +321,11 @@ static struct socket *geneve_create_sock(struct net *net, bool ipv6,
 	udp_conf.local_udp_port = port;
 
 	/* Open UDP socket */
-	err = udp_sock_create(net, &udp_conf, &sock);
+	err = udp_sock_create(net, &udp_conf, &sk);
 	if (err < 0)
 		return ERR_PTR(err);
 
-	return sock;
+	return sk;
 }
 
 /* Create new listen socket if needed */
@@ -335,20 +335,20 @@ static struct geneve_sock *geneve_socket_create(struct net *net, __be16 port,
 {
 	struct geneve_net *gn = net_generic(net, geneve_net_id);
 	struct geneve_sock *gs;
-	struct socket *sock;
+	struct sock *sk;
 	struct udp_tunnel_sock_cfg tunnel_cfg;
 
 	gs = kzalloc(sizeof(*gs), GFP_KERNEL);
 	if (!gs)
 		return ERR_PTR(-ENOMEM);
 
-	sock = geneve_create_sock(net, ipv6, port);
-	if (IS_ERR(sock)) {
+	sk = geneve_create_sock(net, ipv6, port);
+	if (IS_ERR(sk)) {
 		kfree(gs);
-		return ERR_CAST(sock);
+		return ERR_CAST(sk);
 	}
 
-	gs->sock = sock;
+	gs->sk = sk;
 	gs->refcnt = 1;
 	gs->rcv = rcv;
 	gs->rcv_data = data;
@@ -364,7 +364,7 @@ static struct geneve_sock *geneve_socket_create(struct net *net, __be16 port,
 	tunnel_cfg.encap_type = 1;
 	tunnel_cfg.encap_rcv = geneve_udp_encap_recv;
 	tunnel_cfg.encap_destroy = NULL;
-	setup_udp_tunnel_sock(net, sock, &tunnel_cfg);
+	setup_udp_tunnel_sock(net, sk, &tunnel_cfg);
 
 	list_add(&gs->list, &gn->sock_list);
 
@@ -404,7 +404,7 @@ void geneve_sock_release(struct geneve_sock *gs)
 
 	list_del(&gs->list);
 	geneve_notify_del_rx_port(gs);
-	udp_tunnel_sock_release(gs->sock);
+	udp_tunnel_sock_release(gs->sk);
 	kfree_rcu(gs, rcu);
 
 unlock:

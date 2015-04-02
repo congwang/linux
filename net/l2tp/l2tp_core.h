@@ -274,6 +274,16 @@ int l2tp_nl_register_ops(enum l2tp_pwtype pw_type,
 			 const struct l2tp_nl_cmd_ops *ops);
 void l2tp_nl_unregister_ops(enum l2tp_pwtype pw_type);
 
+int l2tp_ip_bind(struct sock *sk, struct sockaddr *uaddr, int addr_len);
+int l2tp_ip_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len);
+extern struct proto l2tp_ip_prot;
+
+#if IS_ENABLED(CONFIG_IPV6)
+int l2tp_ip6_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len);
+int l2tp_ip6_bind(struct sock *sk, struct sockaddr *uaddr, int addr_len);
+extern struct proto l2tp_ip6_prot;
+#endif
+
 /* Session reference counts. Incremented when code obtains a reference
  * to a session.
  */

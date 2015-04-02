@@ -109,7 +109,7 @@ struct vxlan_sock {
 	vxlan_rcv_t	 *rcv;
 	void		 *data;
 	struct work_struct del_work;
-	struct socket	 *sock;
+	struct sock	*sk;
 	struct rcu_head	  rcu;
 	struct hlist_head vni_list[VNI_HASH_SIZE];
 	atomic_t	  refcnt;

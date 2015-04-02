@@ -71,7 +71,7 @@ struct geneve_sock {
 	struct list_head	list;
 	geneve_rcv_t		*rcv;
 	void			*rcv_data;
-	struct socket		*sock;
+	struct sock		*sk;
 	struct rcu_head		rcu;
 	int			refcnt;
 	struct udp_offload	udp_offloads;

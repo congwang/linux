@@ -17,7 +17,7 @@
 #include <uapi/linux/genetlink.h>
 
 struct fou {
-	struct socket *sock;
+	struct sock *sk;
 	u8 protocol;
 	u8 flags;
 	__be16 port;
@@ -413,14 +413,12 @@ static int fou_add_to_port_list(struct net *net, struct fou *fou)
 
 static void fou_release(struct fou *fou)
 {
-	struct socket *sock = fou->sock;
-	struct sock *sk = sock->sk;
+	struct sock *sk = fou->sk;
 
 	if (sk->sk_family == AF_INET)
 		udp_del_offload(&fou->udp_offloads);
 	list_del(&fou->list);
-	udp_tunnel_sock_release(sock);
-
+	udp_tunnel_sock_release(sk);
 	kfree(fou);
 }
 
@@ -447,15 +445,14 @@ static int gue_encap_init(struct sock *sk, struct fou *fou, struct fou_cfg *cfg)
 }
 
 static int fou_create(struct net *net, struct fou_cfg *cfg,
-		      struct socket **sockp)
+		      struct sock **skp)
 {
-	struct socket *sock = NULL;
 	struct fou *fou = NULL;
 	struct sock *sk;
 	int err;
 
 	/* Open UDP socket */
-	err = udp_sock_create(net, &cfg->udp_config, &sock);
+	err = udp_sock_create(net, &cfg->udp_config, &sk);
 	if (err < 0)
 		goto error;
 
@@ -465,8 +462,6 @@ static int fou_create(struct net *net, struct fou_cfg *cfg,
 		err = -ENOMEM;
 		goto error;
 	}
-
-	sk = sock->sk;
 
 	fou->flags = cfg->flags;
 	fou->port = cfg->udp_config.local_udp_port;
@@ -494,7 +489,6 @@ static int fou_create(struct net *net, struct fou_cfg *cfg,
 	udp_encap_enable();
 
 	sk->sk_user_data = fou;
-	fou->sock = sock;
 
 	inet_inc_convert_csum(sk);
 
@@ -510,15 +504,15 @@ static int fou_create(struct net *net, struct fou_cfg *cfg,
 	if (err)
 		goto error;
 
-	if (sockp)
-		*sockp = sock;
+	if (sk)
+		*skp = sk;
 
 	return 0;
 
 error:
 	kfree(fou);
-	if (sock)
-		udp_tunnel_sock_release(sock);
+	if (sk)
+		udp_tunnel_sock_release(sk);
 
 	return err;
 }
@@ -622,7 +616,7 @@ static int fou_nl_cmd_rm_port(struct sk_buff *skb, struct genl_info *info)
 
 static int fou_fill_info(struct fou *fou, struct sk_buff *msg)
 {
-	if (nla_put_u8(msg, FOU_ATTR_AF, fou->sock->sk->sk_family) ||
+	if (nla_put_u8(msg, FOU_ATTR_AF, fou->sk->sk_family) ||
 	    nla_put_be16(msg, FOU_ATTR_PORT, fou->port) ||
 	    nla_put_u8(msg, FOU_ATTR_IPPROTO, fou->protocol) ||
 	    nla_put_u8(msg, FOU_ATTR_TYPE, fou->type))

@@ -78,13 +78,13 @@ struct udp_media_addr {
 /**
  * struct udp_bearer - ip/udp bearer data structure
  * @bearer:	associated generic tipc bearer
- * @ubsock:	bearer associated socket
+ * @ubsk:	bearer associated sock
  * @ifindex:	local address scope
  * @work:	used to schedule deferred work on a bearer
  */
 struct udp_bearer {
 	struct tipc_bearer __rcu *bearer;
-	struct socket *ubsock;
+	struct sock *ubsk;
 	u32 ifindex;
 	struct work_struct work;
 };
@@ -176,7 +176,7 @@ static int tipc_udp_send_msg(struct net *net, struct sk_buff *skb,
 			goto tx_error;
 		}
 		ttl = ip4_dst_hoplimit(&rt->dst);
-		err = udp_tunnel_xmit_skb(rt, ub->ubsock->sk, clone,
+		err = udp_tunnel_xmit_skb(rt, ub->ubsk, clone,
 					  src->ipv4.s_addr,
 					  dst->ipv4.s_addr, 0, ttl, 0,
 					  src->udp_port, dst->udp_port,
@@ -194,11 +194,11 @@ static int tipc_udp_send_msg(struct net *net, struct sk_buff *skb,
 			.saddr = src->ipv6,
 			.flowi6_proto = IPPROTO_UDP
 		};
-		err = ipv6_stub->ipv6_dst_lookup(ub->ubsock->sk, &ndst, &fl6);
+		err = ipv6_stub->ipv6_dst_lookup(ub->ubsk, &ndst, &fl6);
 		if (err)
 			goto tx_error;
 		ttl = ip6_dst_hoplimit(ndst);
-		err = udp_tunnel6_xmit_skb(ndst, ub->ubsock->sk, clone,
+		err = udp_tunnel6_xmit_skb(ndst, ub->ubsk, clone,
 					   ndst->dev, &src->ipv6,
 					   &dst->ipv6, 0, ttl, src->udp_port,
 					   dst->udp_port, false);
@@ -242,7 +242,7 @@ static int enable_mcast(struct udp_bearer *ub, struct udp_media_addr *remote)
 {
 	int err = 0;
 	struct ip_mreqn mreqn;
-	struct sock *sk = ub->ubsock->sk;
+	struct sock *sk = ub->ubsk;
 
 	if (ntohs(remote->proto) == ETH_P_IP) {
 		if (!ipv4_is_multicast(remote->ipv4.s_addr))
@@ -384,14 +384,14 @@ static int tipc_udp_enable(struct net *net, struct tipc_bearer *b,
 		goto err;
 	}
 	udp_conf.local_udp_port = local.udp_port;
-	err = udp_sock_create(net, &udp_conf, &ub->ubsock);
+	err = udp_sock_create(net, &udp_conf, &ub->ubsk);
 	if (err)
 		goto err;
 	tuncfg.sk_user_data = ub;
 	tuncfg.encap_type = 1;
 	tuncfg.encap_rcv = tipc_udp_recv;
 	tuncfg.encap_destroy = NULL;
-	setup_udp_tunnel_sock(net, ub->ubsock, &tuncfg);
+	setup_udp_tunnel_sock(net, ub->ubsk, &tuncfg);
 
 	if (enable_mcast(ub, remote))
 		goto err;
@@ -406,8 +406,8 @@ static void cleanup_bearer(struct work_struct *work)
 {
 	struct udp_bearer *ub = container_of(work, struct udp_bearer, work);
 
-	if (ub->ubsock)
-		udp_tunnel_sock_release(ub->ubsock);
+	if (ub->ubsk)
+		udp_tunnel_sock_release(ub->ubsk);
 	synchronize_net();
 	kfree(ub);
 }
@@ -422,8 +422,8 @@ static void tipc_udp_disable(struct tipc_bearer *b)
 		pr_err("UDP bearer instance not found\n");
 		return;
 	}
-	if (ub->ubsock)
-		sock_set_flag(ub->ubsock->sk, SOCK_DEAD);
+	if (ub->ubsk)
+		sock_set_flag(ub->ubsk, SOCK_DEAD);
 	RCU_INIT_POINTER(b->media_ptr, NULL);
 	RCU_INIT_POINTER(ub->bearer, NULL);
 

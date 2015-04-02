@@ -107,7 +107,7 @@ static int geneve_get_options(const struct vport *vport,
 			      struct sk_buff *skb)
 {
 	struct geneve_port *geneve_port = geneve_vport(vport);
-	struct inet_sock *sk = inet_sk(geneve_port->gs->sock->sk);
+	struct inet_sock *sk = inet_sk(geneve_port->gs->sk);
 
 	if (nla_put_u16(skb, OVS_TUNNEL_ATTR_DST_PORT, ntohs(sk->inet_sport)))
 		return -EMSGSIZE;
@@ -174,7 +174,7 @@ static int geneve_tnl_send(struct vport *vport, struct sk_buff *skb)
 	struct ovs_tunnel_info *tun_info;
 	struct net *net = ovs_dp_get_net(vport->dp);
 	struct geneve_port *geneve_port = geneve_vport(vport);
-	__be16 dport = inet_sk(geneve_port->gs->sock->sk)->inet_sport;
+	__be16 dport = inet_sk(geneve_port->gs->sk)->inet_sport;
 	__be16 sport;
 	struct rtable *rt;
 	struct flowi4 fl;
@@ -234,7 +234,7 @@ static int geneve_get_egress_tun_info(struct vport *vport, struct sk_buff *skb,
 {
 	struct geneve_port *geneve_port = geneve_vport(vport);
 	struct net *net = ovs_dp_get_net(vport->dp);
-	__be16 dport = inet_sk(geneve_port->gs->sock->sk)->inet_sport;
+	__be16 dport = inet_sk(geneve_port->gs->sk)->inet_sport;
 	__be16 sport = udp_flow_src_port(net, skb, 1, USHRT_MAX, true);
 
 	/* Get tp_src and tp_dst, refert to geneve_build_header().

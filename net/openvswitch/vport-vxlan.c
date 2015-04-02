@@ -92,7 +92,7 @@ static void vxlan_rcv(struct vxlan_sock *vs, struct sk_buff *skb,
 static int vxlan_get_options(const struct vport *vport, struct sk_buff *skb)
 {
 	struct vxlan_port *vxlan_port = vxlan_vport(vport);
-	__be16 dst_port = inet_sk(vxlan_port->vs->sock->sk)->inet_sport;
+	__be16 dst_port = inet_sk(vxlan_port->vs->sk)->inet_sport;
 
 	if (nla_put_u16(skb, OVS_TUNNEL_ATTR_DST_PORT, ntohs(dst_port)))
 		return -EMSGSIZE;
@@ -222,7 +222,7 @@ static int vxlan_tnl_send(struct vport *vport, struct sk_buff *skb)
 {
 	struct net *net = ovs_dp_get_net(vport->dp);
 	struct vxlan_port *vxlan_port = vxlan_vport(vport);
-	struct sock *sk = vxlan_port->vs->sock->sk;
+	struct sock *sk = vxlan_port->vs->sk;
 	__be16 dst_port = inet_sk(sk)->inet_sport;
 	const struct ovs_key_ipv4_tunnel *tun_key;
 	struct vxlan_metadata md = {0};
@@ -273,7 +273,7 @@ static int vxlan_get_egress_tun_info(struct vport *vport, struct sk_buff *skb,
 {
 	struct net *net = ovs_dp_get_net(vport->dp);
 	struct vxlan_port *vxlan_port = vxlan_vport(vport);
-	__be16 dst_port = inet_sk(vxlan_port->vs->sock->sk)->inet_sport;
+	__be16 dst_port = inet_sk(vxlan_port->vs->sk)->inet_sport;
 	__be16 src_port;
 	int port_min;
 	int port_max;

@@ -35,14 +35,14 @@ struct udp_port_cfg {
 };
 
 int udp_sock_create4(struct net *net, struct udp_port_cfg *cfg,
-		     struct socket **sockp);
+		     struct sock **skp);
 
 #if IS_ENABLED(CONFIG_IPV6)
 int udp_sock_create6(struct net *net, struct udp_port_cfg *cfg,
-		     struct socket **sockp);
+		     struct sock **skp);
 #else
 static inline int udp_sock_create6(struct net *net, struct udp_port_cfg *cfg,
-				   struct socket **sockp)
+				   struct sock **skp)
 {
 	return 0;
 }
@@ -50,13 +50,13 @@ static inline int udp_sock_create6(struct net *net, struct udp_port_cfg *cfg,
 
 static inline int udp_sock_create(struct net *net,
 				  struct udp_port_cfg *cfg,
-				  struct socket **sockp)
+				  struct sock **skp)
 {
 	if (cfg->family == AF_INET)
-		return udp_sock_create4(net, cfg, sockp);
+		return udp_sock_create4(net, cfg, skp);
 
 	if (cfg->family == AF_INET6)
-		return udp_sock_create6(net, cfg, sockp);
+		return udp_sock_create6(net, cfg, skp);
 
 	return -EPFNOSUPPORT;
 }
@@ -73,7 +73,7 @@ struct udp_tunnel_sock_cfg {
 };
 
 /* Setup the given (UDP) sock to receive UDP encapsulated packets */
-void setup_udp_tunnel_sock(struct net *net, struct socket *sock,
+void setup_udp_tunnel_sock(struct net *net, struct sock *sk,
 			   struct udp_tunnel_sock_cfg *sock_cfg);
 
 /* Transmit the skb using UDP encapsulation. */
@@ -91,7 +91,7 @@ int udp_tunnel6_xmit_skb(struct dst_entry *dst, struct sock *sk,
 			 __be16 dst_port, bool nocheck);
 #endif
 
-void udp_tunnel_sock_release(struct socket *sock);
+void udp_tunnel_sock_release(struct sock *sk);
 
 static inline struct sk_buff *udp_tunnel_handle_offloads(struct sk_buff *skb,
 							 bool udp_csum)
@@ -110,10 +110,10 @@ static inline void udp_tunnel_gro_complete(struct sk_buff *skb, int nhoff)
 				SKB_GSO_UDP_TUNNEL_CSUM : SKB_GSO_UDP_TUNNEL;
 }
 
-static inline void udp_tunnel_encap_enable(struct socket *sock)
+static inline void udp_tunnel_encap_enable(struct sock *sk)
 {
 #if IS_ENABLED(CONFIG_IPV6)
-	if (sock->sk->sk_family == PF_INET6)
+	if (sk->sk_family == PF_INET6)
 		ipv6_stub->udpv6_encap_enable();
 	else
 #endif

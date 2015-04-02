@@ -11,26 +11,26 @@
 #include <net/netns/generic.h>
 #include <net/ip6_tunnel.h>
 #include <net/ip6_checksum.h>
+#include <net/inet_common.h>
+#include <net/transp_v6.h>
 
 int udp_sock_create6(struct net *net, struct udp_port_cfg *cfg,
-		     struct socket **sockp)
+		     struct sock **skp)
 {
 	struct sockaddr_in6 udp6_addr;
 	int err;
-	struct socket *sock = NULL;
+	struct sock *sk = NULL;
 
-	err = sock_create_kern(AF_INET6, SOCK_DGRAM, 0, &sock);
-	if (err < 0)
+	sk = sk_alloc(net, PF_INET6, GFP_KERNEL, &udpv6_prot);
+	if (!sk)
 		goto error;
-
-	sk_change_net(sock->sk, net);
 
 	udp6_addr.sin6_family = AF_INET6;
 	memcpy(&udp6_addr.sin6_addr, &cfg->local_ip6,
 	       sizeof(udp6_addr.sin6_addr));
 	udp6_addr.sin6_port = cfg->local_udp_port;
-	err = kernel_bind(sock, (struct sockaddr *)&udp6_addr,
-			  sizeof(udp6_addr));
+	err = inet6_bind_sk(sk, (struct sockaddr *)&udp6_addr,
+			    sizeof(udp6_addr), false);
 	if (err < 0)
 		goto error;
 
@@ -39,25 +39,22 @@ int udp_sock_create6(struct net *net, struct udp_port_cfg *cfg,
 		memcpy(&udp6_addr.sin6_addr, &cfg->peer_ip6,
 		       sizeof(udp6_addr.sin6_addr));
 		udp6_addr.sin6_port = cfg->peer_udp_port;
-		err = kernel_connect(sock,
-				     (struct sockaddr *)&udp6_addr,
-				     sizeof(udp6_addr), 0);
+		err = inet_dgram_connect_sk(sk, (struct sockaddr *)&udp6_addr,
+					    sizeof(udp6_addr), 0);
 	}
 	if (err < 0)
 		goto error;
 
-	udp_set_no_check6_tx(sock->sk, !cfg->use_udp6_tx_checksums);
-	udp_set_no_check6_rx(sock->sk, !cfg->use_udp6_rx_checksums);
+	udp_set_no_check6_tx(sk, !cfg->use_udp6_tx_checksums);
+	udp_set_no_check6_rx(sk, !cfg->use_udp6_rx_checksums);
 
-	*sockp = sock;
+	*skp = sk;
 	return 0;
 
 error:
-	if (sock) {
-		kernel_sock_shutdown(sock, SHUT_RDWR);
-		sk_release_kernel(sock->sk);
-	}
-	*sockp = NULL;
+	if (sk)
+		udp_tunnel_sock_release(sk);
+	*skp = NULL;
 	return err;
 }
 EXPORT_SYMBOL_GPL(udp_sock_create6);
