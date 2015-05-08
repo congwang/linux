@@ -18,8 +18,12 @@ int inet_stream_connect(struct socket *sock, struct sockaddr *uaddr,
 			int addr_len, int flags);
 int __inet_stream_connect(struct socket *sock, struct sockaddr *uaddr,
 			  int addr_len, int flags);
+
+int inet_dgram_connect_sk(struct sock *sk, struct sockaddr *uaddr,
+			  int addr_len, int flags);
 int inet_dgram_connect(struct socket *sock, struct sockaddr *uaddr,
 		       int addr_len, int flags);
+
 int inet_accept(struct socket *sock, struct socket *newsock, int flags);
 int inet_sendmsg(struct socket *sock, struct msghdr *msg, size_t size);
 ssize_t inet_sendpage(struct socket *sock, struct page *page, int offset,
@@ -29,6 +33,8 @@ int inet_recvmsg(struct socket *sock, struct msghdr *msg, size_t size,
 int inet_shutdown(struct socket *sock, int how);
 int inet_listen(struct socket *sock, int backlog);
 void inet_sock_destruct(struct sock *sk);
+
+int inet_bind_sk(struct sock *sk, struct sockaddr *uaddr, int addr_len);
 int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len);
 int inet_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_len,
 		 int peer);

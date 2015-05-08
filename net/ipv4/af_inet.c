@@ -416,10 +416,9 @@ int inet_release(struct socket *sock)
 }
 EXPORT_SYMBOL(inet_release);
 
-int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
+int inet_bind_sk(struct sock *sk, struct sockaddr *uaddr, int addr_len)
 {
 	struct sockaddr_in *addr = (struct sockaddr_in *)uaddr;
-	struct sock *sk = sock->sk;
 	struct inet_sock *inet = inet_sk(sk);
 	struct net *net = sock_net(sk);
 	unsigned short snum;
@@ -508,13 +507,17 @@ out_release_sock:
 out:
 	return err;
 }
+EXPORT_SYMBOL(inet_bind_sk);
+
+int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
+{
+	return inet_bind_sk(sock->sk, uaddr, addr_len);
+}
 EXPORT_SYMBOL(inet_bind);
 
-int inet_dgram_connect(struct socket *sock, struct sockaddr *uaddr,
-		       int addr_len, int flags)
+int inet_dgram_connect_sk(struct sock *sk, struct sockaddr *uaddr,
+			  int addr_len, int flags)
 {
-	struct sock *sk = sock->sk;
-
 	if (addr_len < sizeof(uaddr->sa_family))
 		return -EINVAL;
 	if (uaddr->sa_family == AF_UNSPEC)
@@ -524,7 +527,15 @@ int inet_dgram_connect(struct socket *sock, struct sockaddr *uaddr,
 		return -EAGAIN;
 	return sk->sk_prot->connect(sk, uaddr, addr_len);
 }
+EXPORT_SYMBOL(inet_dgram_connect_sk);
+
+int inet_dgram_connect(struct socket *sock, struct sockaddr *uaddr,
+		       int addr_len, int flags)
+{
+	return inet_dgram_connect_sk(sock->sk, uaddr, addr_len, flags);
+}
 EXPORT_SYMBOL(inet_dgram_connect);
+
 
 static long inet_wait_for_connect(struct sock *sk, long timeo, int writebias)
 {

@@ -249,10 +249,9 @@ out_rcu_unlock:
 
 
 /* bind for INET6 API */
-int inet6_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
+int inet6_bind_sk(struct sock *sk, struct sockaddr *uaddr, int addr_len, bool stream)
 {
 	struct sockaddr_in6 *addr = (struct sockaddr_in6 *)uaddr;
-	struct sock *sk = sock->sk;
 	struct inet_sock *inet = inet_sk(sk);
 	struct ipv6_pinfo *np = inet6_sk(sk);
 	struct net *net = sock_net(sk);
@@ -272,7 +271,7 @@ int inet6_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 		return -EAFNOSUPPORT;
 
 	addr_type = ipv6_addr_type(&addr->sin6_addr);
-	if ((addr_type & IPV6_ADDR_MULTICAST) && sock->type == SOCK_STREAM)
+	if ((addr_type & IPV6_ADDR_MULTICAST) && stream)
 		return -EINVAL;
 
 	snum = ntohs(addr->sin6_port);
@@ -384,6 +383,13 @@ out:
 out_unlock:
 	rcu_read_unlock();
 	goto out;
+}
+EXPORT_SYMBOL(inet6_bind_sk);
+
+int inet6_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
+{
+	return inet6_bind_sk(sock->sk, uaddr, addr_len,
+			     sock->type == SOCK_STREAM);
 }
 EXPORT_SYMBOL(inet6_bind);
 
