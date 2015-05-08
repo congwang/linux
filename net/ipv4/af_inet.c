@@ -777,9 +777,8 @@ int inet_recvmsg(struct socket *sock, struct msghdr *msg, size_t size,
 }
 EXPORT_SYMBOL(inet_recvmsg);
 
-int inet_shutdown(struct socket *sock, int how)
+int inet_shutdown_sk(struct sock *sk, int how, socket_state *state)
 {
-	struct sock *sk = sock->sk;
 	int err = 0;
 
 	/* This should really check to make sure
@@ -792,12 +791,12 @@ int inet_shutdown(struct socket *sock, int how)
 		return -EINVAL;
 
 	lock_sock(sk);
-	if (sock->state == SS_CONNECTING) {
+	if (state && *state == SS_CONNECTING) {
 		if ((1 << sk->sk_state) &
 		    (TCPF_SYN_SENT | TCPF_SYN_RECV | TCPF_CLOSE))
-			sock->state = SS_DISCONNECTING;
+			*state = SS_DISCONNECTING;
 		else
-			sock->state = SS_CONNECTED;
+			*state = SS_CONNECTED;
 	}
 
 	switch (sk->sk_state) {
@@ -821,7 +820,8 @@ int inet_shutdown(struct socket *sock, int how)
 		/* Fall through */
 	case TCP_SYN_SENT:
 		err = sk->sk_prot->disconnect(sk, O_NONBLOCK);
-		sock->state = err ? SS_DISCONNECTING : SS_UNCONNECTED;
+		if (state)
+			*state = err ? SS_DISCONNECTING : SS_UNCONNECTED;
 		break;
 	}
 
@@ -829,6 +829,12 @@ int inet_shutdown(struct socket *sock, int how)
 	sk->sk_state_change(sk);
 	release_sock(sk);
 	return err;
+}
+EXPORT_SYMBOL(inet_shutdown_sk);
+
+int inet_shutdown(struct socket *sock, int how)
+{
+	return inet_shutdown_sk(sock->sk, how, &sock->state);
 }
 EXPORT_SYMBOL(inet_shutdown);
 
