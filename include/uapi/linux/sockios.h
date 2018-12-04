@@ -150,4 +150,12 @@
  */
  
 #define SIOCPROTOPRIVATE 0x89E0 /* to 89EF */
+
+
+/* skbtrace ioctl's */
+#define SIOCSKBTRACESETUP 0x8A00
+#define SIOCSKBTRACESTART 0x8A01
+#define SIOCSKBTRACESTOP 0x8A02
+#define SIOCSKBTRACETEARDOWN 0x8A03
+
 #endif	/* _LINUX_SOCKIOS_H */

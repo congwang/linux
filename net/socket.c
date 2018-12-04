@@ -107,6 +107,7 @@
 #include <linux/sockios.h>
 #include <net/busy_poll.h>
 #include <linux/errqueue.h>
+#include <linux/skbtrace_api.h>
 
 #ifdef CONFIG_NET_RX_BUSY_POLL
 unsigned int sysctl_net_busy_read __read_mostly;
@@ -1069,6 +1070,15 @@ static long sock_ioctl(struct file *file, unsigned cmd, unsigned long arg)
 				break;
 
 			err = open_related_ns(&net->ns, get_net_ns);
+			break;
+		case SIOCSKBTRACESETUP:
+		case SIOCSKBTRACESTART:
+		case SIOCSKBTRACESTOP:
+		case SIOCSKBTRACETEARDOWN:
+			err = -EPERM;
+			if (!ns_capable(net->user_ns, CAP_NET_ADMIN))
+				break;
+			err = skb_trace_ioctl(cmd, argp);
 			break;
 		default:
 			err = sock_do_ioctl(net, sock, cmd, arg,

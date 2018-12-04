@@ -44,6 +44,7 @@ struct net_generic;
 struct uevent_sock;
 struct netns_ipvs;
 struct bpf_prog;
+struct skb_trace;
 
 
 #define NETDEV_HASHBITS    8
@@ -163,6 +164,9 @@ struct net {
 #endif
 	struct sock		*diag_nlsk;
 	atomic_t		fnhe_genid;
+#ifdef CONFIG_SKB_TRACE
+	struct skb_trace	*skb_trace;
+#endif
 } __randomize_layout;
 
 #include <linux/seq_file_net.h>

@@ -433,6 +433,7 @@ struct sk_buff *__netdev_alloc_skb(struct net_device *dev, unsigned int len,
 skb_success:
 	skb_reserve(skb, NET_SKB_PAD);
 	skb->dev = dev;
+	trace_skb_alloc(dev_net(dev), skb);
 
 skb_fail:
 	return skb;
@@ -493,6 +494,7 @@ struct sk_buff *__napi_alloc_skb(struct napi_struct *napi, unsigned int len,
 skb_success:
 	skb_reserve(skb, NET_SKB_PAD + NET_IP_ALIGN);
 	skb->dev = napi->dev;
+	trace_skb_alloc(dev_net(napi->dev), skb);
 
 skb_fail:
 	return skb;
