@@ -3964,8 +3964,12 @@ static void hci_inquiry_result_with_rssi_evt(struct hci_dev *hdev,
 					     struct sk_buff *skb)
 {
 	struct inquiry_data data;
-	int num_rsp = *((__u8 *) skb->data);
+	int num_rsp;
 
+	if (unlikely(!pskb_may_pull(skb, 1)))
+		return;
+
+	num_rsp = *((__u8 *)skb->data);
 	BT_DBG("%s num_rsp %d", hdev->name, num_rsp);
 
 	if (!num_rsp)
@@ -3978,6 +3982,9 @@ static void hci_inquiry_result_with_rssi_evt(struct hci_dev *hdev,
 
 	if ((skb->len - 1) / num_rsp != sizeof(struct inquiry_info_with_rssi)) {
 		struct inquiry_info_with_rssi_and_pscan_mode *info;
+
+		if (unlikely(!pskb_may_pull(skb, 1 + num_rsp * sizeof(*info))))
+			goto unlock;
 		info = (void *) (skb->data + 1);
 
 		for (; num_rsp; num_rsp--, info++) {
@@ -3999,7 +4006,11 @@ static void hci_inquiry_result_with_rssi_evt(struct hci_dev *hdev,
 					  flags, NULL, 0, NULL, 0);
 		}
 	} else {
-		struct inquiry_info_with_rssi *info = (void *) (skb->data + 1);
+		struct inquiry_info_with_rssi *info;
+
+		if (unlikely(!pskb_may_pull(skb, 1 + num_rsp * sizeof(*info))))
+			goto unlock;
+		info = (void *)(skb->data + 1);
 
 		for (; num_rsp; num_rsp--, info++) {
 			u32 flags;
@@ -4021,6 +4032,7 @@ static void hci_inquiry_result_with_rssi_evt(struct hci_dev *hdev,
 		}
 	}
 
+unlock:
 	hci_dev_unlock(hdev);
 }
 
@@ -5742,12 +5754,17 @@ static bool hci_get_cmd_complete(struct hci_dev *hdev, u16 opcode,
 
 void hci_event_packet(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_event_hdr *hdr = (void *) skb->data;
+	struct hci_event_hdr *hdr;
 	hci_req_complete_t req_complete = NULL;
 	hci_req_complete_skb_t req_complete_skb = NULL;
 	struct sk_buff *orig_skb = NULL;
-	u8 status = 0, event = hdr->evt, req_evt = 0;
+	u8 status = 0, event, req_evt = 0;
 	u16 opcode = HCI_OP_NOP;
+
+	if (unlikely(!pskb_may_pull(skb,  HCI_EVENT_HDR_SIZE)))
+		goto free;
+	hdr = (void *)skb->data;
+	event = hdr->evt;
 
 	if (hdev->sent_cmd && bt_cb(hdev->sent_cmd)->hci.req_event == event) {
 		struct hci_command_hdr *cmd_hdr = (void *) hdev->sent_cmd->data;
@@ -5960,6 +5977,7 @@ void hci_event_packet(struct hci_dev *hdev, struct sk_buff *skb)
 		req_complete_skb(hdev, status, opcode, orig_skb);
 	}
 
+free:
 	kfree_skb(orig_skb);
 	kfree_skb(skb);
 	hdev->stat.evt_rx++;
