@@ -4403,10 +4403,14 @@ static u8 bredr_oob_data_present(struct hci_conn *conn)
 
 static void hci_io_capa_request_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_ev_io_capa_request *ev = (void *) skb->data;
+	struct hci_ev_io_capa_request *ev;
 	struct hci_conn *conn;
 
 	BT_DBG("%s", hdev->name);
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev))))
+		return;
+	ev = (void *)skb->data;
 
 	hci_dev_lock(hdev);
 
