@@ -2391,13 +2391,20 @@ unlock:
 static void hci_inquiry_result_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
 	struct inquiry_data data;
-	struct inquiry_info *info = (void *) (skb->data + 1);
-	int num_rsp = *((__u8 *) skb->data);
+	struct inquiry_info *info;
+	int num_rsp;
 
 	BT_DBG("%s num_rsp %d", hdev->name, num_rsp);
 
+	if (unlikely(!pskb_may_pull(skb, 1)))
+		return;
+	num_rsp = *((__u8 *)skb->data);
 	if (!num_rsp)
 		return;
+
+	if (unlikely(!pskb_may_pull(skb, 1 + num_rsp * sizeof(*info))))
+		return;
+	info = (void *)(skb->data + 1);
 
 	if (hci_dev_test_flag(hdev, HCI_PERIODIC_INQ))
 		return;
