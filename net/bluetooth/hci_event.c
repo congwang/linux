@@ -4234,14 +4234,21 @@ static void hci_extended_inquiry_result_evt(struct hci_dev *hdev,
 					    struct sk_buff *skb)
 {
 	struct inquiry_data data;
-	struct extended_inquiry_info *info = (void *) (skb->data + 1);
-	int num_rsp = *((__u8 *) skb->data);
+	struct extended_inquiry_info *info;
+	int num_rsp;
 	size_t eir_len;
+
+	if (unlikely(!pskb_may_pull(skb, 1)))
+		return;
+	num_rsp = *((__u8 *)skb->data);
 
 	BT_DBG("%s num_rsp %d", hdev->name, num_rsp);
 
 	if (!num_rsp)
 		return;
+	if (unlikely(!pskb_may_pull(skb, 1 + num_rsp * sizeof(*info))))
+		return;
+	info = (void *)(skb->data + 1);
 
 	if (hci_dev_test_flag(hdev, HCI_PERIODIC_INQ))
 		return;
