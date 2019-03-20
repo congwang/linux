@@ -2331,10 +2331,13 @@ static void hci_cs_switch_role(struct hci_dev *hdev, u8 status)
 
 static void hci_inquiry_complete_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	__u8 status = *((__u8 *) skb->data);
 	struct discovery_state *discov = &hdev->discovery;
 	struct inquiry_entry *e;
+	__u8 status;
 
+	if (unlikely(!pskb_may_pull(skb, 1)))
+		return;
+	status = *((__u8 *)skb->data);
 	BT_DBG("%s status 0x%2.2x", hdev->name, status);
 
 	hci_conn_check_pending(hdev);
