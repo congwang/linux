@@ -5147,7 +5147,11 @@ unlock:
 
 static void hci_le_conn_complete_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_ev_le_conn_complete *ev = (void *) skb->data;
+	struct hci_ev_le_conn_complete *ev;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev))))
+		return;
+	ev = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, ev->status);
 
@@ -5161,7 +5165,11 @@ static void hci_le_conn_complete_evt(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_le_enh_conn_complete_evt(struct hci_dev *hdev,
 					 struct sk_buff *skb)
 {
-	struct hci_ev_le_enh_conn_complete *ev = (void *) skb->data;
+	struct hci_ev_le_enh_conn_complete *ev;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev))))
+		return;
+	ev = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, ev->status);
 
@@ -5174,8 +5182,12 @@ static void hci_le_enh_conn_complete_evt(struct hci_dev *hdev,
 
 static void hci_le_ext_adv_term_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_evt_le_ext_adv_set_term *ev = (void *) skb->data;
+	struct hci_evt_le_ext_adv_set_term *ev;
 	struct hci_conn *conn;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev))))
+		return;
+	ev = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, ev->status);
 
@@ -5203,8 +5215,12 @@ static void hci_le_ext_adv_term_evt(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_le_conn_update_complete_evt(struct hci_dev *hdev,
 					    struct sk_buff *skb)
 {
-	struct hci_ev_le_conn_update_complete *ev = (void *) skb->data;
+	struct hci_ev_le_conn_update_complete *ev;
 	struct hci_conn *conn;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev))))
+		return;
+	ev = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, ev->status);
 
@@ -5511,14 +5527,28 @@ static void process_adv_report(struct hci_dev *hdev, u8 type, bdaddr_t *bdaddr,
 
 static void hci_le_adv_report_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	u8 num_reports = skb->data[0];
-	void *ptr = &skb->data[1];
+	unsigned int len;
+	u8 num_reports;
+
+	if (unlikely(!pskb_may_pull(skb, 1)))
+		return;
+	num_reports = skb->data[0];
+	len = 1;
 
 	hci_dev_lock(hdev);
 
 	while (num_reports--) {
-		struct hci_ev_le_advertising_info *ev = ptr;
+		struct hci_ev_le_advertising_info *ev;
+		u8 ev_len;
 		s8 rssi;
+
+		if (unlikely(!pskb_may_pull(skb, len + sizeof(*ev))))
+			break;
+		ev = (void *)skb->data + len;
+		ev_len = ev->length + 1;
+		if (unlikely(!pskb_may_pull(skb, len + sizeof(*ev) + ev_len)))
+			break;
+		ev = (void *)skb->data + len;
 
 		if (ev->length <= HCI_MAX_AD_LENGTH) {
 			rssi = ev->data[ev->length];
@@ -5529,7 +5559,7 @@ static void hci_le_adv_report_evt(struct hci_dev *hdev, struct sk_buff *skb)
 			bt_dev_err(hdev, "Dropping invalid advertising data");
 		}
 
-		ptr += sizeof(*ev) + ev->length + 1;
+		len += sizeof(*ev) + ev_len;
 	}
 
 	hci_dev_unlock(hdev);
@@ -5583,15 +5613,29 @@ static u8 ext_evt_type_to_legacy(u16 evt_type)
 
 static void hci_le_ext_adv_report_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	u8 num_reports = skb->data[0];
-	void *ptr = &skb->data[1];
+	unsigned int len;
+	u8 num_reports;
+
+	if (unlikely(!pskb_may_pull(skb, 1)))
+		return;
+	num_reports = skb->data[0];
+	len = 1;
 
 	hci_dev_lock(hdev);
 
 	while (num_reports--) {
-		struct hci_ev_le_ext_adv_report *ev = ptr;
+		struct hci_ev_le_ext_adv_report *ev;
 		u8 legacy_evt_type;
 		u16 evt_type;
+		u8 ev_len;
+
+		if (unlikely(!pskb_may_pull(skb, len + sizeof(*ev))))
+			break;
+		ev = (void *)skb->data + len;
+		ev_len = ev->length + 1;
+		if (unlikely(!pskb_may_pull(skb, len + sizeof(*ev) + ev_len)))
+			break;
+		ev = (void *)skb->data + len;
 
 		evt_type = __le16_to_cpu(ev->evt_type);
 		legacy_evt_type = ext_evt_type_to_legacy(evt_type);
@@ -5601,7 +5645,7 @@ static void hci_le_ext_adv_report_evt(struct hci_dev *hdev, struct sk_buff *skb)
 					   ev->data, ev->length);
 		}
 
-		ptr += sizeof(*ev) + ev->length + 1;
+		len += sizeof(*ev) + ev_len;
 	}
 
 	hci_dev_unlock(hdev);
@@ -5610,8 +5654,12 @@ static void hci_le_ext_adv_report_evt(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_le_remote_feat_complete_evt(struct hci_dev *hdev,
 					    struct sk_buff *skb)
 {
-	struct hci_ev_le_remote_feat_complete *ev = (void *)skb->data;
+	struct hci_ev_le_remote_feat_complete *ev;
 	struct hci_conn *conn;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev))))
+		return;
+	ev = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, ev->status);
 
@@ -5651,11 +5699,15 @@ static void hci_le_remote_feat_complete_evt(struct hci_dev *hdev,
 
 static void hci_le_ltk_request_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_ev_le_ltk_req *ev = (void *) skb->data;
+	struct hci_ev_le_ltk_req *ev;
 	struct hci_cp_le_ltk_reply cp;
 	struct hci_cp_le_ltk_neg_reply neg;
 	struct hci_conn *conn;
 	struct smp_ltk *ltk;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev))))
+		return;
+	ev = (void *)skb->data;
 
 	BT_DBG("%s handle 0x%4.4x", hdev->name, __le16_to_cpu(ev->handle));
 
@@ -5728,10 +5780,14 @@ static void send_conn_param_neg_reply(struct hci_dev *hdev, u16 handle,
 static void hci_le_remote_conn_param_req_evt(struct hci_dev *hdev,
 					     struct sk_buff *skb)
 {
-	struct hci_ev_le_remote_conn_param_req *ev = (void *) skb->data;
+	struct hci_ev_le_remote_conn_param_req *ev;
 	struct hci_cp_le_conn_param_req_reply cp;
 	struct hci_conn *hcon;
 	u16 handle, min, max, latency, timeout;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev))))
+		return;
+	ev = (void *)skb->data;
 
 	handle = le16_to_cpu(ev->handle);
 	min = le16_to_cpu(ev->interval_min);
@@ -5786,19 +5842,27 @@ static void hci_le_remote_conn_param_req_evt(struct hci_dev *hdev,
 static void hci_le_direct_adv_report_evt(struct hci_dev *hdev,
 					 struct sk_buff *skb)
 {
-	u8 num_reports = skb->data[0];
-	void *ptr = &skb->data[1];
+	unsigned int len;
+	u8 num_reports;
+
+	if (unlikely(!pskb_may_pull(skb, 1)))
+		return;
+	num_reports = skb->data[0];
+	len = 1;
 
 	hci_dev_lock(hdev);
 
 	while (num_reports--) {
-		struct hci_ev_le_direct_adv_info *ev = ptr;
+		struct hci_ev_le_direct_adv_info *ev;
 
+		if (unlikely(!pskb_may_pull(skb, len + sizeof(*ev))))
+			break;
+		ev = (void *)skb->data + len;
 		process_adv_report(hdev, ev->evt_type, &ev->bdaddr,
 				   ev->bdaddr_type, &ev->direct_addr,
 				   ev->direct_addr_type, ev->rssi, NULL, 0);
 
-		ptr += sizeof(*ev);
+		len += sizeof(*ev);
 	}
 
 	hci_dev_unlock(hdev);
@@ -5806,8 +5870,11 @@ static void hci_le_direct_adv_report_evt(struct hci_dev *hdev,
 
 static void hci_le_meta_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_ev_le_meta *le_ev = (void *) skb->data;
+	struct hci_ev_le_meta *le_ev;
 
+	if (unlikely(!pskb_may_pull(skb, sizeof(*le_ev))))
+		return;
+	le_ev = (void *)skb->data;
 	skb_pull(skb, sizeof(*le_ev));
 
 	switch (le_ev->subevent) {
