@@ -3847,12 +3847,16 @@ static void conn_set_key(struct hci_conn *conn, u8 key_type, u8 pin_len)
 
 static void hci_link_key_request_evt(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_ev_link_key_req *ev = (void *) skb->data;
+	struct hci_ev_link_key_req *ev;
 	struct hci_cp_link_key_reply cp;
 	struct hci_conn *conn;
 	struct link_key *key;
 
 	BT_DBG("%s", hdev->name);
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev))))
+		return;
+	ev = (void *)skb->data;
 
 	if (!hci_dev_test_flag(hdev, HCI_MGMT))
 		return;
