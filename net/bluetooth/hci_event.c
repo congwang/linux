@@ -4497,11 +4497,15 @@ unlock:
 static void hci_user_confirm_request_evt(struct hci_dev *hdev,
 					 struct sk_buff *skb)
 {
-	struct hci_ev_user_confirm_req *ev = (void *) skb->data;
+	struct hci_ev_user_confirm_req *ev;
 	int loc_mitm, rem_mitm, confirm_hint = 0;
 	struct hci_conn *conn;
 
 	BT_DBG("%s", hdev->name);
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev))))
+		return;
+	ev = (void *)skb->data;
 
 	hci_dev_lock(hdev);
 
