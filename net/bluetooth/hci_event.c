@@ -100,8 +100,12 @@ static void hci_cc_remote_name_req_cancel(struct hci_dev *hdev,
 
 static void hci_cc_role_discovery(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_role_discovery *rp = (void *) skb->data;
+	struct hci_rp_role_discovery *rp;
 	struct hci_conn *conn;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -119,8 +123,12 @@ static void hci_cc_role_discovery(struct hci_dev *hdev, struct sk_buff *skb)
 
 static void hci_cc_read_link_policy(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_read_link_policy *rp = (void *) skb->data;
+	struct hci_rp_read_link_policy *rp;
 	struct hci_conn *conn;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -138,9 +146,13 @@ static void hci_cc_read_link_policy(struct hci_dev *hdev, struct sk_buff *skb)
 
 static void hci_cc_write_link_policy(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_write_link_policy *rp = (void *) skb->data;
+	struct hci_rp_write_link_policy *rp;
 	struct hci_conn *conn;
 	void *sent;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -163,7 +175,11 @@ static void hci_cc_write_link_policy(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_cc_read_def_link_policy(struct hci_dev *hdev,
 					struct sk_buff *skb)
 {
-	struct hci_rp_read_def_link_policy *rp = (void *) skb->data;
+	struct hci_rp_read_def_link_policy *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -227,8 +243,12 @@ static void hci_cc_reset(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_cc_read_stored_link_key(struct hci_dev *hdev,
 					struct sk_buff *skb)
 {
-	struct hci_rp_read_stored_link_key *rp = (void *)skb->data;
+	struct hci_rp_read_stored_link_key *rp;
 	struct hci_cp_read_stored_link_key *sent;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -245,7 +265,11 @@ static void hci_cc_read_stored_link_key(struct hci_dev *hdev,
 static void hci_cc_delete_stored_link_key(struct hci_dev *hdev,
 					  struct sk_buff *skb)
 {
-	struct hci_rp_delete_stored_link_key *rp = (void *)skb->data;
+	struct hci_rp_delete_stored_link_key *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -281,7 +305,11 @@ static void hci_cc_write_local_name(struct hci_dev *hdev, struct sk_buff *skb)
 
 static void hci_cc_read_local_name(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_read_local_name *rp = (void *) skb->data;
+	struct hci_rp_read_local_name *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -381,7 +409,11 @@ done:
 
 static void hci_cc_read_class_of_dev(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_read_class_of_dev *rp = (void *) skb->data;
+	struct hci_rp_read_class_of_dev *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -418,8 +450,12 @@ static void hci_cc_write_class_of_dev(struct hci_dev *hdev, struct sk_buff *skb)
 
 static void hci_cc_read_voice_setting(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_read_voice_setting *rp = (void *) skb->data;
+	struct hci_rp_read_voice_setting *rp;
 	__u16 setting;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -471,7 +507,11 @@ static void hci_cc_write_voice_setting(struct hci_dev *hdev,
 static void hci_cc_read_num_supported_iac(struct hci_dev *hdev,
 					  struct sk_buff *skb)
 {
-	struct hci_rp_read_num_supported_iac *rp = (void *) skb->data;
+	struct hci_rp_read_num_supported_iac *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -547,7 +587,11 @@ static void hci_cc_write_sc_support(struct hci_dev *hdev, struct sk_buff *skb)
 
 static void hci_cc_read_local_version(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_read_local_version *rp = (void *) skb->data;
+	struct hci_rp_read_local_version *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -567,7 +611,11 @@ static void hci_cc_read_local_version(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_cc_read_local_commands(struct hci_dev *hdev,
 				       struct sk_buff *skb)
 {
-	struct hci_rp_read_local_commands *rp = (void *) skb->data;
+	struct hci_rp_read_local_commands *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -582,7 +630,11 @@ static void hci_cc_read_local_commands(struct hci_dev *hdev,
 static void hci_cc_read_local_features(struct hci_dev *hdev,
 				       struct sk_buff *skb)
 {
-	struct hci_rp_read_local_features *rp = (void *) skb->data;
+	struct hci_rp_read_local_features *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -632,7 +684,11 @@ static void hci_cc_read_local_features(struct hci_dev *hdev,
 static void hci_cc_read_local_ext_features(struct hci_dev *hdev,
 					   struct sk_buff *skb)
 {
-	struct hci_rp_read_local_ext_features *rp = (void *) skb->data;
+	struct hci_rp_read_local_ext_features *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -649,7 +705,11 @@ static void hci_cc_read_local_ext_features(struct hci_dev *hdev,
 static void hci_cc_read_flow_control_mode(struct hci_dev *hdev,
 					  struct sk_buff *skb)
 {
-	struct hci_rp_read_flow_control_mode *rp = (void *) skb->data;
+	struct hci_rp_read_flow_control_mode *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -661,7 +721,11 @@ static void hci_cc_read_flow_control_mode(struct hci_dev *hdev,
 
 static void hci_cc_read_buffer_size(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_read_buffer_size *rp = (void *) skb->data;
+	struct hci_rp_read_buffer_size *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -687,7 +751,11 @@ static void hci_cc_read_buffer_size(struct hci_dev *hdev, struct sk_buff *skb)
 
 static void hci_cc_read_bd_addr(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_read_bd_addr *rp = (void *) skb->data;
+	struct hci_rp_read_bd_addr *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -704,7 +772,11 @@ static void hci_cc_read_bd_addr(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_cc_read_page_scan_activity(struct hci_dev *hdev,
 					   struct sk_buff *skb)
 {
-	struct hci_rp_read_page_scan_activity *rp = (void *) skb->data;
+	struct hci_rp_read_page_scan_activity *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -739,7 +811,11 @@ static void hci_cc_write_page_scan_activity(struct hci_dev *hdev,
 static void hci_cc_read_page_scan_type(struct hci_dev *hdev,
 					   struct sk_buff *skb)
 {
-	struct hci_rp_read_page_scan_type *rp = (void *) skb->data;
+	struct hci_rp_read_page_scan_type *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -769,7 +845,11 @@ static void hci_cc_write_page_scan_type(struct hci_dev *hdev,
 static void hci_cc_read_data_block_size(struct hci_dev *hdev,
 					struct sk_buff *skb)
 {
-	struct hci_rp_read_data_block_size *rp = (void *) skb->data;
+	struct hci_rp_read_data_block_size *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -824,7 +904,11 @@ unlock:
 static void hci_cc_read_local_amp_info(struct hci_dev *hdev,
 				       struct sk_buff *skb)
 {
-	struct hci_rp_read_local_amp_info *rp = (void *) skb->data;
+	struct hci_rp_read_local_amp_info *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -846,7 +930,11 @@ static void hci_cc_read_local_amp_info(struct hci_dev *hdev,
 static void hci_cc_read_inq_rsp_tx_power(struct hci_dev *hdev,
 					 struct sk_buff *skb)
 {
-	struct hci_rp_read_inq_rsp_tx_power *rp = (void *) skb->data;
+	struct hci_rp_read_inq_rsp_tx_power *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -858,9 +946,13 @@ static void hci_cc_read_inq_rsp_tx_power(struct hci_dev *hdev,
 
 static void hci_cc_pin_code_reply(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_pin_code_reply *rp = (void *) skb->data;
+	struct hci_rp_pin_code_reply *rp;
 	struct hci_cp_pin_code_reply *cp;
 	struct hci_conn *conn;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -886,7 +978,11 @@ unlock:
 
 static void hci_cc_pin_code_neg_reply(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_pin_code_neg_reply *rp = (void *) skb->data;
+	struct hci_rp_pin_code_neg_reply *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -902,7 +998,11 @@ static void hci_cc_pin_code_neg_reply(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_cc_le_read_buffer_size(struct hci_dev *hdev,
 				       struct sk_buff *skb)
 {
-	struct hci_rp_le_read_buffer_size *rp = (void *) skb->data;
+	struct hci_rp_le_read_buffer_size *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -920,7 +1020,11 @@ static void hci_cc_le_read_buffer_size(struct hci_dev *hdev,
 static void hci_cc_le_read_local_features(struct hci_dev *hdev,
 					  struct sk_buff *skb)
 {
-	struct hci_rp_le_read_local_features *rp = (void *) skb->data;
+	struct hci_rp_le_read_local_features *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -933,7 +1037,11 @@ static void hci_cc_le_read_local_features(struct hci_dev *hdev,
 static void hci_cc_le_read_adv_tx_power(struct hci_dev *hdev,
 					struct sk_buff *skb)
 {
-	struct hci_rp_le_read_adv_tx_power *rp = (void *) skb->data;
+	struct hci_rp_le_read_adv_tx_power *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -945,7 +1053,11 @@ static void hci_cc_le_read_adv_tx_power(struct hci_dev *hdev,
 
 static void hci_cc_user_confirm_reply(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_user_confirm_reply *rp = (void *) skb->data;
+	struct hci_rp_user_confirm_reply *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -961,7 +1073,11 @@ static void hci_cc_user_confirm_reply(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_cc_user_confirm_neg_reply(struct hci_dev *hdev,
 					  struct sk_buff *skb)
 {
-	struct hci_rp_user_confirm_reply *rp = (void *) skb->data;
+	struct hci_rp_user_confirm_reply *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -976,7 +1092,11 @@ static void hci_cc_user_confirm_neg_reply(struct hci_dev *hdev,
 
 static void hci_cc_user_passkey_reply(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_user_confirm_reply *rp = (void *) skb->data;
+	struct hci_rp_user_confirm_reply *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -992,7 +1112,11 @@ static void hci_cc_user_passkey_reply(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_cc_user_passkey_neg_reply(struct hci_dev *hdev,
 					  struct sk_buff *skb)
 {
-	struct hci_rp_user_confirm_reply *rp = (void *) skb->data;
+	struct hci_rp_user_confirm_reply *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -1008,7 +1132,11 @@ static void hci_cc_user_passkey_neg_reply(struct hci_dev *hdev,
 static void hci_cc_read_local_oob_data(struct hci_dev *hdev,
 				       struct sk_buff *skb)
 {
-	struct hci_rp_read_local_oob_data *rp = (void *) skb->data;
+	struct hci_rp_read_local_oob_data *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 }
@@ -1016,7 +1144,11 @@ static void hci_cc_read_local_oob_data(struct hci_dev *hdev,
 static void hci_cc_read_local_oob_ext_data(struct hci_dev *hdev,
 					   struct sk_buff *skb)
 {
-	struct hci_rp_read_local_oob_ext_data *rp = (void *) skb->data;
+	struct hci_rp_read_local_oob_ext_data *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 }
@@ -1333,7 +1465,11 @@ static void hci_cc_le_set_ext_scan_enable(struct hci_dev *hdev,
 static void hci_cc_le_read_num_adv_sets(struct hci_dev *hdev,
 				      struct sk_buff *skb)
 {
-	struct hci_rp_le_read_num_supported_adv_sets *rp = (void *) skb->data;
+	struct hci_rp_le_read_num_supported_adv_sets *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x No of Adv sets %u", hdev->name, rp->status,
 	       rp->num_of_sets);
@@ -1347,7 +1483,11 @@ static void hci_cc_le_read_num_adv_sets(struct hci_dev *hdev,
 static void hci_cc_le_read_white_list_size(struct hci_dev *hdev,
 					   struct sk_buff *skb)
 {
-	struct hci_rp_le_read_white_list_size *rp = (void *) skb->data;
+	struct hci_rp_le_read_white_list_size *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x size %u", hdev->name, rp->status, rp->size);
 
@@ -1411,7 +1551,11 @@ static void hci_cc_le_del_from_white_list(struct hci_dev *hdev,
 static void hci_cc_le_read_supported_states(struct hci_dev *hdev,
 					    struct sk_buff *skb)
 {
-	struct hci_rp_le_read_supported_states *rp = (void *) skb->data;
+	struct hci_rp_le_read_supported_states *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -1424,7 +1568,11 @@ static void hci_cc_le_read_supported_states(struct hci_dev *hdev,
 static void hci_cc_le_read_def_data_len(struct hci_dev *hdev,
 					struct sk_buff *skb)
 {
-	struct hci_rp_le_read_def_data_len *rp = (void *) skb->data;
+	struct hci_rp_le_read_def_data_len *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -1509,7 +1657,11 @@ static void hci_cc_le_clear_resolv_list(struct hci_dev *hdev,
 static void hci_cc_le_read_resolv_list_size(struct hci_dev *hdev,
 					   struct sk_buff *skb)
 {
-	struct hci_rp_le_read_resolv_list_size *rp = (void *) skb->data;
+	struct hci_rp_le_read_resolv_list_size *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x size %u", hdev->name, rp->status, rp->size);
 
@@ -1546,7 +1698,11 @@ static void hci_cc_le_set_addr_resolution_enable(struct hci_dev *hdev,
 static void hci_cc_le_read_max_data_len(struct hci_dev *hdev,
 					struct sk_buff *skb)
 {
-	struct hci_rp_le_read_max_data_len *rp = (void *) skb->data;
+	struct hci_rp_le_read_max_data_len *rp;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -1614,9 +1770,13 @@ static void hci_cc_set_adv_param(struct hci_dev *hdev, struct sk_buff *skb)
 
 static void hci_cc_set_ext_adv_param(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_le_set_ext_adv_params *rp = (void *) skb->data;
+	struct hci_rp_le_set_ext_adv_params *rp;
 	struct hci_cp_le_set_ext_adv_params *cp;
 	struct adv_info *adv_instance;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -1645,8 +1805,12 @@ static void hci_cc_set_ext_adv_param(struct hci_dev *hdev, struct sk_buff *skb)
 
 static void hci_cc_read_rssi(struct hci_dev *hdev, struct sk_buff *skb)
 {
-	struct hci_rp_read_rssi *rp = (void *) skb->data;
+	struct hci_rp_read_rssi *rp;
 	struct hci_conn *conn;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -1665,8 +1829,12 @@ static void hci_cc_read_rssi(struct hci_dev *hdev, struct sk_buff *skb)
 static void hci_cc_read_tx_power(struct hci_dev *hdev, struct sk_buff *skb)
 {
 	struct hci_cp_read_tx_power *sent;
-	struct hci_rp_read_tx_power *rp = (void *) skb->data;
+	struct hci_rp_read_tx_power *rp;
 	struct hci_conn *conn;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*rp))))
+		return;
+	rp = (void *)skb->data;
 
 	BT_DBG("%s status 0x%2.2x", hdev->name, rp->status);
 
@@ -3108,7 +3276,11 @@ static void hci_cmd_complete_evt(struct hci_dev *hdev, struct sk_buff *skb,
 				 hci_req_complete_t *req_complete,
 				 hci_req_complete_skb_t *req_complete_skb)
 {
-	struct hci_ev_cmd_complete *ev = (void *) skb->data;
+	struct hci_ev_cmd_complete *ev;
+
+	if (unlikely(!pskb_may_pull(skb, sizeof(*ev) + 1)))
+		return;
+	ev = (void *)skb->data;
 
 	*opcode = __le16_to_cpu(ev->opcode);
 	*status = skb->data[sizeof(*ev)];
