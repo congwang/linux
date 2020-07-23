@@ -37,9 +37,13 @@ static unsigned char default_operstate(const struct net_device *dev)
 	if (netif_testing(dev))
 		return IF_OPER_TESTING;
 
-	if (!netif_carrier_ok(dev))
+	if (!netif_carrier_ok(dev)) {
+		if (dev->reg_state == NETREG_UNREGISTERING ||
+		    dev->reg_state == NETREG_UNREGISTERED)
+			return IF_OPER_DOWN;
 		return (dev->ifindex != dev_get_iflink(dev) ?
 			IF_OPER_LOWERLAYERDOWN : IF_OPER_DOWN);
+	}
 
 	if (netif_dormant(dev))
 		return IF_OPER_DORMANT;
