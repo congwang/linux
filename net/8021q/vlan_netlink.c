@@ -185,8 +185,6 @@ static int vlan_newlink(struct net *src_net, struct net_device *dev,
 	err = vlan_changelink(dev, tb, data, extack);
 	if (!err)
 		err = register_vlan_dev(dev, extack);
-	if (err)
-		vlan_dev_uninit(dev);
 	return err;
 }
 

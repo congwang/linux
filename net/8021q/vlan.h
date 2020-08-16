@@ -49,6 +49,28 @@ static inline unsigned int vlan_proto_idx(__be16 proto)
 	}
 }
 
+static inline int vlan_group_prealloc_vid(struct vlan_group *vg,
+					  __be16 vlan_proto, u16 vlan_id)
+{
+	struct net_device **array;
+	unsigned int pidx, vidx;
+	unsigned int size;
+
+	pidx  = vlan_proto_idx(vlan_proto);
+	vidx  = vlan_id / VLAN_GROUP_ARRAY_PART_LEN;
+	array = vg->vlan_devices_arrays[pidx][vidx];
+	if (array != NULL)
+		return 0;
+
+	size = sizeof(struct net_device *) * VLAN_GROUP_ARRAY_PART_LEN;
+	array = kzalloc(size, GFP_KERNEL);
+	if (array == NULL)
+		return -ENOBUFS;
+
+	vg->vlan_devices_arrays[pidx][vidx] = array;
+	return 0;
+}
+
 static inline struct net_device *__vlan_group_get_device(struct vlan_group *vg,
 							 unsigned int pidx,
 							 u16 vlan_id)
