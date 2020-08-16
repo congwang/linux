@@ -96,11 +96,6 @@ void unregister_vlan_dev(struct net_device *dev, struct list_head *head)
 
 	grp->nr_vlan_devs--;
 
-	if (vlan->flags & VLAN_FLAG_MVRP)
-		vlan_mvrp_request_leave(dev);
-	if (vlan->flags & VLAN_FLAG_GVRP)
-		vlan_gvrp_request_leave(dev);
-
 	vlan_group_set_device(grp, vlan->vlan_proto, vlan_id, NULL);
 
 	netdev_upper_dev_unlink(real_dev, dev);
