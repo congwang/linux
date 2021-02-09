@@ -862,6 +862,7 @@ enum bpf_cmd {
 	BPF_ITER_CREATE,
 	BPF_LINK_DETACH,
 	BPF_PROG_BIND_MAP,
+	BPF_TIMER_CREATE,
 };
 
 enum bpf_map_type {
@@ -895,6 +896,7 @@ enum bpf_map_type {
 	BPF_MAP_TYPE_RINGBUF,
 	BPF_MAP_TYPE_INODE_STORAGE,
 	BPF_MAP_TYPE_TASK_STORAGE,
+	BPF_MAP_TYPE_TIMER_ARRAY,
 };
 
 /* Note that tracing related programs such as
@@ -937,6 +939,7 @@ enum bpf_prog_type {
 	BPF_PROG_TYPE_EXT,
 	BPF_PROG_TYPE_LSM,
 	BPF_PROG_TYPE_SK_LOOKUP,
+	BPF_PROG_TYPE_TIMER,
 };
 
 enum bpf_attach_type {
@@ -1457,6 +1460,13 @@ union bpf_attr {
 		__u32		map_fd;
 		__u32		flags;		/* extra flags */
 	} prog_bind_map;
+
+	struct { /* struct used by BPF_TIMER_CREATE command */
+		__u32		map_fd;
+		__u32		index;
+		__u32		prog_fd;
+		__u32		flags;		/* timer flags */
+	} timer_create;
 
 } __attribute__((aligned(8)));
 
@@ -6079,6 +6089,12 @@ enum {
 	BTF_F_NONAME	=	(1ULL << 1),
 	BTF_F_PTR_RAW	=	(1ULL << 2),
 	BTF_F_ZERO	=	(1ULL << 3),
+};
+
+/* bpf timer flags */
+enum {
+	BTF_TIMER_F_DEFERRABLE	= (1ULL << 0),
+	BTF_TIMER_F_PINNED	= (1ULL << 1),
 };
 
 #endif /* _UAPI__LINUX_BPF_H__ */

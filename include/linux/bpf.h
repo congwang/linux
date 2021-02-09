@@ -2085,4 +2085,6 @@ int bpf_bprintf_prepare(char *fmt, u32 fmt_size, const u64 *raw_args,
 			u32 **bin_buf, u32 num_args);
 void bpf_bprintf_cleanup(void);
 
+int bpf_timer_create(union bpf_attr *attr);
+
 #endif /* _LINUX_BPF_H */
