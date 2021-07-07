@@ -141,6 +141,7 @@
 #include <linux/mroute.h>
 #include <linux/netlink.h>
 #include <net/dst_metadata.h>
+#include <trace/events/ip.h>
 
 /*
  *	Process Router Attention IP option (RFC 2113)
@@ -438,6 +439,7 @@ static struct sk_buff *ip_rcv_core(struct sk_buff *skb, struct net *net)
 	const struct iphdr *iph;
 	u32 len;
 
+	trace_ip_rcv(skb);
 	/* When the interface is in promisc. mode, drop all the crap
 	 * that it receives, do not try to analyse it.
 	 */
