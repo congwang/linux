@@ -52,6 +52,7 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 #include <trace/events/skb.h>
+#include <trace/events/udp.h>
 #include "udp_impl.h"
 
 static u32 udp6_ehashfn(const struct net *net,
@@ -1246,6 +1247,7 @@ csum_partial:
 		uh->check = CSUM_MANGLED_0;
 
 send:
+	trace_udp_v6_send_skb(sk, skb);
 	err = ip6_send_skb(skb);
 	if (err) {
 		if (err == -ENOBUFS && !inet6_sk(sk)->recverr) {
