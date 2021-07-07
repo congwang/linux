@@ -82,6 +82,7 @@
 #include <linux/netfilter_bridge.h>
 #include <linux/netlink.h>
 #include <linux/tcp.h>
+#include <trace/events/ip.h>
 
 static int
 ip_fragment(struct net *net, struct sock *sk, struct sk_buff *skb,
@@ -522,6 +523,7 @@ packet_routed:
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
 
+	trace_ip_queue_xmit(sk, skb);
 	res = ip_local_out(net, sk, skb);
 	rcu_read_unlock();
 	return res;
