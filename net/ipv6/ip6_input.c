@@ -44,6 +44,7 @@
 #include <net/xfrm.h>
 #include <net/inet_ecn.h>
 #include <net/dst_metadata.h>
+#include <trace/events/ip.h>
 
 INDIRECT_CALLABLE_DECLARE(void tcp_v6_early_demux(struct sk_buff *));
 static void ip6_rcv_finish_core(struct net *net, struct sock *sk,
@@ -148,6 +149,8 @@ static struct sk_buff *ip6_rcv_core(struct sk_buff *skb, struct net_device *dev,
 	const struct ipv6hdr *hdr;
 	u32 pkt_len;
 	struct inet6_dev *idev;
+
+	trace_ipv6_rcv(skb);
 
 	if (skb->pkt_type == PACKET_OTHERHOST) {
 		kfree_skb(skb);
