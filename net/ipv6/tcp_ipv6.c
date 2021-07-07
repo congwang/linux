@@ -1631,6 +1631,8 @@ INDIRECT_CALLABLE_SCOPE int tcp_v6_rcv(struct sk_buff *skb)
 	int ret;
 	struct net *net = dev_net(skb->dev);
 
+	trace_tcp_v6_rcv(skb);
+
 	if (skb->pkt_type != PACKET_HOST)
 		goto discard_it;
 
