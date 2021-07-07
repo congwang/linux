@@ -1971,6 +1971,8 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	struct sock *sk;
 	int ret;
 
+	trace_tcp_v4_rcv(skb);
+
 	if (skb->pkt_type != PACKET_HOST)
 		goto discard_it;
 
