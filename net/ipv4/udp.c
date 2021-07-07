@@ -963,6 +963,7 @@ csum_partial:
 		uh->check = CSUM_MANGLED_0;
 
 send:
+	trace_udp_send_skb(sk, skb);
 	err = ip_send_skb(sock_net(sk), skb);
 	if (err) {
 		if (err == -ENOBUFS && !inet->recverr) {
