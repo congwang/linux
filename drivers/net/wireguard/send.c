@@ -296,7 +296,7 @@ void wg_packet_encrypt_worker(struct work_struct *work)
 		skb_list_walk_safe(first, skb, next) {
 			if (likely(encrypt_packet(skb,
 					PACKET_CB(first)->keypair))) {
-				wg_reset_packet(skb, true);
+				wg_reset_packet(skb, true, true);
 			} else {
 				state = PACKET_STATE_DEAD;
 				break;
