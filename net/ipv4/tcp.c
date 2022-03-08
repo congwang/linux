@@ -1709,8 +1709,7 @@ int tcp_read_sock(struct sock *sk, read_descriptor_t *desc,
 }
 EXPORT_SYMBOL(tcp_read_sock);
 
-int tcp_read_skb(struct sock *sk, read_descriptor_t *desc,
-		 sk_read_actor_t recv_actor)
+int tcp_read_skb(struct sock *sk, skb_read_actor_t recv_actor)
 {
 	struct tcp_sock *tp = tcp_sk(sk);
 	u32 seq = tp->copied_seq;
@@ -1725,7 +1724,7 @@ int tcp_read_skb(struct sock *sk, read_descriptor_t *desc,
 		int used;
 
 		__skb_unlink(skb, &sk->sk_receive_queue);
-		used = recv_actor(desc, skb, 0, skb->len);
+		used = recv_actor(sk, skb);
 		if (used <= 0) {
 			if (!copied)
 				copied = used;
@@ -1740,9 +1739,7 @@ int tcp_read_skb(struct sock *sk, read_descriptor_t *desc,
 			break;
 		}
 		consume_skb(skb);
-		if (!desc->count)
-			break;
-		WRITE_ONCE(tp->copied_seq, seq);
+		break;
 	}
 	WRITE_ONCE(tp->copied_seq, seq);
 
