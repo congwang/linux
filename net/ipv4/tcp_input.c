@@ -5000,10 +5000,11 @@ err:
 
 }
 
-void tcp_data_ready(struct sock *sk)
+int tcp_data_ready(struct sock *sk)
 {
 	if (tcp_epollin_ready(sk, sk->sk_rcvlowat) || sock_flag(sk, SOCK_DONE))
 		sk->sk_data_ready(sk);
+	return 0;
 }
 
 static void tcp_data_queue(struct sock *sk, struct sk_buff *skb)
@@ -5076,8 +5077,10 @@ queue_and_out:
 
 		if (eaten > 0)
 			kfree_skb_partial(skb, fragstolen);
-		if (!sock_flag(sk, SOCK_DEAD))
-			tcp_data_ready(sk);
+		if (!sock_flag(sk, SOCK_DEAD)) {
+			if (tcp_data_ready(sk) < 0)
+				inet_csk_unschedule_ack(sk);
+		}
 		return;
 	}
 
@@ -5573,13 +5576,13 @@ send_now:
 			       HRTIMER_MODE_REL_PINNED_SOFT);
 }
 
-static inline void tcp_ack_snd_check(struct sock *sk)
+static inline void tcp_ack_snd_check(struct sock *sk, bool ofo_possible)
 {
 	if (!inet_csk_ack_scheduled(sk)) {
 		/* We sent a data segment already. */
 		return;
 	}
-	__tcp_ack_snd_check(sk, 1);
+	__tcp_ack_snd_check(sk, ofo_possible);
 }
 
 /*
@@ -5971,17 +5974,16 @@ void tcp_rcv_established(struct sock *sk, struct sk_buff *skb)
 				/* Well, only one small jumplet in fast path... */
 				tcp_ack(sk, skb, FLAG_DATA);
 				tcp_data_snd_check(sk);
-				if (!inet_csk_ack_scheduled(sk))
-					goto no_ack;
 			} else {
 				tcp_update_wl(tp, TCP_SKB_CB(skb)->seq);
+				inet_csk_ack_scheduled(sk);
 			}
 
-			__tcp_ack_snd_check(sk, 0);
-no_ack:
+			if (tcp_data_ready(sk) < 0)
+				inet_csk_unschedule_ack(sk);
+			tcp_ack_snd_check(sk, false);
 			if (eaten)
 				kfree_skb_partial(skb, fragstolen);
-			tcp_data_ready(sk);
 			return;
 		}
 	}
@@ -6017,7 +6019,7 @@ step5:
 	tcp_data_queue(sk, skb);
 
 	tcp_data_snd_check(sk);
-	tcp_ack_snd_check(sk);
+	tcp_ack_snd_check(sk, true);
 	return;
 
 csum_error:
@@ -6697,7 +6699,7 @@ int tcp_rcv_state_process(struct sock *sk, struct sk_buff *skb)
 	/* tcp_data could move socket to TIME-WAIT */
 	if (sk->sk_state != TCP_CLOSE) {
 		tcp_data_snd_check(sk);
-		tcp_ack_snd_check(sk);
+		tcp_ack_snd_check(sk, true);
 	}
 
 	if (!queued) {

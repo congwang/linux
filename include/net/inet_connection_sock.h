@@ -178,6 +178,11 @@ static inline void inet_csk_schedule_ack(struct sock *sk)
 	inet_csk(sk)->icsk_ack.pending |= ICSK_ACK_SCHED;
 }
 
+static inline void inet_csk_unschedule_ack(struct sock *sk)
+{
+	inet_csk(sk)->icsk_ack.pending &= ~ICSK_ACK_SCHED;
+}
+
 static inline int inet_csk_ack_scheduled(const struct sock *sk)
 {
 	return inet_csk(sk)->icsk_ack.pending & ICSK_ACK_SCHED;
