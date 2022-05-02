@@ -555,7 +555,7 @@ struct iscsit_conn {
 	struct completion	rx_half_close_comp;
 	/* socket used by this connection */
 	struct socket		*sock;
-	void			(*orig_data_ready)(struct sock *);
+	int			(*orig_data_ready)(struct sock *);
 	void			(*orig_state_change)(struct sock *);
 #define LOGIN_FLAGS_READY		0
 #define LOGIN_FLAGS_INITIAL_PDU		1

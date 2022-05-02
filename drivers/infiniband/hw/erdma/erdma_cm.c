@@ -20,7 +20,7 @@
 static struct workqueue_struct *erdma_cm_wq;
 
 static void erdma_cm_llp_state_change(struct sock *sk);
-static void erdma_cm_llp_data_ready(struct sock *sk);
+static int erdma_cm_llp_data_ready(struct sock *sk);
 static void erdma_cm_llp_error_report(struct sock *sk);
 
 static void erdma_sk_assign_cm_upcalls(struct sock *sk)
@@ -922,7 +922,7 @@ int erdma_cm_queue_work(struct erdma_cep *cep, enum erdma_work_type type)
 	return 0;
 }
 
-static void erdma_cm_llp_data_ready(struct sock *sk)
+static int erdma_cm_llp_data_ready(struct sock *sk)
 {
 	struct erdma_cep *cep;
 
@@ -940,6 +940,7 @@ static void erdma_cm_llp_data_ready(struct sock *sk)
 
 out:
 	read_unlock(&sk->sk_callback_lock);
+	return 0;
 }
 
 static void erdma_cm_llp_error_report(struct sock *sk)

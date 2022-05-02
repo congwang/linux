@@ -60,7 +60,7 @@ struct siw_cep {
 
 	/* Saved upcalls of socket */
 	void (*sk_state_change)(struct sock *sk);
-	void (*sk_data_ready)(struct sock *sk);
+	int (*sk_data_ready)(struct sock *sk);
 	void (*sk_write_space)(struct sock *sk);
 	void (*sk_error_report)(struct sock *sk);
 };

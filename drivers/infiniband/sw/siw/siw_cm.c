@@ -33,7 +33,7 @@ static __be16 rtr_type = MPA_V2_RDMA_READ_RTR | MPA_V2_RDMA_WRITE_RTR;
 static const bool relaxed_ird_negotiation = true;
 
 static void siw_cm_llp_state_change(struct sock *s);
-static void siw_cm_llp_data_ready(struct sock *s);
+static int siw_cm_llp_data_ready(struct sock *s);
 static void siw_cm_llp_write_space(struct sock *s);
 static void siw_cm_llp_error_report(struct sock *s);
 static int siw_cm_upcall(struct siw_cep *cep, enum iw_cm_event_type reason,
@@ -104,7 +104,7 @@ static void siw_socket_disassoc(struct socket *s)
 	}
 }
 
-static void siw_rtr_data_ready(struct sock *sk)
+static int siw_rtr_data_ready(struct sock *sk)
 {
 	struct siw_cep *cep;
 	struct siw_qp *qp = NULL;
@@ -138,6 +138,7 @@ out:
 	read_unlock(&sk->sk_callback_lock);
 	if (qp)
 		siw_qp_socket_assoc(cep, qp);
+	return 0;
 }
 
 static void siw_sk_assign_rtr_upcalls(struct siw_cep *cep)
@@ -1215,7 +1216,7 @@ int siw_cm_queue_work(struct siw_cep *cep, enum siw_work_type type)
 	return 0;
 }
 
-static void siw_cm_llp_data_ready(struct sock *sk)
+static int siw_cm_llp_data_ready(struct sock *sk)
 {
 	struct siw_cep *cep;
 
@@ -1245,6 +1246,7 @@ static void siw_cm_llp_data_ready(struct sock *sk)
 	}
 out:
 	read_unlock(&sk->sk_callback_lock);
+	return 0;
 }
 
 static void siw_cm_llp_write_space(struct sock *sk)

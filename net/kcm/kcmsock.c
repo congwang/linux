@@ -346,7 +346,7 @@ static void unreserve_rx_kcm(struct kcm_psock *psock,
 }
 
 /* Lower sock lock held */
-static void psock_data_ready(struct sock *sk)
+static int psock_data_ready(struct sock *sk)
 {
 	struct kcm_psock *psock;
 
@@ -359,6 +359,7 @@ static void psock_data_ready(struct sock *sk)
 		strp_data_ready(&psock->strp);
 
 	read_unlock_bh(&sk->sk_callback_lock);
+	return 0;
 }
 
 /* Called with lower sock held */

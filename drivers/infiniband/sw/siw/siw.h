@@ -526,7 +526,7 @@ int siw_sqe_complete(struct siw_qp *qp, struct siw_sqe *sqe, u32 bytes,
 		     enum siw_wc_status status);
 int siw_rqe_complete(struct siw_qp *qp, struct siw_rqe *rqe, u32 bytes,
 		     u32 inval_stag, enum siw_wc_status status);
-void siw_qp_llp_data_ready(struct sock *sk);
+int siw_qp_llp_data_ready(struct sock *sk);
 void siw_qp_llp_write_space(struct sock *sk);
 
 /* QP TX path functions */

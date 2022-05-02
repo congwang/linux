@@ -165,7 +165,7 @@ static void iscsi_sw_tcp_recv_data_work(struct work_struct *work)
 	release_sock(sk);
 }
 
-static void iscsi_sw_tcp_data_ready(struct sock *sk)
+static int iscsi_sw_tcp_data_ready(struct sock *sk)
 {
 	struct iscsi_sw_tcp_conn *tcp_sw_conn;
 	struct iscsi_tcp_conn *tcp_conn;
@@ -177,7 +177,7 @@ static void iscsi_sw_tcp_data_ready(struct sock *sk)
 	conn = sk->sk_user_data;
 	if (!conn) {
 		read_unlock_bh(&sk->sk_callback_lock);
-		return;
+		return 0;
 	}
 	tcp_conn = conn->dd_data;
 	tcp_sw_conn = tcp_conn->dd_data;
@@ -187,6 +187,7 @@ static void iscsi_sw_tcp_data_ready(struct sock *sk)
 	else
 		iscsi_sw_tcp_recv_data(conn);
 	read_unlock_bh(&sk->sk_callback_lock);
+	return 0;
 }
 
 static void iscsi_sw_tcp_state_change(struct sock *sk)

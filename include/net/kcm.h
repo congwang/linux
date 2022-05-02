@@ -97,7 +97,7 @@ struct kcm_psock {
 	u32 unattaching : 1;
 
 	void (*save_state_change)(struct sock *sk);
-	void (*save_data_ready)(struct sock *sk);
+	int (*save_data_ready)(struct sock *sk);
 	void (*save_write_space)(struct sock *sk);
 
 	struct list_head psock_list;

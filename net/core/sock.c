@@ -3281,7 +3281,7 @@ static void sock_def_error_report(struct sock *sk)
 	rcu_read_unlock();
 }
 
-void sock_def_readable(struct sock *sk)
+int sock_def_readable(struct sock *sk)
 {
 	struct socket_wq *wq;
 
@@ -3294,6 +3294,7 @@ void sock_def_readable(struct sock *sk)
 						EPOLLRDNORM | EPOLLRDBAND);
 	sk_wake_async(sk, SOCK_WAKE_WAITD, POLL_IN);
 	rcu_read_unlock();
+	return 0;
 }
 
 static void sock_def_write_space(struct sock *sk)

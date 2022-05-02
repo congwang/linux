@@ -436,7 +436,7 @@ static void tipc_conn_recv_work(struct work_struct *work)
 /* tipc_conn_data_ready - interrupt callback indicating the socket has data
  * The queued work is launched into tipc_recv_work()->tipc_conn_rcv_from_sock()
  */
-static void tipc_conn_data_ready(struct sock *sk)
+static int tipc_conn_data_ready(struct sock *sk)
 {
 	struct tipc_conn *con;
 
@@ -450,6 +450,7 @@ static void tipc_conn_data_ready(struct sock *sk)
 			conn_put(con);
 	}
 	read_unlock_bh(&sk->sk_callback_lock);
+	return 0;
 }
 
 static void tipc_topsrv_accept(struct work_struct *work)
@@ -495,7 +496,7 @@ static void tipc_topsrv_accept(struct work_struct *work)
 /* tipc_topsrv_listener_data_ready - interrupt callback with connection request
  * The queued job is launched into tipc_topsrv_accept()
  */
-static void tipc_topsrv_listener_data_ready(struct sock *sk)
+static int tipc_topsrv_listener_data_ready(struct sock *sk)
 {
 	struct tipc_topsrv *srv;
 
@@ -506,6 +507,7 @@ static void tipc_topsrv_listener_data_ready(struct sock *sk)
 	if (srv)
 		queue_work(srv->rcv_wq, &srv->awork);
 	read_unlock_bh(&sk->sk_callback_lock);
+	return 0;
 }
 
 static int tipc_topsrv_create_listener(struct tipc_topsrv *srv)

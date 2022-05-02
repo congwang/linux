@@ -29,7 +29,7 @@
 /* callback implementation to wakeup consumers blocked with smc_rx_wait().
  * indirectly called by smc_cdc_msg_recv_action().
  */
-static void smc_rx_wake_up(struct sock *sk)
+static int smc_rx_wake_up(struct sock *sk)
 {
 	struct socket_wq *wq;
 
@@ -47,6 +47,7 @@ static void smc_rx_wake_up(struct sock *sk)
 	    (sk->sk_state == SMC_CLOSED))
 		sk_wake_async(sk, SOCK_WAKE_WAITD, POLL_HUP);
 	rcu_read_unlock();
+	return 0;
 }
 
 /* Update consumer cursor

@@ -1111,7 +1111,7 @@ static int sk_psock_strp_parse(struct strparser *strp, struct sk_buff *skb)
 }
 
 /* Called with socket lock held. */
-static void sk_psock_strp_data_ready(struct sock *sk)
+static int sk_psock_strp_data_ready(struct sock *sk)
 {
 	struct sk_psock *psock;
 
@@ -1129,6 +1129,7 @@ static void sk_psock_strp_data_ready(struct sock *sk)
 		}
 	}
 	rcu_read_unlock();
+	return 0;
 }
 
 int sk_psock_init_strp(struct sock *sk, struct sk_psock *psock)
@@ -1209,15 +1210,15 @@ out:
 	return len;
 }
 
-static void sk_psock_verdict_data_ready(struct sock *sk)
+static int sk_psock_verdict_data_ready(struct sock *sk)
 {
 	struct socket *sock = sk->sk_socket;
 
 	trace_sk_data_ready(sk);
 
 	if (unlikely(!sock || !sock->ops || !sock->ops->read_skb))
-		return;
-	sock->ops->read_skb(sk, sk_psock_verdict_recv);
+		return 0;
+	return sock->ops->read_skb(sk, sk_psock_verdict_recv);
 }
 
 void sk_psock_start_verdict(struct sock *sk, struct sk_psock *psock)

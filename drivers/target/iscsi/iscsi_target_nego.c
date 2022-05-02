@@ -380,7 +380,7 @@ err:
 	return -1;
 }
 
-static void iscsi_target_sk_data_ready(struct sock *sk)
+static int iscsi_target_sk_data_ready(struct sock *sk)
 {
 	struct iscsit_conn *conn = sk->sk_user_data;
 	bool rc;
@@ -391,25 +391,25 @@ static void iscsi_target_sk_data_ready(struct sock *sk)
 	write_lock_bh(&sk->sk_callback_lock);
 	if (!sk->sk_user_data) {
 		write_unlock_bh(&sk->sk_callback_lock);
-		return;
+		return 0;
 	}
 	if (!test_bit(LOGIN_FLAGS_READY, &conn->login_flags)) {
 		write_unlock_bh(&sk->sk_callback_lock);
 		pr_debug("Got LOGIN_FLAGS_READY=0, conn: %p >>>>\n", conn);
-		return;
+		return 0;
 	}
 	if (test_bit(LOGIN_FLAGS_CLOSED, &conn->login_flags)) {
 		write_unlock_bh(&sk->sk_callback_lock);
 		pr_debug("Got LOGIN_FLAGS_CLOSED=1, conn: %p >>>>\n", conn);
-		return;
+		return 0;
 	}
 	if (test_and_set_bit(LOGIN_FLAGS_READ_ACTIVE, &conn->login_flags)) {
 		write_unlock_bh(&sk->sk_callback_lock);
 		pr_debug("Got LOGIN_FLAGS_READ_ACTIVE=1, conn: %p >>>>\n", conn);
 		if (iscsi_target_sk_data_ready == conn->orig_data_ready)
-			return;
+			return 0;
 		conn->orig_data_ready(sk);
-		return;
+		return 0;
 	}
 
 	rc = schedule_delayed_work(&conn->login_work, 0);
@@ -418,6 +418,7 @@ static void iscsi_target_sk_data_ready(struct sock *sk)
 			 " got false\n");
 	}
 	write_unlock_bh(&sk->sk_callback_lock);
+	return 0;
 }
 
 static void iscsi_target_sk_state_change(struct sock *);

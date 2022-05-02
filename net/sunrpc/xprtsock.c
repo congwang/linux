@@ -1375,7 +1375,7 @@ static void xs_udp_data_receive_workfn(struct work_struct *work)
  * @sk: socket with data to read
  *
  */
-static void xs_data_ready(struct sock *sk)
+static int xs_data_ready(struct sock *sk)
 {
 	struct rpc_xprt *xprt;
 
@@ -1397,6 +1397,7 @@ static void xs_data_ready(struct sock *sk)
 		if (!test_and_set_bit(XPRT_SOCK_DATA_READY, &transport->sock_state))
 			queue_work(xprtiod_workqueue, &transport->recv_worker);
 	}
+	return 0;
 }
 
 /*

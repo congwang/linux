@@ -817,7 +817,15 @@ static void smc_fback_state_change(struct sock *clcsk)
 	read_unlock_bh(&clcsk->sk_callback_lock);
 }
 
-static void smc_fback_data_ready(struct sock *clcsk)
+static void smc_clcsk_data_ready(struct sock *clcsk)
+{
+	struct smc_sock *smc =
+		smc_clcsock_user_data(clcsk);
+
+	smc->clcsk_data_ready(clcsk);
+}
+
+static int smc_fback_data_ready(struct sock *clcsk)
 {
 	struct smc_sock *smc;
 
@@ -825,8 +833,9 @@ static void smc_fback_data_ready(struct sock *clcsk)
 	smc = smc_clcsock_user_data(clcsk);
 	if (smc)
 		smc_fback_forward_wakeup(smc, clcsk,
-					 smc->clcsk_data_ready);
+					 smc_clcsk_data_ready);
 	read_unlock_bh(&clcsk->sk_callback_lock);
+	return 0;
 }
 
 static void smc_fback_write_space(struct sock *clcsk)
@@ -2486,7 +2495,7 @@ out:
 	sock_put(&lsmc->sk); /* sock_hold in smc_clcsock_data_ready() */
 }
 
-static void smc_clcsock_data_ready(struct sock *listen_clcsock)
+static int smc_clcsock_data_ready(struct sock *listen_clcsock)
 {
 	struct smc_sock *lsmc;
 
@@ -2502,6 +2511,7 @@ static void smc_clcsock_data_ready(struct sock *listen_clcsock)
 	}
 out:
 	read_unlock_bh(&listen_clcsock->sk_callback_lock);
+	return 0;
 }
 
 static int smc_listen(struct socket *sock, int backlog)

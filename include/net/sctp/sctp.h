@@ -90,7 +90,7 @@ int sctp_inet_connect(struct socket *sock, struct sockaddr *uaddr,
 int sctp_backlog_rcv(struct sock *sk, struct sk_buff *skb);
 int sctp_inet_listen(struct socket *sock, int backlog);
 void sctp_write_space(struct sock *sk);
-void sctp_data_ready(struct sock *sk);
+int sctp_data_ready(struct sock *sk);
 __poll_t sctp_poll(struct file *file, struct socket *sock,
 		poll_table *wait);
 void sctp_sock_rfree(struct sk_buff *skb);

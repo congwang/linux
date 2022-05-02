@@ -91,7 +91,7 @@ struct iwarp_msg_info iwarp_pktinfo[RDMAP_TERMINATE + 1] = {
 	  .rx_data = siw_proc_terminate }
 };
 
-void siw_qp_llp_data_ready(struct sock *sk)
+int siw_qp_llp_data_ready(struct sock *sk)
 {
 	struct siw_qp *qp;
 
@@ -124,6 +124,7 @@ void siw_qp_llp_data_ready(struct sock *sk)
 	}
 done:
 	read_unlock(&sk->sk_callback_lock);
+	return 0;
 }
 
 void siw_qp_llp_close(struct siw_qp *qp)

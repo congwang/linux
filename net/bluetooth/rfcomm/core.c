@@ -186,12 +186,13 @@ static void rfcomm_l2state_change(struct sock *sk)
 	rfcomm_schedule();
 }
 
-static void rfcomm_l2data_ready(struct sock *sk)
+static int rfcomm_l2data_ready(struct sock *sk)
 {
 	trace_sk_data_ready(sk);
 
 	BT_DBG("%p", sk);
 	rfcomm_schedule();
+	return 0;
 }
 
 static int rfcomm_l2sock_create(struct socket **sock)

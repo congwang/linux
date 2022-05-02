@@ -123,7 +123,7 @@ static int o2net_sys_err_translations[O2NET_ERR_MAX] =
 static void o2net_sc_connect_completed(struct work_struct *work);
 static void o2net_rx_until_empty(struct work_struct *work);
 static void o2net_shutdown_sc(struct work_struct *work);
-static void o2net_listen_data_ready(struct sock *sk);
+static int o2net_listen_data_ready(struct sock *sk);
 static void o2net_sc_send_keep_req(struct work_struct *work);
 static void o2net_idle_timer(struct timer_list *t);
 static void o2net_sc_postpone_idle(struct o2net_sock_container *sc);
@@ -581,9 +581,9 @@ static void o2net_set_nn_state(struct o2net_node *nn,
 }
 
 /* see o2net_register_callbacks() */
-static void o2net_data_ready(struct sock *sk)
+static int o2net_data_ready(struct sock *sk)
 {
-	void (*ready)(struct sock *sk);
+	int (*ready)(struct sock *sk);
 	struct o2net_sock_container *sc;
 
 	trace_sk_data_ready(sk);
@@ -601,6 +601,7 @@ static void o2net_data_ready(struct sock *sk)
 	read_unlock_bh(&sk->sk_callback_lock);
 
 	ready(sk);
+	return 0;
 }
 
 /* see o2net_register_callbacks() */
@@ -1930,9 +1931,9 @@ static void o2net_accept_many(struct work_struct *work)
 	}
 }
 
-static void o2net_listen_data_ready(struct sock *sk)
+static int o2net_listen_data_ready(struct sock *sk)
 {
-	void (*ready)(struct sock *sk);
+	int (*ready)(struct sock *sk);
 
 	trace_sk_data_ready(sk);
 
@@ -1966,6 +1967,7 @@ out:
 	read_unlock_bh(&sk->sk_callback_lock);
 	if (ready != NULL)
 		ready(sk);
+	return 0;
 }
 
 static int o2net_open_listening_sock(__be32 addr, __be16 port)

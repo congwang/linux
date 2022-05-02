@@ -754,11 +754,12 @@ static void qrtr_ns_worker(struct work_struct *work)
 	kfree(recv_buf);
 }
 
-static void qrtr_ns_data_ready(struct sock *sk)
+static int qrtr_ns_data_ready(struct sock *sk)
 {
 	trace_sk_data_ready(sk);
 
 	queue_work(qrtr_ns.workqueue, &qrtr_ns.work);
+	return 0;
 }
 
 int qrtr_ns_init(void)

@@ -304,7 +304,7 @@ static void svc_sock_secure_port(struct svc_rqst *rqstp)
 /*
  * INET callback when data has been received on the socket.
  */
-static void svc_data_ready(struct sock *sk)
+static int svc_data_ready(struct sock *sk)
 {
 	struct svc_sock	*svsk = (struct svc_sock *)sk->sk_user_data;
 
@@ -318,6 +318,7 @@ static void svc_data_ready(struct sock *sk)
 		if (!test_and_set_bit(XPT_DATA, &svsk->sk_xprt.xpt_flags))
 			svc_xprt_enqueue(&svsk->sk_xprt);
 	}
+	return 0;
 }
 
 /*
@@ -683,7 +684,7 @@ static void svc_udp_init(struct svc_sock *svsk, struct svc_serv *serv)
  * A data_ready event on a listening socket means there's a connection
  * pending. Do not use state_change as a substitute for it.
  */
-static void svc_tcp_listen_data_ready(struct sock *sk)
+static int svc_tcp_listen_data_ready(struct sock *sk)
 {
 	struct svc_sock	*svsk = (struct svc_sock *)sk->sk_user_data;
 
@@ -711,6 +712,7 @@ static void svc_tcp_listen_data_ready(struct sock *sk)
 			svc_xprt_enqueue(&svsk->sk_xprt);
 		}
 	}
+	return 0;
 }
 
 /*

@@ -149,7 +149,7 @@ struct o2net_sock_container {
 
 	/* original handlers for the sockets */
 	void			(*sc_state_change)(struct sock *sk);
-	void			(*sc_data_ready)(struct sock *sk);
+	int			(*sc_data_ready)(struct sock *sk);
 
 	u32			sc_msg_key;
 	u16			sc_msg_type;

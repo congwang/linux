@@ -23,7 +23,7 @@ struct svc_sock {
 
 	/* We keep the old state_change and data_ready CB's here */
 	void			(*sk_ostate)(struct sock *);
-	void			(*sk_odata)(struct sock *);
+	int			(*sk_odata)(struct sock *);
 	void			(*sk_owspace)(struct sock *);
 
 	/* private TCP part */

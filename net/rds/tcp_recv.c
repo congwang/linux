@@ -304,9 +304,9 @@ int rds_tcp_recv_path(struct rds_conn_path *cp)
 	return ret;
 }
 
-void rds_tcp_data_ready(struct sock *sk)
+int rds_tcp_data_ready(struct sock *sk)
 {
-	void (*ready)(struct sock *sk);
+	int (*ready)(struct sock *sk);
 	struct rds_conn_path *cp;
 	struct rds_tcp_connection *tc;
 
@@ -333,6 +333,7 @@ void rds_tcp_data_ready(struct sock *sk)
 out:
 	read_unlock_bh(&sk->sk_callback_lock);
 	ready(sk);
+	return 0;
 }
 
 int rds_tcp_recv_init(void)

@@ -566,7 +566,7 @@ static void qmi_data_ready_work(struct work_struct *work)
 	}
 }
 
-static void qmi_data_ready(struct sock *sk)
+static int qmi_data_ready(struct sock *sk)
 {
 	struct qmi_handle *qmi = sk->sk_user_data;
 
@@ -577,9 +577,15 @@ static void qmi_data_ready(struct sock *sk)
 	 * qmi_handle_release()
 	 */
 	if (!qmi)
-		return;
+		return 0;
 
 	queue_work(qmi->wq, &qmi->work);
+	return 0;
+}
+
+static void qmi_error_report(struct sock *sk)
+{
+	qmi_data_ready(sk);
 }
 
 static struct socket *qmi_sock_create(struct qmi_handle *qmi,
@@ -601,7 +607,7 @@ static struct socket *qmi_sock_create(struct qmi_handle *qmi,
 
 	sock->sk->sk_user_data = qmi;
 	sock->sk->sk_data_ready = qmi_data_ready;
-	sock->sk->sk_error_report = qmi_data_ready;
+	sock->sk->sk_error_report = qmi_error_report;
 
 	return sock;
 }

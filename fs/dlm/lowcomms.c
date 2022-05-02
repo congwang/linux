@@ -171,7 +171,7 @@ struct dlm_proto_ops {
 
 static struct listen_sock_callbacks {
 	void (*sk_error_report)(struct sock *);
-	void (*sk_data_ready)(struct sock *);
+	int (*sk_data_ready)(struct sock *);
 	void (*sk_state_change)(struct sock *);
 	void (*sk_write_space)(struct sock *);
 } listen_sock;
@@ -499,7 +499,7 @@ int dlm_lowcomms_addr(int nodeid, struct sockaddr_storage *addr, int len)
 }
 
 /* Data available on socket or listen socket received a connect */
-static void lowcomms_data_ready(struct sock *sk)
+static int lowcomms_data_ready(struct sock *sk)
 {
 	struct connection *con = sock2con(sk);
 
@@ -507,6 +507,7 @@ static void lowcomms_data_ready(struct sock *sk)
 
 	set_bit(CF_RECV_INTR, &con->flags);
 	lowcomms_queue_rwork(con);
+	return 0;
 }
 
 static void lowcomms_write_space(struct sock *sk)
@@ -534,11 +535,12 @@ static void lowcomms_state_change(struct sock *sk)
 		lowcomms_data_ready(sk);
 }
 
-static void lowcomms_listen_data_ready(struct sock *sk)
+static int lowcomms_listen_data_ready(struct sock *sk)
 {
 	trace_sk_data_ready(sk);
 
 	queue_work(io_workqueue, &listen_con.rwork);
+	return 0;
 }
 
 int dlm_lowcomms_connect_node(int nodeid)

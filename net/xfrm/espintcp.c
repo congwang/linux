@@ -394,13 +394,14 @@ static struct proto espintcp6_prot;
 static struct proto_ops espintcp6_ops;
 static DEFINE_MUTEX(tcpv6_prot_mutex);
 
-static void espintcp_data_ready(struct sock *sk)
+static int espintcp_data_ready(struct sock *sk)
 {
 	struct espintcp_ctx *ctx = espintcp_getctx(sk);
 
 	trace_sk_data_ready(sk);
 
 	strp_data_ready(&ctx->strp);
+	return 0;
 }
 
 static void espintcp_tx_work(struct work_struct *work)

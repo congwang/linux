@@ -231,9 +231,9 @@ out:
 	return ret;
 }
 
-void rds_tcp_listen_data_ready(struct sock *sk)
+int rds_tcp_listen_data_ready(struct sock *sk)
 {
-	void (*ready)(struct sock *sk);
+	int (*ready)(struct sock *sk);
 
 	trace_sk_data_ready(sk);
 	rdsdebug("listen data ready sk %p\n", sk);
@@ -263,6 +263,7 @@ out:
 	read_unlock_bh(&sk->sk_callback_lock);
 	if (ready)
 		ready(sk);
+	return 0;
 }
 
 struct socket *rds_tcp_listen_init(struct net *net, bool isv6)

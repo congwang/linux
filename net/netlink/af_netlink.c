@@ -2033,7 +2033,7 @@ out:
 	return err ? : copied;
 }
 
-static void netlink_data_ready(struct sock *sk)
+static int netlink_data_ready(struct sock *sk)
 {
 	BUG();
 }

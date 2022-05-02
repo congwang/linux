@@ -1462,7 +1462,7 @@ static void subflow_error_report(struct sock *ssk)
 	mptcp_data_unlock(sk);
 }
 
-static void subflow_data_ready(struct sock *sk)
+static int subflow_data_ready(struct sock *sk)
 {
 	struct mptcp_subflow_context *subflow = mptcp_subflow_ctx(sk);
 	u16 state = 1 << inet_sk_state_load(sk);
@@ -1477,10 +1477,9 @@ static void subflow_data_ready(struct sock *sk)
 		 * avoid stray wakeups
 		 */
 		if (reqsk_queue_empty(&inet_csk(sk)->icsk_accept_queue))
-			return;
+			return 0;
 
-		parent->sk_data_ready(parent);
-		return;
+		return parent->sk_data_ready(parent);
 	}
 
 	WARN_ON_ONCE(!__mptcp_check_fallback(msk) && !subflow->mp_capable &&
@@ -1490,6 +1489,7 @@ static void subflow_data_ready(struct sock *sk)
 		mptcp_data_ready(parent, sk);
 	else if (unlikely(sk->sk_err))
 		subflow_error_report(sk);
+	return 0;
 }
 
 static void subflow_write_space(struct sock *ssk)

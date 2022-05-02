@@ -68,7 +68,7 @@ struct sock_mapping {
 	atomic_t io;
 	atomic_t release;
 	atomic_t eoi;
-	void (*saved_data_ready)(struct sock *sk);
+	int (*saved_data_ready)(struct sock *sk);
 	struct pvcalls_ioworker ioworker;
 };
 
@@ -81,7 +81,7 @@ struct sockpass_mapping {
 	spinlock_t copy_lock;
 	struct workqueue_struct *wq;
 	struct work_struct register_work;
-	void (*saved_data_ready)(struct sock *sk);
+	int (*saved_data_ready)(struct sock *sk);
 };
 
 static irqreturn_t pvcalls_back_conn_event(int irq, void *sock_map);
@@ -297,7 +297,7 @@ static void pvcalls_sk_state_change(struct sock *sock)
 	notify_remote_via_irq(map->irq);
 }
 
-static void pvcalls_sk_data_ready(struct sock *sock)
+static int pvcalls_sk_data_ready(struct sock *sock)
 {
 	struct sock_mapping *map = sock->sk_user_data;
 	struct pvcalls_ioworker *iow;
@@ -305,12 +305,13 @@ static void pvcalls_sk_data_ready(struct sock *sock)
 	trace_sk_data_ready(sock);
 
 	if (map == NULL)
-		return;
+		return 0;
 
 	iow = &map->ioworker;
 	atomic_inc(&map->read);
 	atomic_inc(&map->io);
 	queue_work(iow->wq, &iow->register_work);
+	return 0;
 }
 
 static struct sock_mapping *pvcalls_new_active_socket(
@@ -584,7 +585,7 @@ out_error:
 	mappass->reqcopy.cmd = 0;
 }
 
-static void pvcalls_pass_sk_data_ready(struct sock *sock)
+static int pvcalls_pass_sk_data_ready(struct sock *sock)
 {
 	struct sockpass_mapping *mappass = sock->sk_user_data;
 	struct pvcalls_fedata *fedata;
@@ -595,7 +596,7 @@ static void pvcalls_pass_sk_data_ready(struct sock *sock)
 	trace_sk_data_ready(sock);
 
 	if (mappass == NULL)
-		return;
+		return 0;
 
 	fedata = mappass->fedata;
 	spin_lock_irqsave(&mappass->copy_lock, flags);
@@ -617,6 +618,7 @@ static void pvcalls_pass_sk_data_ready(struct sock *sock)
 		spin_unlock_irqrestore(&mappass->copy_lock, flags);
 		queue_work(mappass->wq, &mappass->register_work);
 	}
+	return 0;
 }
 
 static int pvcalls_back_bind(struct xenbus_device *dev,

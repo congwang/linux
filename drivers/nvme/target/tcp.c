@@ -145,7 +145,7 @@ struct nvmet_tcp_queue {
 
 	struct page_frag_cache	pf_cache;
 
-	void (*data_ready)(struct sock *);
+	int (*data_ready)(struct sock *);
 	void (*state_change)(struct sock *);
 	void (*write_space)(struct sock *);
 };
@@ -155,7 +155,7 @@ struct nvmet_tcp_port {
 	struct work_struct	accept_work;
 	struct nvmet_port	*nport;
 	struct sockaddr_storage addr;
-	void (*data_ready)(struct sock *);
+	int (*data_ready)(struct sock *);
 };
 
 static DEFINE_IDA(nvmet_tcp_queue_ida);
@@ -1466,7 +1466,7 @@ static void nvmet_tcp_release_queue_work(struct work_struct *w)
 	kfree(queue);
 }
 
-static void nvmet_tcp_data_ready(struct sock *sk)
+static int nvmet_tcp_data_ready(struct sock *sk)
 {
 	struct nvmet_tcp_queue *queue;
 
@@ -1477,6 +1477,7 @@ static void nvmet_tcp_data_ready(struct sock *sk)
 	if (likely(queue))
 		queue_work_on(queue_cpu(queue), nvmet_tcp_wq, &queue->io_work);
 	read_unlock_bh(&sk->sk_callback_lock);
+	return 0;
 }
 
 static void nvmet_tcp_write_space(struct sock *sk)
@@ -1665,7 +1666,7 @@ static void nvmet_tcp_accept_work(struct work_struct *w)
 	}
 }
 
-static void nvmet_tcp_listen_data_ready(struct sock *sk)
+static int nvmet_tcp_listen_data_ready(struct sock *sk)
 {
 	struct nvmet_tcp_port *port;
 
@@ -1680,6 +1681,7 @@ static void nvmet_tcp_listen_data_ready(struct sock *sk)
 		queue_work(nvmet_wq, &port->accept_work);
 out:
 	read_unlock_bh(&sk->sk_callback_lock);
+	return 0;
 }
 
 static int nvmet_tcp_add_port(struct nvmet_port *nport)

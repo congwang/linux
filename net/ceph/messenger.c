@@ -342,14 +342,14 @@ static void con_sock_state_closed(struct ceph_connection *con)
  */
 
 /* data available on socket, or listen socket received a connect */
-static void ceph_sock_data_ready(struct sock *sk)
+static int ceph_sock_data_ready(struct sock *sk)
 {
 	struct ceph_connection *con = sk->sk_user_data;
 
 	trace_sk_data_ready(sk);
 
 	if (atomic_read(&con->msgr->stopping)) {
-		return;
+		return 0;
 	}
 
 	if (sk->sk_state != TCP_CLOSE_WAIT) {
@@ -357,6 +357,7 @@ static void ceph_sock_data_ready(struct sock *sk)
 		     con, con->state);
 		queue_con(con);
 	}
+	return 0;
 }
 
 /* socket has buffer space for writing */

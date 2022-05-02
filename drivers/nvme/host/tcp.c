@@ -150,7 +150,7 @@ struct nvme_tcp_queue {
 	struct page_frag_cache	pf_cache;
 
 	void (*state_change)(struct sock *);
-	void (*data_ready)(struct sock *);
+	int (*data_ready)(struct sock *);
 	void (*write_space)(struct sock *);
 };
 
@@ -914,7 +914,7 @@ static int nvme_tcp_recv_skb(read_descriptor_t *desc, struct sk_buff *skb,
 	return consumed;
 }
 
-static void nvme_tcp_data_ready(struct sock *sk)
+static int nvme_tcp_data_ready(struct sock *sk)
 {
 	struct nvme_tcp_queue *queue;
 
@@ -926,6 +926,7 @@ static void nvme_tcp_data_ready(struct sock *sk)
 	    !test_bit(NVME_TCP_Q_POLLING, &queue->flags))
 		queue_work_on(queue->io_cpu, nvme_tcp_wq, &queue->io_work);
 	read_unlock_bh(&sk->sk_callback_lock);
+	return 0;
 }
 
 static void nvme_tcp_write_space(struct sock *sk)

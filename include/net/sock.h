@@ -525,7 +525,7 @@ struct sock {
 	struct sock_cgroup_data	sk_cgrp_data;
 	struct mem_cgroup	*sk_memcg;
 	void			(*sk_state_change)(struct sock *sk);
-	void			(*sk_data_ready)(struct sock *sk);
+	int			(*sk_data_ready)(struct sock *sk);
 	void			(*sk_write_space)(struct sock *sk);
 	void			(*sk_error_report)(struct sock *sk);
 	int			(*sk_backlog_rcv)(struct sock *sk,
@@ -2938,7 +2938,7 @@ static inline bool sk_dev_equal_l3scope(struct sock *sk, int dif)
 	return false;
 }
 
-void sock_def_readable(struct sock *sk);
+int sock_def_readable(struct sock *sk);
 
 int sock_bindtoindex(struct sock *sk, int ifindex, bool lock_sk);
 void sock_set_timestamp(struct sock *sk, int optname, bool valbool);

@@ -9241,7 +9241,7 @@ do_nonblock:
 	goto out;
 }
 
-void sctp_data_ready(struct sock *sk)
+int sctp_data_ready(struct sock *sk)
 {
 	struct socket_wq *wq;
 
@@ -9254,6 +9254,7 @@ void sctp_data_ready(struct sock *sk)
 						EPOLLRDNORM | EPOLLRDBAND);
 	sk_wake_async(sk, SOCK_WAKE_WAITD, POLL_IN);
 	rcu_read_unlock();
+	return 0;
 }
 
 /* If socket sndbuf has changed, wake up all per association waiters.  */

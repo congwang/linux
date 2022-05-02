@@ -143,7 +143,7 @@ struct tipc_sock {
 };
 
 static int tipc_sk_backlog_rcv(struct sock *sk, struct sk_buff *skb);
-static void tipc_data_ready(struct sock *sk);
+static int tipc_data_ready(struct sock *sk);
 static void tipc_write_space(struct sock *sk);
 static void tipc_sock_destruct(struct sock *sk);
 static int tipc_release(struct socket *sock);
@@ -2127,7 +2127,7 @@ static void tipc_write_space(struct sock *sk)
  * tipc_data_ready - wake up threads to indicate messages have been received
  * @sk: socket
  */
-static void tipc_data_ready(struct sock *sk)
+static int tipc_data_ready(struct sock *sk)
 {
 	struct socket_wq *wq;
 
@@ -2139,6 +2139,7 @@ static void tipc_data_ready(struct sock *sk)
 		wake_up_interruptible_sync_poll(&wq->wait, EPOLLIN |
 						EPOLLRDNORM | EPOLLRDBAND);
 	rcu_read_unlock();
+	return 0;
 }
 
 static void tipc_sock_destruct(struct sock *sk)

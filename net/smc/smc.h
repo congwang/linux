@@ -243,7 +243,7 @@ struct smc_sock {				/* smc sock container */
 	struct socket		*clcsock;	/* internal tcp socket */
 	void			(*clcsk_state_change)(struct sock *sk);
 						/* original stat_change fct. */
-	void			(*clcsk_data_ready)(struct sock *sk);
+	int			(*clcsk_data_ready)(struct sock *sk);
 						/* original data_ready fct. */
 	void			(*clcsk_write_space)(struct sock *sk);
 						/* original write_space fct. */

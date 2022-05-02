@@ -26,7 +26,7 @@
 struct gprs_dev {
 	struct sock		*sk;
 	void			(*old_state_change)(struct sock *);
-	void			(*old_data_ready)(struct sock *);
+	int			(*old_data_ready)(struct sock *);
 	void			(*old_write_space)(struct sock *);
 
 	struct net_device	*dev;
@@ -135,7 +135,7 @@ drop:
 	return err;
 }
 
-static void gprs_data_ready(struct sock *sk)
+static int gprs_data_ready(struct sock *sk)
 {
 	struct gprs_dev *gp = sk->sk_user_data;
 	struct sk_buff *skb;
@@ -146,6 +146,7 @@ static void gprs_data_ready(struct sock *sk)
 		skb_orphan(skb);
 		gprs_recv(gp, skb);
 	}
+	return 0;
 }
 
 static void gprs_write_space(struct sock *sk)
