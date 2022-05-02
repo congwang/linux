@@ -930,11 +930,12 @@ static int sk_psock_skb_redirect(struct sk_psock *from, struct sk_buff *skb)
 		return -EIO;
 	}
 	spin_lock_bh(&psock_other->ingress_lock);
-	if (!sk_psock_test_state(psock_other, SK_PSOCK_TX_ENABLED)) {
+	if (!sk_psock_test_state(psock_other, SK_PSOCK_TX_ENABLED) ||
+	    atomic_read(&sk_other->sk_rmem_alloc) > READ_ONCE(sk_other->sk_rcvbuf)) {
 		spin_unlock_bh(&psock_other->ingress_lock);
 		skb_bpf_redirect_clear(skb);
 		sock_drop(from->sk, skb);
-		return -EIO;
+		return -ENOMEM;
 	}
 
 	skb_queue_tail(&psock_other->ingress_skb, skb);
@@ -996,7 +997,7 @@ static int sk_psock_verdict_apply(struct sk_psock *psock, struct sk_buff *skb,
 		}
 
 		skb_bpf_set_ingress(skb);
-
+		err = -ENOMEM;
 		/* If the queue is empty then we can submit directly
 		 * into the msg queue. If its not empty we have to
 		 * queue work otherwise we may get OOO data. Otherwise,
@@ -1016,7 +1017,8 @@ static int sk_psock_verdict_apply(struct sk_psock *psock, struct sk_buff *skb,
 		}
 		if (err < 0) {
 			spin_lock_bh(&psock->ingress_lock);
-			if (sk_psock_test_state(psock, SK_PSOCK_TX_ENABLED)) {
+			if (sk_psock_test_state(psock, SK_PSOCK_TX_ENABLED) &&
+			    atomic_read(&sk_other->sk_rmem_alloc) <= READ_ONCE(sk_other->sk_rcvbuf)) {
 				skb_queue_tail(&psock->ingress_skb, skb);
 				schedule_work(&psock->work);
 				err = 0;
