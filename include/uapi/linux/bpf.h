@@ -5574,6 +5574,7 @@ union bpf_attr {
 	FN(skb_map_pop_min),		\
 	FN(flow_map_push),		\
 	FN(flow_map_pop),		\
+	FN(skb_tc_classify),		\
 	/* */
 
 /* integer value in 'imm' field of BPF_CALL instruction selects which helper
