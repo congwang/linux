@@ -1486,9 +1486,11 @@ static int subflow_data_ready(struct sock *sk)
 		     !subflow->mp_join && !(state & TCPF_CLOSE));
 
 	if (mptcp_subflow_data_available(sk))
-		mptcp_data_ready(parent, sk);
-	else if (unlikely(sk->sk_err))
+		return mptcp_data_ready(parent, sk);
+	else if (unlikely(sk->sk_err)) {
 		subflow_error_report(sk);
+		return -EIO;
+	}
 	return 0;
 }
 

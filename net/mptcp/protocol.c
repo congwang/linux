@@ -780,18 +780,19 @@ static bool move_skbs_to_msk(struct mptcp_sock *msk, struct sock *ssk)
 	return moved > 0;
 }
 
-void mptcp_data_ready(struct sock *sk, struct sock *ssk)
+int mptcp_data_ready(struct sock *sk, struct sock *ssk)
 {
 	struct mptcp_subflow_context *subflow = mptcp_subflow_ctx(ssk);
 	struct mptcp_sock *msk = mptcp_sk(sk);
 	int sk_rbuf, ssk_rbuf;
+	int ret = 0;
 
 	/* The peer can send data while we are shutting down this
 	 * subflow at msk destruction time, but we must avoid enqueuing
 	 * more data to the msk receive queue
 	 */
 	if (unlikely(subflow->disposable))
-		return;
+		return 0;
 
 	ssk_rbuf = READ_ONCE(ssk->sk_rcvbuf);
 	sk_rbuf = READ_ONCE(sk->sk_rcvbuf);
@@ -801,15 +802,16 @@ void mptcp_data_ready(struct sock *sk, struct sock *ssk)
 	/* over limit? can't append more skbs to msk, Also, no need to wake-up*/
 	if (__mptcp_rmem(sk) > sk_rbuf) {
 		MPTCP_INC_STATS(sock_net(sk), MPTCP_MIB_RCVPRUNED);
-		return;
+		return -ENOMEM;
 	}
 
 	/* Wake-up the reader only for in-sequence data */
 	mptcp_data_lock(sk);
 	if (move_skbs_to_msk(msk, ssk))
-		sk->sk_data_ready(sk);
+		ret = sk->sk_data_ready(sk);
 
 	mptcp_data_unlock(sk);
+	return ret;
 }
 
 static bool __mptcp_finish_join(struct mptcp_sock *msk, struct sock *ssk)

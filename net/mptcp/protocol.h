@@ -696,7 +696,7 @@ static inline bool mptcp_is_fully_established(struct sock *sk)
 	       READ_ONCE(mptcp_sk(sk)->fully_established);
 }
 void mptcp_rcv_space_init(struct mptcp_sock *msk, const struct sock *ssk);
-void mptcp_data_ready(struct sock *sk, struct sock *ssk);
+int mptcp_data_ready(struct sock *sk, struct sock *ssk);
 bool mptcp_finish_join(struct sock *sk);
 bool mptcp_schedule_work(struct sock *sk);
 int mptcp_setsockopt(struct sock *sk, int level, int optname,
