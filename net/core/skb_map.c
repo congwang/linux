@@ -212,6 +212,114 @@ static int bpf_for_each_skb_map(struct bpf_map *map, bpf_callback_t callback_fn,
 	return num_elems;
 }
 
+struct skb_map_seq_info {
+	struct bpf_map *map;
+	struct bpf_skb_map *rb;
+};
+
+struct bpf_iter__skbmap {
+	__bpf_md_ptr(struct bpf_iter_meta *, meta);
+	__bpf_md_ptr(struct bpf_map *, map);
+	__bpf_md_ptr(struct sk_buff*, skb);
+	u64 rank;
+};
+
+static void *skb_map_seq_find_next(struct skb_map_seq_info *info,
+				   struct sk_buff *prev_elem)
+{
+	const struct bpf_skb_map *rb = info->rb;
+	struct sk_buff *elem;
+
+	/* try to find next elem in the same bucket */
+	if (prev_elem) {
+		elem = skb_rb_next(prev_elem);
+		if (elem)
+			return elem;
+		return NULL;
+	}
+
+	return skb_rb_first(&rb->root);
+}
+
+static void *skb_map_seq_start(struct seq_file *seq, loff_t *pos)
+	__acquires(rcu)
+{
+	struct skb_map_seq_info *info = seq->private;
+
+	if (*pos == 0)
+		++*pos;
+
+	/* pairs with skb_map_seq_stop */
+	rcu_read_lock();
+	return skb_map_seq_find_next(info, NULL);
+}
+
+static void *skb_map_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+	__must_hold(rcu)
+{
+	struct skb_map_seq_info *info = seq->private;
+
+	++*pos;
+	return skb_map_seq_find_next(info, v);
+}
+
+static int skb_map_seq_show(struct seq_file *seq, void *v)
+	__must_hold(rcu)
+{
+	struct skb_map_seq_info *info = seq->private;
+	struct bpf_iter__skbmap ctx = {};
+	struct bpf_iter_meta meta;
+	struct sk_buff *elem = v;
+	struct bpf_prog *prog;
+
+	meta.seq = seq;
+	prog = bpf_iter_get_info(&meta, !elem);
+	if (!prog)
+		return 0;
+
+	ctx.meta = &meta;
+	ctx.map = info->map;
+	if (elem) {
+		ctx.rank = skb_map_cb(elem)->rank;
+		ctx.skb = elem;
+	}
+
+	return bpf_iter_run_prog(prog, &ctx);
+}
+
+static void skb_map_seq_stop(struct seq_file *seq, void *v)
+	__releases(rcu)
+{
+	if (!v)
+		(void)skb_map_seq_show(seq, NULL);
+
+	/* pairs with skb_map_seq_start */
+	rcu_read_unlock();
+}
+
+static const struct seq_operations skb_map_seq_ops = {
+	.start	= skb_map_seq_start,
+	.next	= skb_map_seq_next,
+	.stop	= skb_map_seq_stop,
+	.show	= skb_map_seq_show,
+};
+
+static int skb_map_init_seq_private(void *priv_data,
+				     struct bpf_iter_aux_info *aux)
+{
+	struct skb_map_seq_info *info = priv_data;
+
+	info->map = aux->map;
+	info->rb = bpf_skb_map(info->map);
+	return 0;
+}
+
+static const struct bpf_iter_seq_info skb_map_iter_seq_info = {
+	.seq_ops		= &skb_map_seq_ops,
+	.init_seq_private	= skb_map_init_seq_private,
+	.seq_priv_size		= sizeof(struct skb_map_seq_info),
+};
+
 BTF_ID_LIST_SINGLE(skb_map_btf_ids, struct, bpf_skb_map)
 const struct bpf_map_ops skb_map_ops = {
 	.map_meta_equal = bpf_map_meta_equal,
@@ -226,6 +334,7 @@ const struct bpf_map_ops skb_map_ops = {
 	.map_set_for_each_callback_args = map_set_for_each_callback_args,
 	.map_for_each_callback = bpf_for_each_skb_map,
 	.map_btf_id = &skb_map_btf_ids[0],
+	.iter_seq_info = &skb_map_iter_seq_info,
 };
 
 static void skb_rb_push(struct rb_root *root, struct sk_buff *skb)
