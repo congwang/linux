@@ -273,6 +273,32 @@ const struct bpf_func_proto bpf_skb_map_pop_proto = {
 	.arg2_type	= ARG_ANYTHING,
 };
 
+BPF_CALL_1(bpf_skb_map_pop_min, struct bpf_map *, map)
+{
+	struct bpf_skb_map *rb = bpf_skb_map(map);
+	struct sk_buff *skb;
+	unsigned long flags;
+
+	raw_spin_lock_irqsave(&rb->lock, flags);
+	skb = skb_rb_first(&rb->root);
+	if (!skb) {
+		raw_spin_unlock_irqrestore(&rb->lock, flags);
+		return (unsigned long)NULL;
+	}
+	rb_erase(&skb->rbnode, &rb->root);
+	raw_spin_unlock_irqrestore(&rb->lock, flags);
+	consume_skb(skb);
+	atomic_dec(&rb->count);
+	return (unsigned long)skb;
+}
+
+const struct bpf_func_proto bpf_skb_map_pop_min_proto = {
+	.func		= bpf_skb_map_pop_min,
+	.gpl_only	= false,
+	.ret_type	= RET_INTEGER,
+	.arg1_type	= ARG_CONST_MAP_PTR,
+};
+
 BPF_CALL_3(bpf_skb_map_push, struct bpf_map *, map, struct sk_buff *, skb, u64, key)
 {
 	struct bpf_skb_map *rb = bpf_skb_map(map);

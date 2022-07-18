@@ -2432,6 +2432,7 @@ extern const struct bpf_func_proto bpf_set_retval_proto;
 extern const struct bpf_func_proto bpf_get_retval_proto;
 extern const struct bpf_func_proto bpf_skb_map_push_proto;
 extern const struct bpf_func_proto bpf_skb_map_pop_proto;
+extern const struct bpf_func_proto bpf_skb_map_pop_min_proto;
 extern const struct bpf_func_proto bpf_flow_map_push_proto;
 extern const struct bpf_func_proto bpf_flow_map_pop_proto;
 

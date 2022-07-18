@@ -5570,6 +5570,7 @@ union bpf_attr {
 	FN(ktime_get_tai_ns),		\
 	FN(skb_map_push),		\
 	FN(skb_map_pop),		\
+	FN(skb_map_pop_min),		\
 	FN(flow_map_push),		\
 	FN(flow_map_pop),		\
 	/* */

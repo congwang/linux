@@ -6292,7 +6292,8 @@ static int check_map_func_compatibility(struct bpf_verifier_env *env,
 		break;
 	case BPF_MAP_TYPE_SKBMAP:
 		if (func_id != BPF_FUNC_skb_map_push &&
-		    func_id != BPF_FUNC_skb_map_pop)
+		    func_id != BPF_FUNC_skb_map_pop &&
+		    func_id != BPF_FUNC_skb_map_pop_min)
 			goto error;
 		break;
 	case BPF_MAP_TYPE_FLOWMAP:
