@@ -9,6 +9,7 @@
 #include <net/sock.h>
 #include <net/af_vsock.h>
 #include <linux/if_arp.h>
+#include <linux/vsockmon.h>
 
 static DEFINE_SPINLOCK(vsock_tap_lock);
 static struct list_head vsock_tap_all __read_mostly =
@@ -57,23 +58,17 @@ out:
 }
 EXPORT_SYMBOL_GPL(vsock_remove_tap);
 
-static int __vsock_deliver_tap_skb(struct sk_buff *skb,
+static int __vsock_deliver_tap_skb(struct sk_buff *nskb,
 				   struct net_device *dev)
 {
 	int ret = 0;
-	struct sk_buff *nskb = skb_clone(skb, GFP_ATOMIC);
 
-	if (nskb) {
-		dev_hold(dev);
-
-		nskb->dev = dev;
-		ret = dev_queue_xmit(nskb);
-		if (unlikely(ret > 0))
-			ret = net_xmit_errno(ret);
-
-		dev_put(dev);
-	}
-
+	dev_hold(dev);
+	nskb->dev = dev;
+	ret = dev_queue_xmit(nskb);
+	if (unlikely(ret > 0))
+		ret = net_xmit_errno(ret);
+	dev_put(dev);
 	return ret;
 }
 
@@ -89,22 +84,19 @@ static void __vsock_deliver_tap(struct sk_buff *skb)
 	}
 }
 
-void vsock_deliver_tap(struct sk_buff *build_skb(void *opaque), void *opaque)
+void vsock_deliver_tap(void build_skb(struct sk_buff *, struct sk_buff *),
+		       struct sk_buff *skb)
 {
-	struct sk_buff *skb;
-
 	rcu_read_lock();
+	if (unlikely(!list_empty(&vsock_tap_all))) {
+		struct sk_buff *nskb;
 
-	if (likely(list_empty(&vsock_tap_all)))
-		goto out;
-
-	skb = build_skb(opaque);
-	if (skb) {
-		__vsock_deliver_tap(skb);
-		consume_skb(skb);
+		nskb = skb_realloc_headroom(skb, sizeof(struct af_vsockmon_hdr));
+		if (nskb) {
+			build_skb(skb, nskb);
+			__vsock_deliver_tap(nskb);
+		}
 	}
-
-out:
 	rcu_read_unlock();
 }
 EXPORT_SYMBOL_GPL(vsock_deliver_tap);

@@ -155,29 +155,19 @@ static void virtio_transport_copy_nonlinear_skb(const struct sk_buff *skb,
 }
 
 /* Packet capture */
-static struct sk_buff *virtio_transport_build_skb(void *opaque)
+static void virtio_transport_build_skb(struct sk_buff *oskb, struct sk_buff *nskb)
 {
 	struct virtio_vsock_hdr *pkt_hdr;
-	struct sk_buff *pkt = opaque;
 	struct af_vsockmon_hdr *hdr;
-	struct sk_buff *skb;
-	size_t payload_len;
 
 	/* A packet could be split to fit the RX buffer, so we can retrieve
 	 * the payload length from the header and the buffer pointer taking
 	 * care of the offset in the original packet.
 	 */
-	pkt_hdr = virtio_vsock_hdr(pkt);
-	payload_len = pkt->len;
+	pkt_hdr = virtio_vsock_hdr(oskb);
+	hdr = skb_push(nskb, sizeof(*hdr));
 
-	skb = alloc_skb(sizeof(*hdr) + sizeof(*pkt_hdr) + payload_len,
-			GFP_ATOMIC);
-	if (!skb)
-		return NULL;
-
-	hdr = skb_put(skb, sizeof(*hdr));
-
-	/* pkt->hdr is little-endian so no need to byteswap here */
+	/* oskb->hdr is little-endian so no need to byteswap here */
 	hdr->src_cid = pkt_hdr->src_cid;
 	hdr->src_port = pkt_hdr->src_port;
 	hdr->dst_cid = pkt_hdr->dst_cid;
@@ -207,20 +197,6 @@ static struct sk_buff *virtio_transport_build_skb(void *opaque)
 		hdr->op = cpu_to_le16(AF_VSOCK_OP_UNKNOWN);
 		break;
 	}
-
-	skb_put_data(skb, pkt_hdr, sizeof(*pkt_hdr));
-
-	if (payload_len) {
-		if (skb_is_nonlinear(pkt)) {
-			void *data = skb_put(skb, payload_len);
-
-			virtio_transport_copy_nonlinear_skb(pkt, data, payload_len);
-		} else {
-			skb_put_data(skb, pkt->data, payload_len);
-		}
-	}
-
-	return skb;
 }
 
 void virtio_transport_deliver_tap_pkt(struct sk_buff *skb)
