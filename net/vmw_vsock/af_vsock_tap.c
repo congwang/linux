@@ -91,7 +91,8 @@ void vsock_deliver_tap(void build_skb(struct sk_buff *, struct sk_buff *),
 	if (unlikely(!list_empty(&vsock_tap_all))) {
 		struct sk_buff *nskb;
 
-		nskb = skb_realloc_headroom(skb, sizeof(struct af_vsockmon_hdr));
+		nskb = skb_copy_expand(skb, sizeof(struct af_vsockmon_hdr),
+				       skb_tailroom(skb), GFP_ATOMIC);
 		if (nskb) {
 			build_skb(skb, nskb);
 			__vsock_deliver_tap(nskb);

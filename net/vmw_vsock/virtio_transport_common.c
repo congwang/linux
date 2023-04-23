@@ -175,6 +175,7 @@ static void virtio_transport_build_skb(struct sk_buff *oskb, struct sk_buff *nsk
 
 	hdr->transport = cpu_to_le16(AF_VSOCK_TRANSPORT_VIRTIO);
 	hdr->len = cpu_to_le16(sizeof(*pkt_hdr));
+	pr_info("hdr->len = %u dst_cid = %llu, pkt_hdr->dst_cid = %llu\n", le16_to_cpu(hdr->len), le64_to_cpu(hdr->dst_cid), le64_to_cpu(pkt_hdr->dst_cid));
 	memset(hdr->reserved, 0, sizeof(hdr->reserved));
 
 	switch (le16_to_cpu(pkt_hdr->op)) {
