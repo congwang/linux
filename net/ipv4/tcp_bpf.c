@@ -32,8 +32,6 @@ void tcp_eat_skb(struct sock *sk, struct sk_buff *skb)
 static int bpf_tcp_ingress(struct sock *sk, struct sk_psock *psock,
 			   struct sk_msg *msg, u32 apply_bytes)
 {
-	bool apply = apply_bytes;
-	struct scatterlist *sge;
 	u32 size, copied = 0;
 	struct sk_msg *tmp;
 	int i, ret = 0;
@@ -42,46 +40,48 @@ static int bpf_tcp_ingress(struct sock *sk, struct sk_psock *psock,
 	if (unlikely(!tmp))
 		return -ENOMEM;
 
-	lock_sock(sk);
-	tmp->sg.start = msg->sg.start;
 	i = msg->sg.start;
-	do {
-		sge = sk_msg_elem(msg, i);
-		size = (apply && apply_bytes < sge->length) ?
-			apply_bytes : sge->length;
-		if (!sk_wmem_schedule(sk, size)) {
-			if (!copied)
-				ret = -ENOMEM;
-			break;
-		}
+	if (apply_bytes == msg->sg.size) {
+		sk_msg_xfer_full(tmp, msg);
+		copied = apply_bytes;
+	} else {
+		bool apply = apply_bytes;
+		struct scatterlist *sge;
 
-		sk_mem_charge(sk, size);
-		sk_msg_xfer(tmp, msg, i, size);
-		copied += size;
-		if (sge->length)
-			get_page(sk_msg_page(tmp, i));
-		sk_msg_iter_var_next(i);
-		tmp->sg.end = i;
-		if (apply) {
-			apply_bytes -= size;
-			if (!apply_bytes) {
-				if (sge->length)
-					sk_msg_iter_var_prev(i);
-				break;
+		tmp->sg.start = msg->sg.start;
+		do {
+			sge = sk_msg_elem(msg, i);
+			size = (apply && apply_bytes < sge->length) ?
+				apply_bytes : sge->length;
+			sk_msg_xfer(tmp, msg, i, size);
+			copied += size;
+			if (sge->length)
+				get_page(sk_msg_page(tmp, i));
+			sk_msg_iter_var_next(i);
+			tmp->sg.end = i;
+			if (apply) {
+				apply_bytes -= size;
+				if (!apply_bytes) {
+					if (sge->length)
+						sk_msg_iter_var_prev(i);
+					break;
+				}
 			}
-		}
-	} while (i != msg->sg.end);
+		} while (i != msg->sg.end);
+	}
 
-	if (!ret) {
+	lock_sock(sk);
+	if (!sk_wmem_schedule(sk, copied)) {
+		release_sock(sk);
+		kfree(tmp);
+		ret = -ENOMEM;
+	} else {
+		sk_mem_charge(sk, copied);
 		msg->sg.start = i;
 		sk_psock_queue_msg(psock, tmp);
 		sk_psock_data_ready(sk, psock);
-	} else {
-		sk_msg_free(sk, tmp);
-		kfree(tmp);
+		release_sock(sk);
 	}
-
-	release_sock(sk);
 	return ret;
 }
 
