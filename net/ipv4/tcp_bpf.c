@@ -72,7 +72,7 @@ static int bpf_tcp_ingress(struct sock *sk, struct sk_psock *psock,
 	}
 
 	slow = lock_sock_fast(sk);
-	if (!sk_wmem_schedule(sk, copied)) {
+	if (!__sk_rmem_schedule(sk, copied, false)) {
 		unlock_sock_fast(sk, slow);
 		kfree(tmp);
 		ret = -ENOMEM;
