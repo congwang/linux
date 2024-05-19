@@ -35,6 +35,7 @@ static int bpf_tcp_ingress(struct sock *sk, struct sk_psock *psock,
 	u32 size, copied = 0;
 	struct sk_msg *tmp;
 	int i, ret = 0;
+	bool slow;
 
 	tmp = kzalloc(sizeof(*tmp), __GFP_NOWARN | GFP_KERNEL);
 	if (unlikely(!tmp))
@@ -70,9 +71,9 @@ static int bpf_tcp_ingress(struct sock *sk, struct sk_psock *psock,
 		} while (i != msg->sg.end);
 	}
 
-	lock_sock(sk);
+	slow = lock_sock_fast(sk);
 	if (!sk_wmem_schedule(sk, copied)) {
-		release_sock(sk);
+		unlock_sock_fast(sk, slow);
 		kfree(tmp);
 		ret = -ENOMEM;
 	} else {
@@ -80,7 +81,7 @@ static int bpf_tcp_ingress(struct sock *sk, struct sk_psock *psock,
 		msg->sg.start = i;
 		sk_psock_queue_msg(psock, tmp);
 		sk_psock_data_ready(sk, psock);
-		release_sock(sk);
+		unlock_sock_fast(sk, slow);
 	}
 	return ret;
 }
