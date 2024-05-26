@@ -333,7 +333,7 @@ static int tcp_bpf_recvmsg(struct sock *sk, struct msghdr *msg, size_t len,
 			   int flags, int *addr_len)
 {
 	struct sk_psock *psock;
-	int copied, ret;
+	int copied = 0, ret;
 
 	if (unlikely(flags & MSG_ERRQUEUE))
 		return inet_recv_error(sk, msg, len, addr_len);
@@ -349,10 +349,11 @@ static int tcp_bpf_recvmsg(struct sock *sk, struct msghdr *msg, size_t len,
 		sk_psock_put(sk, psock);
 		return tcp_recvmsg(sk, msg, len, flags, addr_len);
 	}
+
 	lock_sock(sk);
 msg_bytes_ready:
-	copied = sk_msg_recvmsg(sk, psock, msg, len, flags);
-	if (!copied) {
+	copied += sk_msg_recvmsg(sk, psock, msg, len - copied, flags);
+	while (copied < len) {
 		long timeo;
 		int data;
 
@@ -367,9 +368,11 @@ msg_bytes_ready:
 				goto msg_bytes_ready;
 			release_sock(sk);
 			sk_psock_put(sk, psock);
-			return tcp_recvmsg(sk, msg, len, flags, addr_len);
+			copied += tcp_recvmsg(sk, msg, len - copied, flags, addr_len);
+			return copied;
 		}
 		copied = -EAGAIN;
+		break;
 	}
 	ret = copied;
 
