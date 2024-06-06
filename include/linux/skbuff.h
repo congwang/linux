@@ -2787,7 +2787,6 @@ void *__pskb_pull_tail(struct sk_buff *skb, int delta);
 static inline enum skb_drop_reason
 pskb_may_pull_reason(struct sk_buff *skb, unsigned int len)
 {
-	DEBUG_NET_WARN_ON_ONCE(len > INT_MAX);
 	skb_might_realloc(skb);
 
 	if (likely(len <= skb_headlen(skb)))
