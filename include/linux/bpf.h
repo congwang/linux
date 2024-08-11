@@ -3018,6 +3018,7 @@ int sock_map_link_create(const union bpf_attr *attr, struct bpf_prog *prog);
 void sock_map_unhash(struct sock *sk);
 void sock_map_destroy(struct sock *sk);
 void sock_map_close(struct sock *sk, long timeout);
+int sock_map_diag_dump(struct sock *sk, struct sk_buff *skb, int attr);
 #else
 static inline int bpf_dev_bound_kfunc_check(struct bpf_verifier_log *log,
 					    struct bpf_prog_aux *prog_aux)
