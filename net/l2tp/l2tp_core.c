@@ -1660,11 +1660,9 @@ int l2tp_tunnel_register(struct l2tp_tunnel *tunnel, struct net *net,
 
 	sk = sock->sk;
 	lock_sock(sk);
-	write_lock_bh(&sk->sk_callback_lock);
 	ret = l2tp_validate_socket(sk, net, tunnel->encap);
 	if (ret < 0)
 		goto err_inval_sock;
-	write_unlock_bh(&sk->sk_callback_lock);
 
 	if (tunnel->encap == L2TP_ENCAPTYPE_UDP) {
 		struct udp_tunnel_sock_cfg udp_cfg = {
@@ -1674,7 +1672,9 @@ int l2tp_tunnel_register(struct l2tp_tunnel *tunnel, struct net *net,
 			.encap_destroy = l2tp_udp_encap_destroy,
 		};
 
-		setup_udp_tunnel_sock(net, sock, &udp_cfg);
+		ret = setup_udp_tunnel_sock(net, sock, &udp_cfg);
+		if (ret < 0)
+			goto err_inval_sock;
 	}
 
 	sk->sk_allocation = GFP_ATOMIC;
@@ -1696,7 +1696,6 @@ int l2tp_tunnel_register(struct l2tp_tunnel *tunnel, struct net *net,
 	return 0;
 
 err_inval_sock:
-	write_unlock_bh(&sk->sk_callback_lock);
 	release_sock(sk);
 
 	if (tunnel->fd < 0)

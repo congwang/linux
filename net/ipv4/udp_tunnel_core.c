@@ -57,11 +57,13 @@ error:
 }
 EXPORT_SYMBOL(udp_sock_create4);
 
-void setup_udp_tunnel_sock(struct net *net, struct socket *sock,
-			   struct udp_tunnel_sock_cfg *cfg)
+int setup_udp_tunnel_sock(struct net *net, struct socket *sock,
+			  struct udp_tunnel_sock_cfg *cfg)
 {
 	struct sock *sk = sock->sk;
 
+	if (sk->sk_user_data)
+		return -EBUSY;
 	/* Disable multicast loopback */
 	inet_clear_bit(MC_LOOP, sk);
 
@@ -79,6 +81,7 @@ void setup_udp_tunnel_sock(struct net *net, struct socket *sock,
 	udp_sk(sk)->gro_complete = cfg->gro_complete;
 
 	udp_tunnel_encap_enable(sk);
+	return 0;
 }
 EXPORT_SYMBOL_GPL(setup_udp_tunnel_sock);
 

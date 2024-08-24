@@ -1672,21 +1672,16 @@ static struct sock *gtp_encap_enable_socket(int fd, int type,
 	}
 
 	lock_sock(sk);
-	if (sk->sk_user_data) {
-		sk = ERR_PTR(-EBUSY);
-		goto out_rel_sock;
-	}
-
-	sock_hold(sk);
 
 	tuncfg.sk_user_data = gtp;
 	tuncfg.encap_type = type;
 	tuncfg.encap_rcv = gtp_encap_recv;
 	tuncfg.encap_destroy = gtp_encap_destroy;
+	if (setup_udp_tunnel_sock(sock_net(sock->sk), sock, &tuncfg))
+		sk = ERR_PTR(-EBUSY);
+	else
+		sock_hold(sk);
 
-	setup_udp_tunnel_sock(sock_net(sock->sk), sock, &tuncfg);
-
-out_rel_sock:
 	release_sock(sock->sk);
 out_sock:
 	sockfd_put(sock);
