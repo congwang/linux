@@ -1414,19 +1414,17 @@ static void l2tp_tunnel_del_work(struct work_struct *work)
 {
 	struct l2tp_tunnel *tunnel = container_of(work, struct l2tp_tunnel,
 						  del_work);
-	struct sock *sk = tunnel->sock;
-	struct socket *sock = sk->sk_socket;
-
 	l2tp_tunnel_closeall(tunnel);
 
 	/* If the tunnel socket was created within the kernel, use
 	 * the sk API to release it here.
 	 */
 	if (tunnel->fd < 0) {
-		if (sock) {
-			kernel_sock_shutdown(sock, SHUT_RDWR);
-			sock_release(sock);
-		}
+		struct sock *sk = tunnel->sock;
+		struct socket *sock = sk->sk_socket;
+
+		if (sock)
+			udp_tunnel_sock_release(sock);
 	}
 
 	l2tp_tunnel_remove(tunnel->l2tp_net, tunnel);
