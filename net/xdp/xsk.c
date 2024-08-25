@@ -1129,7 +1129,7 @@ static struct socket *xsk_lookup_xsk_from_fd(int fd)
 
 	sock = sockfd_lookup(fd, &err);
 	if (!sock)
-		return ERR_PTR(-ENOTSOCK);
+		return ERR_PTR(err);
 
 	if (sock->sk->sk_family != PF_XDP) {
 		sockfd_put(sock);
