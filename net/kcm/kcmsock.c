@@ -1325,7 +1325,7 @@ static int kcm_attach_ioctl(struct socket *sock, struct kcm_attach *info)
 
 	csock = sockfd_lookup(info->fd, &err);
 	if (!csock)
-		return -ENOENT;
+		return err;
 
 	prog = bpf_prog_get_type(info->bpf_fd, BPF_PROG_TYPE_SOCKET_FILTER);
 	if (IS_ERR(prog)) {
@@ -1454,7 +1454,7 @@ static int kcm_unattach_ioctl(struct socket *sock, struct kcm_unattach *info)
 
 	csock = sockfd_lookup(info->fd, &err);
 	if (!csock)
-		return -ENOENT;
+		return err;
 
 	csk = csock->sk;
 	if (!csk) {
