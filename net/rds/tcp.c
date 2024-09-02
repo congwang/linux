@@ -136,11 +136,12 @@ void rds_tcp_restore_callbacks(struct socket *sock,
  * it is set.  The absence of RDS_CONN_UP bit protects those paths
  * from being called while it isn't set.
  */
-void rds_tcp_reset_callbacks(struct socket *sock,
-			     struct rds_conn_path *cp)
+int rds_tcp_reset_callbacks(struct socket *sock,
+			    struct rds_conn_path *cp)
 {
 	struct rds_tcp_connection *tc = cp->cp_transport_data;
 	struct socket *osock = tc->t_sock;
+	int ret = 0;
 
 	if (!osock)
 		goto newsock;
@@ -183,21 +184,25 @@ void rds_tcp_reset_callbacks(struct socket *sock,
 newsock:
 	rds_send_path_reset(cp);
 	lock_sock(sock->sk);
-	rds_tcp_set_callbacks(sock, cp);
+	ret = rds_tcp_set_callbacks(sock, cp);
 	release_sock(sock->sk);
+	return ret;
 }
 
 /* Add tc to rds_tcp_tc_list and set tc->t_sock. See comments
  * above rds_tcp_reset_callbacks for notes about synchronization
  * with data path
  */
-void rds_tcp_set_callbacks(struct socket *sock, struct rds_conn_path *cp)
+int rds_tcp_set_callbacks(struct socket *sock, struct rds_conn_path *cp)
 {
 	struct rds_tcp_connection *tc = cp->cp_transport_data;
 
-	rdsdebug("setting sock %p callbacks to tc %p\n", sock, tc);
 	write_lock_bh(&sock->sk->sk_callback_lock);
-
+	if (sock->sk->sk_user_data) {
+		write_unlock_bh(&sock->sk->sk_callback_lock);
+		return -EBUSY;
+	}
+	rdsdebug("setting sock %p callbacks to tc %p\n", sock, tc);
 	/* done under the callback_lock to serialize with write_space */
 	spin_lock(&rds_tcp_tc_list_lock);
 	list_add_tail(&tc->t_list_item, &rds_tcp_tc_list);
@@ -224,6 +229,7 @@ void rds_tcp_set_callbacks(struct socket *sock, struct rds_conn_path *cp)
 	sock->sk->sk_state_change = rds_tcp_state_change;
 
 	write_unlock_bh(&sock->sk->sk_callback_lock);
+	return 0;
 }
 
 /* Handle RDS_INFO_TCP_SOCKETS socket option.  It only returns IPv4

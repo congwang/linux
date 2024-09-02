@@ -205,11 +205,15 @@ int rds_tcp_accept_one(struct socket *sock)
 		goto rst_nsk;
 	if (rs_tcp->t_sock) {
 		/* Duelling SYN has been handled in rds_tcp_accept_one() */
-		rds_tcp_reset_callbacks(new_sock, cp);
+		ret = rds_tcp_reset_callbacks(new_sock, cp);
+		if (ret)
+			goto rst_nsk;
 		/* rds_connect_path_complete() marks RDS_CONN_UP */
 		rds_connect_path_complete(cp, RDS_CONN_RESETTING);
 	} else {
-		rds_tcp_set_callbacks(new_sock, cp);
+		ret = rds_tcp_set_callbacks(new_sock, cp);
+		if (ret)
+			goto rst_nsk;
 		rds_connect_path_complete(cp, RDS_CONN_CONNECTING);
 	}
 	new_sock = NULL;
