@@ -50,8 +50,8 @@ struct rds_tcp_statistics {
 
 /* tcp.c */
 bool rds_tcp_tune(struct socket *sock);
-void rds_tcp_set_callbacks(struct socket *sock, struct rds_conn_path *cp);
-void rds_tcp_reset_callbacks(struct socket *sock, struct rds_conn_path *cp);
+int rds_tcp_set_callbacks(struct socket *sock, struct rds_conn_path *cp);
+int rds_tcp_reset_callbacks(struct socket *sock, struct rds_conn_path *cp);
 void rds_tcp_restore_callbacks(struct socket *sock,
 			       struct rds_tcp_connection *tc);
 u32 rds_tcp_write_seq(struct rds_tcp_connection *tc);
