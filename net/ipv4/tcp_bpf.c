@@ -29,6 +29,146 @@ void tcp_eat_skb(struct sock *sk, struct sk_buff *skb)
 	__tcp_cleanup_rbuf(sk, skb->len);
 }
 
+static int tcp_bpf_ingress_backlog(struct sk_psock *psock_from,
+				   struct sock *sk_redir,
+				   struct sk_msg *msg, u32 apply_bytes)
+{
+	bool ingress_msg_empty, spin_lock_held = false;
+	struct scatterlist *sge_from, *sge_to;
+	struct sk_msg *last, *tmp = NULL;
+	u32 size, tot_size = 0;
+	struct sk_psock *psock;
+	bool apply;
+	int i;
+
+	psock = sk_psock_get(sk_redir);
+	if (unlikely(!psock))
+		return -EPIPE;
+
+	ingress_msg_empty = false;
+	if (list_empty(&psock->backlog_msg))
+		goto new_sk_msg;
+
+	/* If possible, coalesce to the last sk_msg from the backlog_msg */
+	spin_lock(&psock->backlog_msg_lock);
+	last = list_last_entry(&psock->backlog_msg, struct sk_msg, list);
+	if (list_empty(&psock->backlog_msg) || last->sk != psock_from->sk) {
+		spin_unlock(&psock->backlog_msg_lock);
+		goto new_sk_msg;
+	}
+
+	i = msg->sg.start;
+	apply = apply_bytes;
+	while (i != msg->sg.end) {
+		int last_sge_idx;
+
+		if (sk_msg_full(last))
+			break;
+		sge_from = sk_msg_elem(msg, i);
+		last_sge_idx = last->sg.end;
+		sk_msg_iter_var_prev(last_sge_idx);
+		sge_to = &last->sg.data[last_sge_idx];
+
+		size = (apply && apply_bytes < sge_from->length) ?
+			apply_bytes : sge_from->length;
+		if (sk_msg_try_coalesce_ok(last, last_sge_idx) &&
+		    sg_page(sge_to) == sg_page(sge_from) &&
+		    sge_to->offset + sge_to->length == sge_from->offset) {
+			sge_to->length += size;
+		} else {
+			sge_to = &last->sg.data[last->sg.end];
+			sg_unmark_end(sge_to);
+			sg_set_page(sge_to, sg_page(sge_from), size, sge_from->offset);
+			get_page(sg_page(sge_to));
+			sk_msg_iter_next(last, end);
+		}
+		sge_from->length -= size;
+		sge_from->offset += size;
+		if (sge_from->length == 0) {
+			put_page(sg_page(sge_to));
+			sk_msg_iter_var_next(i);
+		}
+		msg->sg.size -= size;
+		last->sg.size += size;
+		tot_size += size;
+
+		if (apply) {
+			apply_bytes -= size;
+			if (!apply_bytes)
+				break;
+		}
+	}
+	msg->sg.start = i;
+
+	if (!apply_bytes || i == msg->sg.end)
+		goto out;
+	spin_lock_held = true;
+
+new_sk_msg:
+	/* If we jump here from the beginning, the spin_lock is not held */
+	tmp = alloc_sk_msg(GFP_ATOMIC);
+	if (!tmp) {
+		if (spin_lock_held)
+			spin_unlock(&psock->backlog_msg_lock);
+		return -ENOMEM;
+	}
+
+	tmp->sk = psock_from->sk;
+	sock_hold(tmp->sk);
+	tmp->sg.start = msg->sg.start;
+
+	i = msg->sg.start;
+	apply = apply_bytes;
+	do {
+		sge_from = sk_msg_elem(msg, i);
+		size = (apply && apply_bytes < sge_from->length) ?
+			apply_bytes : sge_from->length;
+
+		sk_msg_xfer(tmp, msg, i, size);
+		tot_size += size;
+		if (sge_from->length)
+			get_page(sk_msg_page(tmp, i));
+		sk_msg_iter_var_next(i);
+		tmp->sg.end = i;
+		if (apply) {
+			apply_bytes -= size;
+			if (!apply_bytes) {
+				if (sge_from->length)
+					sk_msg_iter_var_prev(i);
+				break;
+			}
+		}
+	} while (i != msg->sg.end);
+	msg->sg.start = i;
+	if (!spin_lock_held) {
+		spin_lock(&psock->backlog_msg_lock);
+		ingress_msg_empty = list_empty(&psock->ingress_msg);
+	}
+	list_add_tail(&tmp->list, &psock->backlog_msg);
+
+out:
+	spin_unlock(&psock->backlog_msg_lock);
+
+	/* Cork bytes without waking up the other socket, except for two cases
+	 * 1. The backlog size in this round is larger than GSO, we are sure
+	 * that we can wake up the other socket now.
+	 * 2. ingress_msg is empty. For latency, we should handle the first
+	 * sk_msg immediately.
+	 */
+	if (tot_size >= 65536 || ingress_msg_empty) {
+		release_sock(psock_from->sk);
+		psock->work_backlog_delayed = false;
+		sk_psock_backlog_msg(psock);
+		lock_sock(psock_from->sk);
+	} else {
+		psock->work_backlog_delayed = false;
+		schedule_delayed_work(&psock->work_backlog, 0);
+	}
+
+	sk_psock_put(sk_redir, psock);
+	return 0;
+}
+
 static int bpf_tcp_ingress(struct sock *sk, struct sk_psock *psock,
 			   struct sk_msg *msg, u32 apply_bytes)
 {
@@ -440,18 +580,22 @@ more_data:
 			cork = true;
 			psock->cork = NULL;
 		}
-		sk_msg_return(sk, msg, tosend);
-		release_sock(sk);
+		if (redir_ingress) {
+			ret = tcp_bpf_ingress_backlog(psock, sk_redir, msg, tosend);
+		} else {
+			sk_msg_return(sk, msg, tosend);
+			release_sock(sk);
 
-		origsize = msg->sg.size;
-		ret = tcp_bpf_sendmsg_redir(sk_redir, redir_ingress,
-					    msg, tosend, flags);
-		sent = origsize - msg->sg.size;
+			origsize = msg->sg.size;
+			ret = tcp_bpf_sendmsg_redir(sk_redir, redir_ingress,
+						    msg, tosend, flags);
+			sent = origsize - msg->sg.size;
+			lock_sock(sk);
+		}
 
 		if (eval == __SK_REDIRECT)
 			sock_put(sk_redir);
 
-		lock_sock(sk);
 		if (unlikely(ret < 0)) {
 			int free = sk_msg_free_nocharge(sk, msg);
 

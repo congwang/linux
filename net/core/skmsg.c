@@ -12,7 +12,7 @@
 
 struct kmem_cache *sk_msg_cachep;
 
-static bool sk_msg_try_coalesce_ok(struct sk_msg *msg, int elem_first_coalesce)
+bool sk_msg_try_coalesce_ok(struct sk_msg *msg, int elem_first_coalesce)
 {
 	if (msg->sg.end > msg->sg.start &&
 	    elem_first_coalesce < msg->sg.end)
@@ -701,6 +701,113 @@ end:
 	mutex_unlock(&psock->work_mutex);
 }
 
+static inline void schedule_delayed_work_backlog(struct sk_psock *psock)
+{
+	psock->work_backlog_delayed = true;
+	schedule_delayed_work(&psock->work_backlog, 1);
+}
+
+void sk_psock_backlog_msg(struct sk_psock *psock)
+{
+	bool sk_rmem_schedule_failed = false;
+	struct sock *sk_from = NULL;
+	struct sock *sk = psock->sk;
+	struct sk_msg *msg, *tmp;
+	LIST_HEAD(local_head);
+	bool should_notify;
+	u32 tot_size = 0;
+
+	mutex_lock(&psock->work_backlog_mutex);
+	lock_sock(sk);
+	spin_lock(&psock->backlog_msg_lock);
+
+	msg = list_first_entry_or_null(&psock->backlog_msg, struct sk_msg, list);
+	if (!msg) {
+		should_notify = !list_empty(&psock->ingress_msg);
+		if (should_notify)
+			psock->backlog_since_notify = 0;
+		spin_unlock(&psock->backlog_msg_lock);
+		goto notify;
+	}
+	sk_from = msg->sk;
+	sock_hold(sk_from);
+
+	/* Transfer sk_msgs from backlog_msg to a local_list */
+	list_for_each_entry_safe(msg, tmp, &psock->backlog_msg, list) {
+		u32 size = msg->sg.size;
+
+		if (msg->sk != sk_from)
+			break;
+
+		if (!__sk_rmem_schedule(sk, size, false)) {
+			sk_rmem_schedule_failed = true;
+			break;
+		}
+
+		list_del(&msg->list);
+		list_add_tail(&msg->list, &local_head);
+		sock_put(msg->sk);
+		msg->sk = NULL;
+		psock->backlog_since_notify += size;
+		tot_size += size;
+	}
+
+	/* Notify ourselves when the following requirements are met,
+	 * 1. We have corked enough bytes (65536)
+	 * 2. sk_rmem_schedule failed
+	 * 3. We have already delayed the notification once
+	 * 4. ingress_msg was empty, and we are about to splice sk_msgs to it
+	 * Otherwise, we should suppress this notification.
+	 */
+	should_notify = psock->backlog_since_notify >= 65536 ||
+			psock->work_backlog_delayed ||
+			sk_rmem_schedule_failed ||
+			list_empty(&psock->ingress_msg);
+	if (should_notify)
+		psock->backlog_since_notify = 0;
+	spin_unlock(&psock->backlog_msg_lock);
+
+	/* Transfer sk_msgs from the local_list to ingress_msg */
+	spin_lock_bh(&psock->ingress_lock);
+	list_splice_tail_init(&local_head, &psock->ingress_msg);
+	sk_mem_charge(sk, tot_size);
+	spin_unlock_bh(&psock->ingress_lock);
+
+notify:
+	if (should_notify) {
+		psock->work_backlog_delayed = false;
+		sk_psock_data_ready(sk, psock);
+
+		if (!list_empty(&psock->backlog_msg)) {
+			if (sk_rmem_schedule_failed)
+				schedule_delayed_work_backlog(psock);
+			else
+				schedule_delayed_work(&psock->work_backlog, 0);
+		}
+	} else {
+		schedule_delayed_work_backlog(psock);
+	}
+	release_sock(sk);
+	mutex_unlock(&psock->work_backlog_mutex);
+
+	/* Memory account for sk_from */
+	if (!sk_from)
+		return;
+	lock_sock(sk_from);
+	sk_mem_uncharge(sk_from, tot_size);
+	release_sock(sk_from);
+	sock_put(sk_from);
+}
+EXPORT_SYMBOL_GPL(sk_psock_backlog_msg);
+
+static void sk_psock_backlog_msg_work(struct work_struct *work)
+{
+	struct delayed_work *dwork = to_delayed_work(work);
+	struct sk_psock *psock = container_of(dwork, struct sk_psock, work_backlog);
+
+	sk_psock_backlog_msg(psock);
+}
+
 struct sk_psock *sk_psock_init(struct sock *sk, int node)
 {
 	struct sk_psock *psock;
@@ -738,8 +845,12 @@ struct sk_psock *sk_psock_init(struct sock *sk, int node)
 
 	INIT_DELAYED_WORK(&psock->work, sk_psock_backlog);
 	mutex_init(&psock->work_mutex);
+	INIT_DELAYED_WORK(&psock->work_backlog, sk_psock_backlog_msg_work);
+	mutex_init(&psock->work_backlog_mutex);
 	INIT_LIST_HEAD(&psock->ingress_msg);
 	spin_lock_init(&psock->ingress_lock);
+	INIT_LIST_HEAD(&psock->backlog_msg);
+	spin_lock_init(&psock->backlog_msg_lock);
 	skb_queue_head_init(&psock->ingress_skb);
 
 	sk_psock_set_state(psock, SK_PSOCK_TX_ENABLED);
@@ -791,6 +902,35 @@ static void __sk_psock_zap_ingress(struct sk_psock *psock)
 	__sk_psock_purge_ingress_msg(psock);
 }
 
+static void __sk_psock_purge_ingress_msg_backlog(struct sk_psock *psock)
+{
+	struct sk_msg *msg, *tmp;
+	struct sock *sk_from;
+
+	spin_lock(&psock->backlog_msg_lock);
+	msg = list_first_entry_or_null(&psock->backlog_msg, struct sk_msg, list);
+	if (!msg)
+		goto out;
+	sk_from = msg->sk;
+
+	lock_sock(sk_from);
+	list_for_each_entry_safe(msg, tmp, &psock->backlog_msg, list) {
+		if (msg->sk != sk_from) {
+			release_sock(sk_from);
+			sk_from = msg->sk;
+			lock_sock(sk_from);
+		}
+		sock_put(msg->sk);
+		list_del(&msg->list);
+		sk_msg_free_nocharge(psock->sk, msg);
+		sk_mem_uncharge(sk_from, msg->sg.size);
+		kmem_cache_free(sk_msg_cachep, msg);
+	}
+	release_sock(sk_from);
+out:
+	spin_unlock(&psock->backlog_msg_lock);
+}
+
 static void sk_psock_link_destroy(struct sk_psock *psock)
 {
 	struct sk_psock_link *link, *tmp;
@@ -820,8 +960,11 @@ static void sk_psock_destroy(struct work_struct *work)
 	sk_psock_done_strp(psock);
 
 	cancel_delayed_work_sync(&psock->work);
+	cancel_delayed_work_sync(&psock->work_backlog);
 	__sk_psock_zap_ingress(psock);
+	__sk_psock_purge_ingress_msg_backlog(psock);
 	mutex_destroy(&psock->work_mutex);
+	mutex_destroy(&psock->work_backlog_mutex);
 
 	psock_progs_drop(&psock->progs);
 
