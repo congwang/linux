@@ -804,9 +804,7 @@ static void sk_psock_backlog_msg_work(struct work_struct *work)
 	struct delayed_work *dwork = to_delayed_work(work);
 	struct sk_psock *psock = container_of(dwork, struct sk_psock, work_backlog);
 
-	mutex_lock(&psock->work_backlog_mutex);
 	sk_psock_backlog_msg(psock);
-	mutex_unlock(&psock->work_backlog_mutex);
 }
 
 struct sk_psock *sk_psock_init(struct sock *sk, int node)
@@ -847,7 +845,6 @@ struct sk_psock *sk_psock_init(struct sock *sk, int node)
 	INIT_DELAYED_WORK(&psock->work, sk_psock_backlog);
 	mutex_init(&psock->work_mutex);
 	INIT_DELAYED_WORK(&psock->work_backlog, sk_psock_backlog_msg_work);
-	mutex_init(&psock->work_backlog_mutex);
 	INIT_LIST_HEAD(&psock->ingress_msg);
 	spin_lock_init(&psock->ingress_lock);
 	INIT_LIST_HEAD(&psock->backlog_msg);
@@ -963,8 +960,6 @@ static void sk_psock_destroy(struct work_struct *work)
 	__sk_psock_zap_ingress(psock);
 	__sk_psock_purge_ingress_msg_backlog(psock);
 	mutex_destroy(&psock->work_mutex);
-	mutex_destroy(&psock->work_backlog_mutex);
-
 	psock_progs_drop(&psock->progs);
 
 	sk_psock_link_destroy(psock);
