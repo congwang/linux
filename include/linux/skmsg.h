@@ -121,7 +121,6 @@ struct sk_psock {
 	struct mutex			work_mutex;
 	struct sk_psock_work_state	work_state;
 	struct delayed_work		work;
-	struct mutex			work_backlog_mutex;
 	bool				work_backlog_delayed;
 	struct delayed_work		work_backlog;
 	struct sock			*sk_pair;
