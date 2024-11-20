@@ -701,7 +701,7 @@ end:
 	mutex_unlock(&psock->work_mutex);
 }
 
-static inline void schedule_delayed_work_backlog(struct sk_psock *psock)
+static void schedule_delayed_work_backlog(struct sk_psock *psock)
 {
 	psock->work_backlog_delayed = true;
 	schedule_delayed_work(&psock->work_backlog, 1);
@@ -709,7 +709,7 @@ static inline void schedule_delayed_work_backlog(struct sk_psock *psock)
 
 void sk_psock_backlog_msg(struct sk_psock *psock)
 {
-	bool sk_rmem_schedule_failed = false;
+	bool rmem_schedule_failed = false;
 	struct sock *sk_from = NULL;
 	struct sock *sk = psock->sk;
 	struct sk_msg *msg, *tmp;
@@ -740,7 +740,7 @@ void sk_psock_backlog_msg(struct sk_psock *psock)
 			break;
 
 		if (!__sk_rmem_schedule(sk, size, false)) {
-			sk_rmem_schedule_failed = true;
+			rmem_schedule_failed = true;
 			break;
 		}
 
@@ -761,7 +761,7 @@ void sk_psock_backlog_msg(struct sk_psock *psock)
 	 */
 	should_notify = psock->backlog_since_notify >= 65536 ||
 			psock->work_backlog_delayed ||
-			sk_rmem_schedule_failed ||
+			rmem_schedule_failed ||
 			list_empty(&psock->ingress_msg);
 	if (should_notify)
 		psock->backlog_since_notify = 0;
@@ -779,7 +779,7 @@ notify:
 		sk_psock_data_ready(sk, psock);
 
 		if (!list_empty(&psock->backlog_msg)) {
-			if (sk_rmem_schedule_failed)
+			if (rmem_schedule_failed)
 				schedule_delayed_work_backlog(psock);
 			else
 				schedule_delayed_work(&psock->work_backlog, 0);
