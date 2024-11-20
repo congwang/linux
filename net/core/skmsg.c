@@ -718,7 +718,6 @@ void sk_psock_backlog_msg(struct sk_psock *psock)
 	u32 tot_size = 0;
 	bool slow;
 
-	mutex_lock(&psock->work_backlog_mutex);
 	lock_sock(sk);
 	spin_lock(&psock->backlog_msg_lock);
 
@@ -789,7 +788,6 @@ notify:
 		schedule_delayed_work_backlog(psock);
 	}
 	release_sock(sk);
-	mutex_unlock(&psock->work_backlog_mutex);
 
 	/* Memory account for sk_from */
 	if (!sk_from)
@@ -806,7 +804,9 @@ static void sk_psock_backlog_msg_work(struct work_struct *work)
 	struct delayed_work *dwork = to_delayed_work(work);
 	struct sk_psock *psock = container_of(dwork, struct sk_psock, work_backlog);
 
+	mutex_lock(&psock->work_backlog_mutex);
 	sk_psock_backlog_msg(psock);
+	mutex_unlock(&psock->work_backlog_mutex);
 }
 
 struct sk_psock *sk_psock_init(struct sock *sk, int node)
