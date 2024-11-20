@@ -716,6 +716,7 @@ void sk_psock_backlog_msg(struct sk_psock *psock)
 	LIST_HEAD(local_head);
 	bool should_notify;
 	u32 tot_size = 0;
+	bool slow;
 
 	mutex_lock(&psock->work_backlog_mutex);
 	lock_sock(sk);
@@ -793,9 +794,9 @@ notify:
 	/* Memory account for sk_from */
 	if (!sk_from)
 		return;
-	lock_sock(sk_from);
+	slow = lock_sock_fast(sk_from);
 	sk_mem_uncharge(sk_from, tot_size);
-	release_sock(sk_from);
+	unlock_sock_fast(sk_from, slow);
 	sock_put(sk_from);
 }
 EXPORT_SYMBOL_GPL(sk_psock_backlog_msg);
@@ -905,30 +906,28 @@ static void __sk_psock_zap_ingress(struct sk_psock *psock)
 static void __sk_psock_purge_ingress_msg_backlog(struct sk_psock *psock)
 {
 	struct sk_msg *msg, *tmp;
-	struct sock *sk_from;
+	LIST_HEAD(local_head);
 
 	spin_lock(&psock->backlog_msg_lock);
-	msg = list_first_entry_or_null(&psock->backlog_msg, struct sk_msg, list);
-	if (!msg)
-		goto out;
-	sk_from = msg->sk;
+	if (list_empty(&psock->backlog_msg)) {
+		spin_unlock(&psock->backlog_msg_lock);
+		return;
+	}
+	list_splice_tail_init(&local_head, &psock->backlog_msg);
+	spin_unlock(&psock->backlog_msg_lock);
 
-	lock_sock(sk_from);
-	list_for_each_entry_safe(msg, tmp, &psock->backlog_msg, list) {
-		if (msg->sk != sk_from) {
-			release_sock(sk_from);
-			sk_from = msg->sk;
-			lock_sock(sk_from);
-		}
-		sock_put(msg->sk);
+	list_for_each_entry_safe(msg, tmp, &local_head, list) {
+		struct sock *sk_from = msg->sk;
+		bool slow;
+
 		list_del(&msg->list);
+		slow = lock_sock_fast(sk_from);
+		sock_put(sk_from);
 		sk_msg_free_nocharge(psock->sk, msg);
 		sk_mem_uncharge(sk_from, msg->sg.size);
+		unlock_sock_fast(sk_from, slow);
 		kmem_cache_free(sk_msg_cachep, msg);
 	}
-	release_sock(sk_from);
-out:
-	spin_unlock(&psock->backlog_msg_lock);
 }
 
 static void sk_psock_link_destroy(struct sk_psock *psock)
