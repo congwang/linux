@@ -54,6 +54,10 @@
 #define USEC_PER_SEC	1000000L
 #define NSEC_PER_SEC	1000000000LL
 
+#ifndef SCM_TS_OPT_ID
+#define SCM_TS_OPT_ID		81
+#endif
+
 /* command line parameters */
 static int cfg_proto = SOCK_STREAM;
 static int cfg_ipproto = IPPROTO_TCP;
