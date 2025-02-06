@@ -395,6 +395,25 @@ static void ping_pong(struct xsk *xsk, void *rx_packet, clockid_t clock_id)
 	       xsk, ntohs(udph->check), ntohs(want_csum),
 	       meta->request.csum_start, meta->request.csum_offset);
 
+	/* Test GSO by splitting the UDP packet into multiple segments */
+	meta->flags |= XDP_TXMD_FLAGS_GSO;
+	meta->gso.gso_size = 16;  /* Small segments since this is a test packet */
+	meta->gso.gso_segs = 2;   /* Split into 2 segments */
+	meta->gso.gso_type = XDP_GSO_UDPV4;  /* UDP segmentation */
+
+	printf("%p: ping-pong with GSO: size=%d segs=%d type=%d total_len=%d\n",
+	       xsk, meta->gso.gso_size, meta->gso.gso_segs,
+	       meta->gso.gso_type, len);
+
+	/* Verify the GSO parameters make sense */
+	if (meta->gso.gso_size * meta->gso.gso_segs > len) {
+		printf("%p: ERROR: GSO segments (%d * %d = %d) exceed packet length (%d)\n",
+		       xsk, meta->gso.gso_size, meta->gso.gso_segs,
+		       meta->gso.gso_size * meta->gso.gso_segs, len);
+		xsk_ring_prod__cancel(&xsk->tx, 1);
+		return;
+	}
+
 	memcpy(data, rx_packet, len); /* don't share umem chunk for simplicity */
 	tx_desc->options |= XDP_TX_METADATA;
 	tx_desc->len = len;

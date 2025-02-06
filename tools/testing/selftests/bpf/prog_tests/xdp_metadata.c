@@ -69,7 +69,7 @@ static int open_xsk(int ifindex, struct xsk *xsk)
 		.comp_size = XSK_RING_CONS__DEFAULT_NUM_DESCS,
 		.frame_size = XSK_UMEM__DEFAULT_FRAME_SIZE,
 		.flags = XDP_UMEM_UNALIGNED_CHUNK_FLAG | XDP_UMEM_TX_SW_CSUM |
-			 XDP_UMEM_TX_METADATA_LEN,
+			 XDP_UMEM_TX_METADATA_LEN | XDP_UMEM_TX_SW_GSO,
 		.tx_metadata_len = sizeof(struct xsk_tx_metadata),
 	};
 	__u32 idx;
@@ -188,6 +188,18 @@ static int generate_packet(struct xsk *xsk, __u16 dst_port)
 	meta->flags |= XDP_TXMD_FLAGS_CHECKSUM;
 	meta->request.csum_start = sizeof(*eth) + sizeof(*iph);
 	meta->request.csum_offset = offsetof(struct udphdr, check);
+
+	/* Add GSO test */
+	meta->flags |= XDP_TXMD_FLAGS_GSO;
+	meta->gso.gso_size = 16;  /* Small segments since this is a test packet */
+	meta->gso.gso_segs = 2;   /* Split into 2 segments */
+	meta->gso.gso_type = XDP_GSO_UDPV4;
+
+	/* Verify GSO parameters */
+	if (!ASSERT_LE(meta->gso.gso_size * meta->gso.gso_segs,
+		       sizeof(*eth) + ntohs(iph->tot_len),
+		       "gso_size * gso_segs <= packet_len"))
+		return -EINVAL;
 
 	tx_desc->len = sizeof(*eth) + sizeof(*iph) + sizeof(*udph) + UDP_PAYLOAD_BYTES;
 	tx_desc->options |= XDP_TX_METADATA;
@@ -326,6 +338,20 @@ static int verify_xsk_metadata(struct xsk *xsk, bool sent_from_af_xdp)
 
 	/* checksum offload */
 	ASSERT_EQ(udph->check, htons(0x721c), "csum");
+
+	/* GSO verification - should have been split into segments */
+	if (sent_from_af_xdp) {
+		/* Each segment should be 16 bytes as configured */
+		ASSERT_EQ(rx_desc->len, 16, "gso segment size");
+
+		/* Verify UDP payload length matches segment size */
+		ASSERT_EQ(ntohs(udph->len), rx_desc->len - sizeof(*eth) - sizeof(*iph),
+			 "udp segment length");
+
+		/* Total segments should match what we configured */
+		ASSERT_EQ(xsk_ring_cons__peek(&xsk->rx, 2, &idx), 2,
+			 "number of gso segments");
+	}
 
 done:
 	xsk_ring_cons__release(&xsk->rx, 1);
