@@ -45,6 +45,12 @@
  */
 #define XDP_UMEM_TX_METADATA_LEN	(1 << 2)
 
+/* Force GSO to be handled in software. Can be used for testing or
+ * working around lack of hardware GSO support. This option causes
+ * performance degradation and only works in XDP_COPY mode.
+ */
+#define XDP_UMEM_TX_SW_GSO		(1 << 3)
+
 struct sockaddr_xdp {
 	__u16 sxdp_family;
 	__u16 sxdp_flags;
@@ -127,6 +133,16 @@ struct xdp_options {
  */
 #define XDP_TXMD_FLAGS_CHECKSUM			(1 << 1)
 
+/* Request transmit GSO (Generic Segmentation Offload). */
+#define XDP_TXMD_FLAGS_GSO			(1 << 2)
+
+/* GSO types for the gso_type field */
+#define XDP_GSO_NONE		0
+#define XDP_GSO_TCPV4		1
+#define XDP_GSO_TCPV6		2
+#define XDP_GSO_UDPV4		3
+#define XDP_GSO_UDPV6		4
+
 /* AF_XDP offloads request. 'request' union member is consumed by the driver
  * when the packet is being transmitted. 'completion' union member is
  * filled by the driver when the transmit completion arrives.
@@ -148,6 +164,13 @@ struct xsk_tx_metadata {
 			/* XDP_TXMD_FLAGS_TIMESTAMP */
 			__u64 tx_timestamp;
 		} completion;
+
+		struct {
+			/* XDP_TXMD_FLAGS_GSO */
+			__u16 gso_size;    /* Size of each segment */
+			__u16 gso_segs;    /* Number of segments */
+			__u32 gso_type;    /* GSO type above */
+		} gso;
 	};
 };
 

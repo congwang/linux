@@ -152,6 +152,7 @@ static int xdp_umem_account_pages(struct xdp_umem *umem)
 		XDP_UMEM_UNALIGNED_CHUNK_FLAG | \
 		XDP_UMEM_TX_SW_CSUM | \
 		XDP_UMEM_TX_METADATA_LEN | \
+		XDP_UMEM_TX_SW_GSO | \
 	0)
 
 static int xdp_umem_reg(struct xdp_umem *umem, struct xdp_umem_reg *mr)

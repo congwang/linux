@@ -594,8 +594,13 @@ static void xsk_consume_skb(struct sk_buff *skb)
 
 static void xsk_drop_skb(struct sk_buff *skb)
 {
-	xdp_sk(skb->sk)->tx->invalid_descs += xsk_get_num_desc(skb);
-	xsk_consume_skb(skb);
+	struct xdp_sock *xs = xdp_sk(skb->sk);
+
+	xs->tx->invalid_descs += xsk_get_num_desc(skb);
+	if (skb_is_gso(skb))
+		kfree_skb_list(skb);
+	else
+		xsk_consume_skb(skb);
 }
 
 static struct sk_buff *xsk_build_skb_zerocopy(struct xdp_sock *xs,
@@ -741,6 +746,83 @@ static struct sk_buff *xsk_build_skb(struct xdp_sock *xs,
 					if (err)
 						goto free_err;
 				}
+			}
+
+			if (meta->flags & XDP_TXMD_FLAGS_GSO) {
+				struct sk_buff *segs;
+				__u32 gso_type;
+
+				if (unlikely(meta->gso.gso_size == 0 ||
+					    meta->gso.gso_segs == 0 ||
+					    meta->gso.gso_segs > GSO_MAX_SEGS)) {
+					err = -EINVAL;
+					goto free_err;
+				}
+				/* Make sure gso_size * gso_segs doesn't exceed packet length */
+				if (unlikely((u64)meta->gso.gso_size * meta->gso.gso_segs > len)) {
+					err = -EINVAL;
+					goto free_err;
+				}
+
+				switch (meta->gso.gso_type) {
+				case XDP_GSO_TCPV4:
+					gso_type = SKB_GSO_TCPV4;
+					skb->protocol = htons(ETH_P_IP);
+					break;
+				case XDP_GSO_TCPV6:
+					gso_type = SKB_GSO_TCPV6;
+					skb->protocol = htons(ETH_P_IPV6);
+					break;
+				case XDP_GSO_UDPV4:
+					gso_type = SKB_GSO_UDP_L4;
+					skb->protocol = htons(ETH_P_IP);
+					break;
+				case XDP_GSO_UDPV6:
+					gso_type = SKB_GSO_UDP_L4;
+					skb->protocol = htons(ETH_P_IPV6);
+					break;
+				default:
+					err = -EINVAL;
+					goto free_err;
+				}
+
+				skb_shinfo(skb)->gso_size = meta->gso.gso_size;
+				skb_shinfo(skb)->gso_segs = meta->gso.gso_segs;
+				skb_shinfo(skb)->gso_type = gso_type;
+
+				skb->dev = dev;
+				if (unlikely(xs->pool->tx_sw_gso)) {
+					/* Pull data back to make room for MAC header */
+					skb_push(skb, ETH_HLEN);
+					skb_reset_mac_header(skb);
+					skb_set_network_header(skb, ETH_HLEN);
+					switch (meta->gso.gso_type) {
+					case XDP_GSO_TCPV4:
+					case XDP_GSO_UDPV4:
+						skb_set_transport_header(skb, ETH_HLEN + sizeof(struct iphdr));
+						break;
+					case XDP_GSO_TCPV6:
+					case XDP_GSO_UDPV6:
+						skb_set_transport_header(skb, ETH_HLEN + sizeof(struct ipv6hdr));
+						break;
+					}
+					segs = skb_segment(skb, 0);
+					if (IS_ERR(segs)) {
+						err = PTR_ERR(segs);
+						goto free_err;
+					}
+					segs->sk = &xs->sk;
+					consume_skb(skb);
+					skb = segs;
+					xs->skb = segs;
+				} else {
+					netdev_features_t features = netif_skb_features(skb);
+					if (netif_needs_gso(skb, features)) {
+						err = -EOPNOTSUPP;
+						goto free_err;
+					}
+				}
+
 			}
 		}
 	}
