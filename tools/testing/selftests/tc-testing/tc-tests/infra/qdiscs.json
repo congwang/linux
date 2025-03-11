@@ -182,5 +182,61 @@
             "$TC qdisc del dev $DUMMY handle 1: root",
             "$IP addr del 10.10.10.10/24 dev $DUMMY || true"
         ]
+    },
+    {
+        "id": "a4bc",
+        "name": "Test CODEL with HTB parent",
+        "category": [
+            "qdisc",
+            "codel",
+            "htb"
+        ],
+        "plugins": {
+            "requires": "nsPlugin"
+        },
+        "setup": [
+            "$IP link set dev $DUMMY up || true",
+            "$TC qdisc add dev $DUMMY handle 1: root htb default 10",
+            "$TC class add dev $DUMMY parent 1: classid 1:10 htb rate 100mbit",
+            "$TC qdisc add dev $DUMMY parent 1:10 handle 10: codel"
+        ],
+        "cmdUnderTest": "$TC -s qdisc show dev $DUMMY",
+        "expExitCode": "0",
+        "verifyCmd": "$TC -s qdisc show dev $DUMMY",
+        "matchPattern": "qdisc codel 10: parent 1:10",
+        "matchCount": "1",
+        "teardown": [
+            "$TC qdisc del dev $DUMMY handle 1: root"
+        ]
+    },
+    {
+        "id": "a4bd",
+        "name": "Test CODEL with HTB parent - force packet drop with empty queue",
+        "category": [
+            "qdisc",
+            "codel",
+            "htb"
+        ],
+        "plugins": {
+            "requires": "nsPlugin"
+        },
+        "setup": [
+            "$IP link set dev $DUMMY up || true",
+            "$IP addr add 10.10.10.10/24 dev $DUMMY || true",
+            "$TC qdisc add dev $DUMMY handle 1: root htb default 10",
+            "$TC class add dev $DUMMY parent 1: classid 1:10 htb rate 1kbit ceil 1kbit burst 1 prio 1",
+            "$TC qdisc add dev $DUMMY parent 1:10 handle 10: codel limit 1 target 0.01ms interval 1ms noecn",
+            "ping -c 2 -i 0 -s 1400 -I $DUMMY 10.10.10.1 > /dev/null || true",
+            "sleep 0.5"
+        ],
+        "cmdUnderTest": "$TC -s qdisc show dev $DUMMY",
+        "expExitCode": "0",
+        "verifyCmd": "$TC -s qdisc show dev $DUMMY | grep -A 5 'qdisc codel'",
+        "matchPattern": "dropped [1-9][0-9]*",
+        "matchCount": "1",
+        "teardown": [
+            "$TC qdisc del dev $DUMMY handle 1: root",
+            "$IP addr del 10.10.10.10/24 dev $DUMMY || true"
+        ]
     }
 ]
