@@ -122,13 +122,12 @@ static int skbprio_enqueue(struct sk_buff *skb, struct Qdisc *sch,
 
 	/* Check to update highest and lowest priorities. */
 	if (skb_queue_empty(lp_qdisc)) {
+		q->lowest_prio = calc_new_low_prio(q);
 		if (q->lowest_prio == q->highest_prio) {
 			/* The incoming packet is the only packet in queue. */
 			BUG_ON(sch->q.qlen != 1);
 			q->lowest_prio = prio;
 			q->highest_prio = prio;
-		} else {
-			q->lowest_prio = calc_new_low_prio(q);
 		}
 	}
 
@@ -155,12 +154,11 @@ static struct sk_buff *skbprio_dequeue(struct Qdisc *sch)
 
 	/* Update highest priority field. */
 	if (skb_queue_empty(hpq)) {
+		q->highest_prio = calc_new_high_prio(q);
 		if (q->lowest_prio == q->highest_prio) {
 			BUG_ON(sch->q.qlen);
 			q->highest_prio = 0;
 			q->lowest_prio = SKBPRIO_MAX_PRIORITY - 1;
-		} else {
-			q->highest_prio = calc_new_high_prio(q);
 		}
 	}
 	return skb;
