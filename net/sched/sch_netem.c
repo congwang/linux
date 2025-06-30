@@ -419,26 +419,6 @@ static void tfifo_enqueue(struct sk_buff *nskb, struct Qdisc *sch)
 	sch->q.qlen++;
 }
 
-/* netem can't properly corrupt a megapacket (like we get from GSO), so instead
- * when we statistically choose to corrupt one, we instead segment it, returning
- * the first packet to be corrupted, and re-enqueue the remaining frames
- */
-static struct sk_buff *netem_segment(struct sk_buff *skb, struct Qdisc *sch,
-				     struct sk_buff **to_free)
-{
-	struct sk_buff *segs;
-	netdev_features_t features = netif_skb_features(skb);
-
-	segs = skb_gso_segment(skb, features & ~NETIF_F_GSO_MASK);
-
-	if (IS_ERR_OR_NULL(segs)) {
-		qdisc_drop(skb, sch, to_free);
-		return NULL;
-	}
-	consume_skb(skb);
-	return segs;
-}
-
 /*
  * Insert one skb into qdisc.
  * Note: parent depends on return value to account for queue length.
@@ -496,16 +476,6 @@ static int netem_enqueue(struct sk_buff *skb, struct Qdisc *sch,
 	 * do it now in software before we mangle it.
 	 */
 	if (q->corrupt && q->corrupt >= get_crandom(&q->corrupt_cor, &q->prng)) {
-		if (skb_is_gso(skb)) {
-			skb = netem_segment(skb, sch, to_free);
-			if (!skb)
-				goto finish_segs;
-
-			segs = skb->next;
-			skb_mark_not_on_list(skb);
-			qdisc_skb_cb(skb)->pkt_len = skb->len;
-		}
-
 		skb = skb_unshare(skb, GFP_ATOMIC);
 		if (unlikely(!skb)) {
 			qdisc_qstats_drop(sch);
@@ -1075,6 +1045,8 @@ static int netem_change(struct Qdisc *sch, struct nlattr *opt,
 	else
 		q->prng.seed = get_random_u64();
 	prandom_seed_state(&q->prng.prng_state, q->prng.seed);
+	if (q->corrupt)
+		sch->flags |= TCQ_F_NEED_SEGMENT;
 
 unlock:
 	sch_tree_unlock(sch);

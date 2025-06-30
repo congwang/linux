@@ -199,49 +199,6 @@ static void tbf_offload_graft(struct Qdisc *sch, struct Qdisc *new,
 				   TC_SETUP_QDISC_TBF, &graft_offload, extack);
 }
 
-/* GSO packet is too big, segment it so that tbf can transmit
- * each segment in time
- */
-static int tbf_segment(struct sk_buff *skb, struct Qdisc *sch,
-		       struct sk_buff **to_free)
-{
-	struct tbf_sched_data *q = qdisc_priv(sch);
-	struct sk_buff *segs, *nskb;
-	netdev_features_t features = netif_skb_features(skb);
-	unsigned int len = 0, prev_len = qdisc_pkt_len(skb), seg_len;
-	int ret, nb;
-
-	segs = skb_gso_segment(skb, features & ~NETIF_F_GSO_MASK);
-
-	if (IS_ERR_OR_NULL(segs))
-		return qdisc_drop(skb, sch, to_free);
-
-	nb = 0;
-	skb_list_walk_safe(segs, segs, nskb) {
-		skb_mark_not_on_list(segs);
-		seg_len = segs->len;
-		qdisc_skb_cb(segs)->pkt_len = seg_len;
-		ret = qdisc_enqueue(segs, q->qdisc, to_free);
-		if (ret != NET_XMIT_SUCCESS) {
-			if (net_xmit_drop_count(ret))
-				qdisc_qstats_drop(sch);
-		} else {
-			nb++;
-			len += seg_len;
-		}
-	}
-	sch->q.qlen += nb;
-	sch->qstats.backlog += len;
-	if (nb > 0) {
-		qdisc_tree_reduce_backlog(sch, 1 - nb, prev_len - len);
-		consume_skb(skb);
-		return NET_XMIT_SUCCESS;
-	}
-
-	kfree_skb(skb);
-	return NET_XMIT_DROP;
-}
-
 static int tbf_enqueue(struct sk_buff *skb, struct Qdisc *sch,
 		       struct sk_buff **to_free)
 {
@@ -249,12 +206,8 @@ static int tbf_enqueue(struct sk_buff *skb, struct Qdisc *sch,
 	unsigned int len = qdisc_pkt_len(skb);
 	int ret;
 
-	if (qdisc_pkt_len(skb) > q->max_size) {
-		if (skb_is_gso(skb) &&
-		    skb_gso_validate_mac_len(skb, q->max_size))
-			return tbf_segment(skb, sch, to_free);
+	if (qdisc_pkt_len(skb) > q->max_size)
 		return qdisc_drop(skb, sch, to_free);
-	}
 	ret = qdisc_enqueue(skb, q->qdisc, to_free);
 	if (ret != NET_XMIT_SUCCESS) {
 		if (net_xmit_drop_count(ret))
@@ -493,7 +446,7 @@ static int tbf_init(struct Qdisc *sch, struct nlattr *opt,
 		return -EINVAL;
 
 	q->t_c = ktime_get_ns();
-
+	sch->flags |= TCQ_F_NEED_SEGMENT;
 	return tbf_change(sch, opt, extack);
 }
 

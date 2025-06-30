@@ -1784,72 +1784,37 @@ static s32 cake_enqueue(struct sk_buff *skb, struct Qdisc *sch,
 	if (unlikely(len > b->max_skblen))
 		b->max_skblen = len;
 
-	if (skb_is_gso(skb) && q->rate_flags & CAKE_FLAG_SPLIT_GSO) {
-		struct sk_buff *segs, *nskb;
-		netdev_features_t features = netif_skb_features(skb);
-		unsigned int slen = 0, numsegs = 0;
+	/* not splitting */
+	cobalt_set_enqueue_time(skb, now);
+	get_cobalt_cb(skb)->adjusted_len = cake_overhead(q, skb);
+	flow_queue_add(flow, skb);
 
-		segs = skb_gso_segment(skb, features & ~NETIF_F_GSO_MASK);
-		if (IS_ERR_OR_NULL(segs))
-			return qdisc_drop(skb, sch, to_free);
+	if (q->ack_filter)
+		ack = cake_ack_filter(q, flow);
 
-		skb_list_walk_safe(segs, segs, nskb) {
-			skb_mark_not_on_list(segs);
-			qdisc_skb_cb(segs)->pkt_len = segs->len;
-			cobalt_set_enqueue_time(segs, now);
-			get_cobalt_cb(segs)->adjusted_len = cake_overhead(q,
-									  segs);
-			flow_queue_add(flow, segs);
+	if (ack) {
+		b->ack_drops++;
+		sch->qstats.drops++;
+		b->bytes += qdisc_pkt_len(ack);
+		len -= qdisc_pkt_len(ack);
+		q->buffer_used += skb->truesize - ack->truesize;
+		if (q->rate_flags & CAKE_FLAG_INGRESS)
+			cake_advance_shaper(q, b, ack, now, true);
 
-			sch->q.qlen++;
-			numsegs++;
-			slen += segs->len;
-			q->buffer_used += segs->truesize;
-			b->packets++;
-		}
-
-		/* stats */
-		b->bytes	    += slen;
-		b->backlogs[idx]    += slen;
-		b->tin_backlog      += slen;
-		sch->qstats.backlog += slen;
-		q->avg_window_bytes += slen;
-
-		qdisc_tree_reduce_backlog(sch, 1-numsegs, len-slen);
-		consume_skb(skb);
+		qdisc_tree_reduce_backlog(sch, 1, qdisc_pkt_len(ack));
+		consume_skb(ack);
 	} else {
-		/* not splitting */
-		cobalt_set_enqueue_time(skb, now);
-		get_cobalt_cb(skb)->adjusted_len = cake_overhead(q, skb);
-		flow_queue_add(flow, skb);
-
-		if (q->ack_filter)
-			ack = cake_ack_filter(q, flow);
-
-		if (ack) {
-			b->ack_drops++;
-			sch->qstats.drops++;
-			b->bytes += qdisc_pkt_len(ack);
-			len -= qdisc_pkt_len(ack);
-			q->buffer_used += skb->truesize - ack->truesize;
-			if (q->rate_flags & CAKE_FLAG_INGRESS)
-				cake_advance_shaper(q, b, ack, now, true);
-
-			qdisc_tree_reduce_backlog(sch, 1, qdisc_pkt_len(ack));
-			consume_skb(ack);
-		} else {
-			sch->q.qlen++;
-			q->buffer_used      += skb->truesize;
-		}
-
-		/* stats */
-		b->packets++;
-		b->bytes	    += len;
-		b->backlogs[idx]    += len;
-		b->tin_backlog      += len;
-		sch->qstats.backlog += len;
-		q->avg_window_bytes += len;
+		sch->q.qlen++;
+		q->buffer_used      += skb->truesize;
 	}
+
+	/* stats */
+	b->packets++;
+	b->bytes	    += len;
+	b->backlogs[idx]    += len;
+	b->tin_backlog      += len;
+	sch->qstats.backlog += len;
+	q->avg_window_bytes += len;
 
 	if (q->overflow_timeout)
 		cake_heapify_up(q, b->overflow_idx[idx]);
@@ -2690,6 +2655,8 @@ static int cake_change(struct Qdisc *sch, struct nlattr *opt,
 	}
 
 	WRITE_ONCE(q->rate_flags, rate_flags);
+	if (q->rate_flags & CAKE_FLAG_SPLIT_GSO)
+		sch->flags |= TCQ_F_NEED_SEGMENT;
 	WRITE_ONCE(q->flow_mode, flow_mode);
 	if (q->tins) {
 		sch_tree_lock(sch);

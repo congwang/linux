@@ -1210,6 +1210,13 @@ skip:
 		err = cops->graft(parent, cl, new, &old, extack);
 		if (err)
 			return err;
+		/* Propagate TCQ_F_NEED_SEGMENT to root Qdisc if needed */
+		if (new && (new->flags & TCQ_F_NEED_SEGMENT)) {
+			struct Qdisc *root = qdisc_root(parent);
+
+			if (root)
+				root->flags |= TCQ_F_NEED_SEGMENT;
+		}
 		notify_and_destroy(net, skb, n, classid, old, new, extack);
 	}
 	return 0;

@@ -4061,8 +4061,44 @@ static int dev_qdisc_enqueue(struct sk_buff *skb, struct Qdisc *q,
 			     struct sk_buff **to_free,
 			     struct netdev_queue *txq)
 {
-	int rc;
+	int rc = NET_XMIT_SUCCESS;
 
+	if ((q->flags & TCQ_F_NEED_SEGMENT) && skb_is_gso(skb)) {
+		netdev_features_t features = netif_skb_features(skb);
+		struct sk_buff *segs, *nskb, *next;
+		struct sk_buff *fail_list = NULL;
+		bool any_fail = false;
+		int seg_rc;
+
+		segs = skb_gso_segment(skb, features);
+		if (IS_ERR(segs)) {
+			kfree_skb_reason(skb, SKB_DROP_REASON_NOT_SPECIFIED);
+			return NET_XMIT_DROP;
+		}
+		consume_skb(skb);
+
+		for (nskb = segs; nskb; nskb = next) {
+			next = nskb->next;
+			nskb->next = NULL;
+			seg_rc = q->enqueue(nskb, q, to_free) & NET_XMIT_MASK;
+			if (seg_rc != NET_XMIT_SUCCESS) {
+				/* On failure, drop this and all remaining segments */
+				kfree_skb_reason(nskb, SKB_DROP_REASON_QDISC_DROP);
+				any_fail = true;
+				fail_list = next;
+				break;
+			}
+			trace_qdisc_enqueue(q, txq, nskb);
+		}
+
+		if (any_fail && fail_list) {
+			kfree_skb_list_reason(fail_list, SKB_DROP_REASON_QDISC_DROP);
+			rc = NET_XMIT_DROP;
+		}
+		return rc;
+	}
+
+	/* Non-GSO path: enqueue as usual */
 	rc = q->enqueue(skb, q, to_free) & NET_XMIT_MASK;
 	if (rc == NET_XMIT_SUCCESS)
 		trace_qdisc_enqueue(q, txq, skb);
