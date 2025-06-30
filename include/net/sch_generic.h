@@ -108,7 +108,7 @@ struct Qdisc {
 	struct net_rate_estimator __rcu *rate_est;
 	struct gnet_stats_basic_sync __percpu *cpu_bstats;
 	struct gnet_stats_queue	__percpu *cpu_qstats;
-	int			pad;
+	unsigned int max_segment_size; /* minimum max_size of all children, 0 = use device MTU */
 	refcount_t		refcnt;
 
 	/*
@@ -319,6 +319,7 @@ struct Qdisc_ops {
 						    u32 block_index);
 	u32			(*ingress_block_get)(struct Qdisc *sch);
 	u32			(*egress_block_get)(struct Qdisc *sch);
+	unsigned int		(*get_max_size)(struct Qdisc *sch);
 
 	struct module		*owner;
 };

@@ -552,12 +552,20 @@ static const struct Qdisc_class_ops tbf_class_ops = {
 	.dump		=	tbf_dump_class,
 };
 
+static unsigned int tbf_get_max_size(struct Qdisc *sch)
+{
+	struct tbf_sched_data *q = qdisc_priv(sch);
+
+	return q->max_size;
+}
+
 static struct Qdisc_ops tbf_qdisc_ops __read_mostly = {
 	.next		=	NULL,
 	.cl_ops		=	&tbf_class_ops,
 	.id		=	"tbf",
 	.priv_size	=	sizeof(struct tbf_sched_data),
 	.enqueue	=	tbf_enqueue,
+	.get_max_size	=	tbf_get_max_size,
 	.dequeue	=	tbf_dequeue,
 	.peek		=	qdisc_peek_dequeued,
 	.init		=	tbf_init,

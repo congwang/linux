@@ -2457,6 +2457,35 @@ static struct netdev_queue *taprio_select_queue(struct Qdisc *sch,
 	return taprio_queue_get(sch, TC_H_MIN(tcm->tcm_parent));
 }
 
+static unsigned int taprio_get_max_size(struct Qdisc *sch)
+{
+	struct taprio_sched *q = qdisc_priv(sch);
+	struct sched_gate_list *sched;
+	struct net_device *dev = qdisc_dev(sch);
+	unsigned int min_frm_len = ~0U;
+	int num_tc = netdev_get_num_tc(dev);
+	int tc;
+
+	rcu_read_lock();
+	sched = rcu_dereference(q->oper_sched);
+	if (!sched) {
+		rcu_read_unlock();
+		return 0;
+	}
+
+	for (tc = 0; tc < num_tc; tc++) {
+		if (sched->max_frm_len[tc] && sched->max_frm_len[tc] < min_frm_len)
+			min_frm_len = sched->max_frm_len[tc];
+	}
+
+	rcu_read_unlock();
+
+	if (min_frm_len == ~0U)
+		return 0;
+
+	return min_frm_len;
+}
+
 static const struct Qdisc_class_ops taprio_class_ops = {
 	.graft		= taprio_graft,
 	.leaf		= taprio_leaf,
@@ -2481,6 +2510,7 @@ static struct Qdisc_ops taprio_qdisc_ops __read_mostly = {
 	.enqueue	= taprio_enqueue,
 	.dump		= taprio_dump,
 	.dump_stats	= taprio_dump_stats,
+	.get_max_size	= taprio_get_max_size,
 	.owner		= THIS_MODULE,
 };
 MODULE_ALIAS_NET_SCH("taprio");

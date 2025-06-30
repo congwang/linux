@@ -4059,11 +4059,17 @@ static void qdisc_pkt_len_init(struct sk_buff *skb)
 
 static int dev_qdisc_enqueue(struct sk_buff *skb, struct Qdisc *q,
 			     struct sk_buff **to_free,
-			     struct netdev_queue *txq)
+			     struct netdev_queue *txq, unsigned int mtu)
 {
+	unsigned int seg_limit = mtu;
 	int rc = NET_XMIT_SUCCESS;
 
-	if ((q->flags & TCQ_F_NEED_SEGMENT) && skb_is_gso(skb)) {
+	if (q->max_segment_size)
+		seg_limit = q->max_segment_size;
+
+	if ((q->flags & TCQ_F_NEED_SEGMENT) &&
+	    qdisc_pkt_len(skb) > seg_limit &&
+	    skb_is_gso(skb)) {
 		netdev_features_t features = netif_skb_features(skb);
 		struct sk_buff *segs, *nskb, *next;
 		struct sk_buff *fail_list = NULL;
@@ -4125,7 +4131,7 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
 			 * of q->seqlock to protect from racing with requeuing.
 			 */
 			if (unlikely(!nolock_qdisc_is_empty(q))) {
-				rc = dev_qdisc_enqueue(skb, q, &to_free, txq);
+				rc = dev_qdisc_enqueue(skb, q, &to_free, txq, dev->mtu);
 				__qdisc_run(q);
 				qdisc_run_end(q);
 
@@ -4141,7 +4147,7 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
 			return NET_XMIT_SUCCESS;
 		}
 
-		rc = dev_qdisc_enqueue(skb, q, &to_free, txq);
+		rc = dev_qdisc_enqueue(skb, q, &to_free, txq, dev->mtu);
 		qdisc_run(q);
 
 no_lock_out:
@@ -4195,7 +4201,7 @@ no_lock_out:
 		rc = NET_XMIT_SUCCESS;
 	} else {
 		WRITE_ONCE(q->owner, smp_processor_id());
-		rc = dev_qdisc_enqueue(skb, q, &to_free, txq);
+		rc = dev_qdisc_enqueue(skb, q, &to_free, txq, dev->mtu);
 		WRITE_ONCE(q->owner, -1);
 		if (qdisc_run_begin(q)) {
 			if (unlikely(contended)) {

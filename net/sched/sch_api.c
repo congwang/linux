@@ -1210,12 +1210,19 @@ skip:
 		err = cops->graft(parent, cl, new, &old, extack);
 		if (err)
 			return err;
-		/* Propagate TCQ_F_NEED_SEGMENT to root Qdisc if needed */
+		/* Propagate TCQ_F_NEED_SEGMENT and max_segment_size to root Qdisc if needed */
 		if (new && (new->flags & TCQ_F_NEED_SEGMENT)) {
 			struct Qdisc *root = qdisc_root(parent);
+			unsigned int child_max = 0;
 
-			if (root)
+			if (new->ops->get_max_size)
+				child_max = new->ops->get_max_size(new);
+			if (root) {
+				if (!root->max_segment_size ||
+				    (child_max && child_max < root->max_segment_size))
+					root->max_segment_size = child_max;
 				root->flags |= TCQ_F_NEED_SEGMENT;
+			}
 		}
 		notify_and_destroy(net, skb, n, classid, old, new, extack);
 	}
