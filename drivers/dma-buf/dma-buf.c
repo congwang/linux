@@ -192,6 +192,7 @@ static int dma_buf_fs_init_context(struct fs_context *fc)
 	ctx = init_pseudo(fc, DMA_BUF_MAGIC);
 	if (!ctx)
 		return -ENOMEM;
+	fc->s_iflags |= SB_I_NOEXEC;
 	ctx->dops = &dma_buf_dentry_ops;
 	return 0;
 }
