@@ -31,7 +31,8 @@ static unsigned long get_align_mask(struct file *filp)
 	if (filp && is_file_hugepages(filp))
 		return huge_page_mask_align(filp);
 	/* handle 32- and 64-bit case with a single conditional */
-	if (va_align.flags < 0 || !(va_align.flags & (2 - mmap_is_ia32())))
+	if (va_align.flags < 0 ||
+	    !(va_align.flags & (2 - mmap_is_32bit(current->mm))))
 		return 0;
 
 	if (!mm_flags_test(MMF_RANDOMIZE, current->mm))
@@ -92,7 +93,7 @@ SYSCALL_DEFINE6(mmap, unsigned long, addr, unsigned long, len,
 static void find_start_end(unsigned long addr, unsigned long flags,
 		unsigned long *begin, unsigned long *end)
 {
-	if (!in_32bit_syscall() && (flags & MAP_32BIT)) {
+	if (!mmap_is_32bit(current->mm) && (flags & MAP_32BIT)) {
 		/* This is usually used needed to map code in small
 		   model, so it needs to be in the first 31bit. Limit
 		   it to that.  This means we need to move the
@@ -108,7 +109,7 @@ static void find_start_end(unsigned long addr, unsigned long flags,
 	}
 
 	*begin	= get_mmap_base(1);
-	if (in_32bit_syscall())
+	if (mmap_is_32bit(current->mm))
 		*end = task_size_32bit();
 	else
 		*end = task_size_64bit(addr > DEFAULT_MAP_WINDOW);
@@ -173,7 +174,7 @@ arch_get_unmapped_area_topdown(struct file *filp, unsigned long addr0,
 	struct vm_unmapped_area_info info = {};
 
 	/* requested length too big for entire address space */
-	if (len > TASK_SIZE)
+	if (len > mm->task_size)
 		return -ENOMEM;
 
 	/* No address checking. See comment at mmap_address_hint_valid() */
@@ -181,7 +182,7 @@ arch_get_unmapped_area_topdown(struct file *filp, unsigned long addr0,
 		return addr;
 
 	/* for MAP_32BIT mappings we force the legacy mmap base */
-	if (!in_32bit_syscall() && (flags & MAP_32BIT))
+	if (!mmap_is_32bit(current->mm) && (flags & MAP_32BIT))
 		goto bottomup;
 
 	/* requesting a specific address */
@@ -198,7 +199,7 @@ get_unmapped_area:
 
 	info.flags = VM_UNMAPPED_AREA_TOPDOWN;
 	info.length = len;
-	if (!in_32bit_syscall() && (flags & MAP_ABOVE4G))
+	if (!mmap_is_32bit(current->mm) && (flags & MAP_ABOVE4G))
 		info.low_limit = SZ_4G;
 	else
 		info.low_limit = PAGE_SIZE;
@@ -213,10 +214,10 @@ get_unmapped_area:
 	 * If hint address is above DEFAULT_MAP_WINDOW, look for unmapped area
 	 * in the full address space.
 	 *
-	 * !in_32bit_syscall() check to avoid high addresses for x32
+	 * !mmap_is_32bit() check to avoid high addresses for x32
 	 * (and make it no op on native i386).
 	 */
-	if (addr > DEFAULT_MAP_WINDOW && !in_32bit_syscall())
+	if (addr > DEFAULT_MAP_WINDOW && !mmap_is_32bit(current->mm))
 		info.high_limit += TASK_SIZE_MAX - DEFAULT_MAP_WINDOW;
 
 	if (filp) {
