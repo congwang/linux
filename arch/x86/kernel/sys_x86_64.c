@@ -34,7 +34,7 @@ static unsigned long get_align_mask(struct file *filp)
 	if (va_align.flags < 0 || !(va_align.flags & (2 - mmap_is_ia32())))
 		return 0;
 
-	if (!(current->flags & PF_RANDOMIZE))
+	if (!mm_flags_test(MMF_RANDOMIZE, current->mm))
 		return 0;
 
 	return va_align.mask;
@@ -102,9 +102,8 @@ static void find_start_end(unsigned long addr, unsigned long flags,
 		   of playground for now. -AK */
 		*begin = 0x40000000;
 		*end = 0x80000000;
-		if (current->flags & PF_RANDOMIZE) {
+		if (mm_flags_test(MMF_RANDOMIZE, current->mm))
 			*begin = randomize_page(*begin, 0x02000000);
-		}
 		return;
 	}
 

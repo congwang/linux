@@ -68,7 +68,7 @@ static unsigned long get_align_mask(struct file *filp, unsigned long flags)
 {
 	if (filp && is_file_hugepages(filp))
 		return huge_page_mask_align(filp);
-	if (!(current->flags & PF_RANDOMIZE))
+	if (!mm_flags_test(MMF_RANDOMIZE, current->mm))
 		return 0;
 	if (filp || (flags & MAP_SHARED))
 		return MMAP_ALIGN_MASK << PAGE_SHIFT;

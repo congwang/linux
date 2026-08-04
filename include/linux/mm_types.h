@@ -1947,6 +1947,8 @@ enum {
 # define MMF_DUMP_MASK_DEFAULT_ELF	0
 #endif
 					/* leave room for more dump flags */
+#define MMF_RANDOMIZE		15	/* mm layout was randomized at exec */
+#define MMF_RANDOMIZE_MASK	BIT(MMF_RANDOMIZE)
 #define MMF_VM_MERGEABLE	16	/* KSM may merge identical pages */
 #define MMF_VM_HUGEPAGE		17	/* set when mm is available for khugepaged */
 
@@ -1984,7 +1986,8 @@ enum {
 
 #define MMF_INIT_LEGACY_MASK	(MMF_DUMP_FILTER_MASK |\
 				 MMF_DISABLE_THP_MASK | MMF_HAS_MDWE_MASK |\
-				 MMF_VM_MERGE_ANY_MASK | MMF_TOPDOWN_MASK)
+				 MMF_VM_MERGE_ANY_MASK | MMF_TOPDOWN_MASK |\
+				 MMF_RANDOMIZE_MASK)
 
 /* Legacy flags must fit within 32 bits. */
 static_assert((u64)MMF_INIT_LEGACY_MASK <= (u64)UINT_MAX);

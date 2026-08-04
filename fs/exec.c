@@ -1336,6 +1336,17 @@ void setup_new_exec(struct linux_binprm * bprm)
 	/* Setup things that can depend upon the personality */
 	struct task_struct *me = current;
 
+	/*
+	 * Snapshot PF_RANDOMIZE on the mm so that mmap placement can consult
+	 * the mm's own ASLR setting instead of current's task flags. The mm
+	 * inherited the legacy flags word from the pre-exec mm, so the bit
+	 * must be explicitly cleared when randomization is off.
+	 */
+	if (me->flags & PF_RANDOMIZE)
+		mm_flags_set(MMF_RANDOMIZE, me->mm);
+	else
+		mm_flags_clear(MMF_RANDOMIZE, me->mm);
+
 	arch_pick_mmap_layout(me->mm, &bprm->rlim_stack);
 
 	arch_setup_new_exec();
