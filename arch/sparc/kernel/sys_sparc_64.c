@@ -102,7 +102,7 @@ unsigned long arch_get_unmapped_area(struct file *filp, unsigned long addr, unsi
 {
 	struct mm_struct *mm = current->mm;
 	struct vm_area_struct * vma;
-	unsigned long task_size = TASK_SIZE;
+	unsigned long task_size = mm->task_size;
 	int do_color_align;
 	struct vm_unmapped_area_info info = {};
 	bool file_hugepage = false;
@@ -120,7 +120,7 @@ unsigned long arch_get_unmapped_area(struct file *filp, unsigned long addr, unsi
 		return addr;
 	}
 
-	if (test_thread_flag(TIF_32BIT))
+	if (mmap_is_32bit(mm))
 		task_size = STACK_TOP32;
 	if (unlikely(len > task_size || len >= VA_EXCLUDE_START))
 		return -ENOMEM;
@@ -142,7 +142,8 @@ unsigned long arch_get_unmapped_area(struct file *filp, unsigned long addr, unsi
 	}
 
 	info.length = len;
-	info.low_limit = TASK_UNMAPPED_BASE;
+	info.low_limit = mmap_is_32bit(mm) ? TASK_UNMAPPED_BASE_32 :
+					   VA_EXCLUDE_END;
 	info.high_limit = min(task_size, VA_EXCLUDE_START);
 	info.align_mask = get_align_mask(filp, flags);
 	if (!file_hugepage)
@@ -172,8 +173,9 @@ arch_get_unmapped_area_topdown(struct file *filp, const unsigned long addr0,
 	struct vm_unmapped_area_info info = {};
 	bool file_hugepage = false;
 
-	/* This should only ever run for 32-bit processes.  */
-	BUG_ON(!test_thread_flag(TIF_32BIT));
+	/* This should only ever run for 32-bit address spaces.  */
+	if (WARN_ON_ONCE(!mmap_is_32bit(mm)))
+		return -ENOMEM;
 
 	if (filp && is_file_hugepages(filp))
 		file_hugepage = true;
@@ -226,7 +228,7 @@ arch_get_unmapped_area_topdown(struct file *filp, const unsigned long addr0,
 	if (addr & ~PAGE_MASK) {
 		VM_BUG_ON(addr != -ENOMEM);
 		info.flags = 0;
-		info.low_limit = TASK_UNMAPPED_BASE;
+		info.low_limit = TASK_UNMAPPED_BASE_32;
 		info.high_limit = STACK_TOP32;
 		addr = vm_unmapped_area(&info);
 	}

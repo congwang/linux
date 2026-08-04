@@ -121,8 +121,9 @@ extern unsigned long sparc64_va_hole_bottom;
 #define VA_EXCLUDE_START (sparc64_va_hole_bottom - (1UL << 32UL))
 #define VA_EXCLUDE_END   (sparc64_va_hole_top + (1UL << 32UL))
 
+#define TASK_UNMAPPED_BASE_32	_AC(0x0000000070000000, UL)
 #define TASK_UNMAPPED_BASE	(test_thread_flag(TIF_32BIT) ? \
-				 _AC(0x0000000070000000,UL) : \
+				 TASK_UNMAPPED_BASE_32 : \
 				 VA_EXCLUDE_END)
 
 #include <asm-generic/memory_model.h>
