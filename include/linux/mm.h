@@ -4137,6 +4137,8 @@ struct vm_area_struct *_install_special_mapping(struct mm_struct *mm,
 unsigned long randomize_stack_top(unsigned long stack_top);
 unsigned long randomize_page(unsigned long start, unsigned long range);
 
+bool mmap_is_32bit(struct mm_struct *mm);
+
 unsigned long
 __get_unmapped_area(struct file *file, unsigned long addr, unsigned long len,
 		    unsigned long pgoff, unsigned long flags, vm_flags_t vm_flags);

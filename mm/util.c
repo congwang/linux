@@ -386,6 +386,22 @@ unsigned long randomize_page(unsigned long start, unsigned long range)
 	return start + (get_random_long() % range << PAGE_SHIFT);
 }
 
+/*
+ * Whether a mapping placement is for a 32-bit address space. For the
+ * calling task's own mm this is a per-syscall property: a 64-bit task
+ * doing a 32-bit mmap() deliberately gets a 32-bit placement. A remote
+ * caller has no syscall context to consult, so fall back to the bitness
+ * the target mm was exec'ed with.
+ */
+bool mmap_is_32bit(struct mm_struct *mm)
+{
+	if (!IS_ENABLED(CONFIG_64BIT))
+		return true;
+	if (mm == current->mm)
+		return in_compat_syscall();
+	return mm->task_size <= SZ_4G;
+}
+
 #ifdef CONFIG_ARCH_WANT_DEFAULT_TOPDOWN_MMAP_LAYOUT
 unsigned long __weak arch_randomize_brk(struct mm_struct *mm)
 {
