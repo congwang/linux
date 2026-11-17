@@ -5,6 +5,8 @@
 
 #include <linux/linkage.h>
 #include <asm/asm.h>
+#include <asm/hwcap.h>
+#include <asm/alternative-macros.h>
 
 /* void *memcpy(void *, const void *, size_t) */
 SYM_FUNC_START(__memcpy_scalar)
@@ -105,7 +107,17 @@ SYM_FUNC_START(__memcpy_scalar)
 6:
 	ret
 SYM_FUNC_END(__memcpy_scalar)
+
+#if defined(CONFIG_RISCV_ISA_V) && !defined(RISCV_PURGATORY)
+SYM_FUNC_START(__memcpy)
+	ALTERNATIVE("j __memcpy_scalar", "nop", 0, RISCV_ISA_EXT_ZVE32X, CONFIG_RISCV_ISA_V)
+	li	t0, CONFIG_RISCV_ISA_V_MEMCPY_THRESHOLD
+	bltu	a2, t0, __memcpy_scalar
+	tail	enter_vector_memcpy
+SYM_FUNC_END(__memcpy)
+#else
 SYM_FUNC_ALIAS(__memcpy, __memcpy_scalar)
+#endif
 SYM_FUNC_ALIAS_WEAK(memcpy, __memcpy)
 SYM_FUNC_ALIAS(__pi_memcpy, __memcpy_scalar)
 SYM_FUNC_ALIAS(__pi___memcpy, __memcpy_scalar)
