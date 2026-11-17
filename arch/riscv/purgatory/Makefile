@@ -44,6 +44,8 @@ $(obj)/strrchr.o: $(srctree)/arch/riscv/lib/strrchr.S FORCE
 CFLAGS_sha256.o := -D__DISABLE_EXPORTS -D__NO_FORTIFY
 CFLAGS_string.o := -D__DISABLE_EXPORTS
 CFLAGS_ctype.o := -D__DISABLE_EXPORTS
+# The purgatory has no alternatives patching and no kernel-mode vector.
+AFLAGS_memcpy.o := -DRISCV_PURGATORY
 
 # When profile-guided optimization is enabled, llvm emits two different
 # overlapping text sections, which is not supported by kexec. Remove profile

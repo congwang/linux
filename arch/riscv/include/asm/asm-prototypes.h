@@ -15,6 +15,10 @@ long long __ashlti3(long long a, int b);
 
 #ifdef CONFIG_RISCV_ISA_V
 
+asmlinkage void *__memcpy_scalar(void *dst, const void *src, size_t n);
+asmlinkage void *enter_vector_memcpy(void *dst, const void *src, size_t n);
+asmlinkage void __asm_vector_memcpy(void *dst, const void *src, size_t n);
+
 #ifdef CONFIG_MMU
 asmlinkage int enter_vector_usercopy(void *dst, void *src, size_t n, bool enable_sum);
 #endif /* CONFIG_MMU  */
